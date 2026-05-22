@@ -126,7 +126,7 @@ ${goodText}
 Remember: return ONLY valid JSON matching the schema described in your instructions.`;
 
   const response = await client.messages.create({
-    model: 'claude-3-5-sonnet-latest',
+    model: 'claude-opus-4-7',
     max_tokens: 2500,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
