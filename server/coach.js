@@ -1,4 +1,4 @@
-const Anthropic = require('anthropic');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const client = new Anthropic();
 
