@@ -41,7 +41,10 @@ async function startAnalysis() {
 
   // Show loading
   document.getElementById('inputView').style.display = 'none';
-  document.getElementById('loadingView').style.display = 'flex';
+  const loadingView = document.getElementById('loadingView');
+  loadingView.style.display = 'flex';
+  document.getElementById('loadingFill').style.width = '0%';
+  document.getElementById('loadingMsg').textContent = 'Starting analysis...';
 
   try {
     const response = await fetch('/api/analyse', {
@@ -55,17 +58,50 @@ async function startAnalysis() {
       throw new Error(err.error || 'Analysis failed');
     }
 
-    const data = await response.json();
-    moves = data.analysis.moves;
-    coaching = data.coaching;
+    // Read the stream line by line
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalData = null;
 
-    renderCoaching(data.analysis, data.coaching);
-    document.getElementById('loadingView').style.display = 'none';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const msg = JSON.parse(line);
+          if (msg.type === 'progress') {
+            document.getElementById('loadingFill').style.width = msg.pct + '%';
+            document.getElementById('loadingMsg').textContent = msg.message;
+          } else if (msg.type === 'result') {
+            finalData = msg;
+          } else if (msg.type === 'error') {
+            throw new Error(msg.error);
+          }
+        } catch (e) {
+          if (e.message !== msg?.error) console.warn('Parse error:', e);
+        }
+      }
+    }
+
+    if (!finalData) throw new Error('No result received from server');
+
+    moves = finalData.analysis.moves;
+    coaching = finalData.coaching;
+
+    renderCoaching(finalData.analysis, finalData.coaching);
+    loadingView.style.display = 'none';
     document.getElementById('analysisView').style.display = 'block';
     goToMove(0);
   } catch (err) {
     console.error('Analysis error:', err);
-    document.getElementById('loadingView').style.display = 'none';
+    loadingView.style.display = 'none';
     document.getElementById('inputView').style.display = 'block';
     showError(err.message);
   }
