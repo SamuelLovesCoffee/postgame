@@ -70,6 +70,17 @@ app.post('/api/analyse', async (req, res) => {
 });
 
 // ── Health check ──
+app.get('/api/test-key', async (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return res.json({ error: 'ANTHROPIC_API_KEY not found in environment' });
+  res.json({
+    keyPrefix: key.slice(0, 12) + '...',
+    keyLength: key.length,
+    hasQuotes: key.startsWith('"') || key.startsWith("'"),
+    hasSpaces: key !== key.trim(),
+  });
+});
+
 app.get('/api/health', async (req, res) => {
   try {
     const sf = await getEngine();
