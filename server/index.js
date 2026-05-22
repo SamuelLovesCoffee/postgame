@@ -33,27 +33,37 @@ app.post('/api/analyse', async (req, res) => {
   if (!pgn) return res.status(400).json({ error: 'PGN is required' });
   if (!['w', 'b'].includes(playerColor)) return res.status(400).json({ error: 'playerColor must be "w" or "b"' });
 
+  // Stream progress as newline-delimited JSON
+  res.setHeader('Content-Type', 'application/x-ndjson');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const sendProgress = (pct, msg) => {
+    res.write(JSON.stringify({ type: 'progress', pct, message: msg }) + '\n');
+  };
+
   try {
     console.log(`\n── New analysis request (${playerColor === 'w' ? 'White' : 'Black'}) ──`);
     const t0 = Date.now();
 
-    // Step 1: Engine analysis
     const sf = await getEngine();
     const analysis = await analysePGN(pgn, playerColor, sf, (pct, msg) => {
-      // Could use SSE here for real-time progress; for now just log
+      sendProgress(pct, msg);
       console.log(`  [${pct}%] ${msg}`);
     });
 
     const engineTime = ((Date.now() - t0) / 1000).toFixed(1);
     console.log(`  Engine analysis done in ${engineTime}s (${analysis.totalMoves} moves)`);
 
-    // Step 2: Coaching
+    sendProgress(95, 'Generating coaching...');
     console.log('  Generating coaching...');
     const coaching = await generateCoaching(analysis);
     const totalTime = ((Date.now() - t0) / 1000).toFixed(1);
     console.log(`  Complete in ${totalTime}s`);
 
-    res.json({
+    // Send final result
+    res.write(JSON.stringify({
+      type: 'result',
       analysis: {
         headers: analysis.headers,
         openingName: analysis.openingName,
@@ -62,10 +72,12 @@ app.post('/api/analyse', async (req, res) => {
         bookDepth: analysis.bookDepth,
       },
       coaching,
-    });
+    }) + '\n');
+    res.end();
   } catch (err) {
     console.error('Analysis error:', err);
-    res.status(500).json({ error: err.message });
+    res.write(JSON.stringify({ type: 'error', error: err.message }) + '\n');
+    res.end();
   }
 });
 
