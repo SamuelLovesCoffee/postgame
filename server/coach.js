@@ -51,7 +51,9 @@ RULES:
 - If the student played well, say so — don't invent problems
 - Every move reference must use standard notation (e.g. "7...Nf6", "12. Bxc6")
 - The ply values must match the data provided
-- Return ONLY valid JSON`;
+- Return ONLY valid JSON
+- Keep explanations concise — 2-3 sentences per critical moment, not 5
+- For games over 30 moves, limit to 4 segments and 4 critical moments`;
 
 /**
  * Generate coaching review from analysis data
@@ -127,7 +129,7 @@ Remember: return ONLY valid JSON matching the schema described in your instructi
 
   const response = await client.messages.create({
     model: 'claude-opus-4-7',
-    max_tokens: 2500,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
   });
