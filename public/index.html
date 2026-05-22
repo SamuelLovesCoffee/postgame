@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>postgame</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <span class="logo-icon">♞</span>
+        <span class="logo-text">post<em>game</em></span>
+      </a>
+      <span class="header-tag">AI Chess Coach</span>
+    </div>
+  </header>
+
+  <!-- ── INPUT VIEW ── -->
+  <main class="input-view" id="inputView">
+    <div class="input-card">
+      <h1>Understand your game.</h1>
+      <p class="subtitle">Not just what went wrong — <em>why</em>, and what to study next.</p>
+      <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here...&#10;&#10;1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ..."></textarea>
+      <div class="input-row">
+        <div class="select-wrap">
+          <select id="playerColor">
+            <option value="w">I played White</option>
+            <option value="b">I played Black</option>
+          </select>
+        </div>
+        <button class="analyse-btn" id="analyseBtn" onclick="startAnalysis()">
+          <span class="btn-text">Analyse</span>
+          <span class="btn-spinner"></span>
+        </button>
+      </div>
+      <div class="input-footer">
+        <a href="#" onclick="loadSample();return false">Load sample game</a>
+        <span class="input-error" id="errorMsg"></span>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── LOADING VIEW ── -->
+  <main class="loading-view" id="loadingView" style="display:none">
+    <div class="loading-card">
+      <div class="loading-anim">
+        <span>♞</span>
+      </div>
+      <h2 id="loadingTitle">Analysing your game...</h2>
+      <p id="loadingMsg">Evaluating positions with Stockfish</p>
+      <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
+    </div>
+  </main>
+
+  <!-- ── ANALYSIS VIEW ── -->
+  <main class="analysis-view" id="analysisView" style="display:none">
+    <div class="analysis-grid">
+
+      <!-- Board Column -->
+      <div class="board-col">
+        <div class="board-wrap">
+          <div class="eval-bar">
+            <div class="eval-bar-white" id="evalBarWhite" style="height:50%"></div>
+            <div class="eval-bar-black" id="evalBarBlack" style="height:50%"></div>
+            <span class="eval-label eval-label-top" id="evalLabelTop"></span>
+            <span class="eval-label eval-label-bot" id="evalLabelBot">0.0</span>
+          </div>
+          <div class="board-container">
+            <div class="board" id="board"></div>
+            <svg class="arrow-svg" id="arrowSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs><marker id="ah" markerWidth="3" markerHeight="2.5" refX="2.5" refY="1.25" orient="auto"><polygon points="0 0,3 1.25,0 2.5" fill="rgba(22,163,74,0.8)"/></marker></defs>
+            </svg>
+          </div>
+        </div>
+        <div class="board-nav">
+          <button onclick="goToMove(0)">⏮</button>
+          <button onclick="goToMove(currentPly-1)">◀</button>
+          <span class="eval-display" id="evalDisplay">+0.00</span>
+          <button onclick="goToMove(currentPly+1)">▶</button>
+          <button onclick="goToMove(moves.length)">⏭</button>
+          <button class="best-toggle" id="bestToggle" onclick="toggleBest()">Best move</button>
+        </div>
+      </div>
+
+      <!-- Coaching Column -->
+      <div class="coach-col" id="coachCol">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+    <div class="analysis-footer">
+      <button class="new-game-btn" onclick="showInput()">← New game</button>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

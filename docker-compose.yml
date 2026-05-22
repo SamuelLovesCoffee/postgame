@@ -1,0 +1,13 @@
+services:
+  postgame:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - STOCKFISH_PATH=/usr/games/stockfish
+      - STOCKFISH_DEPTH=22
+      - STOCKFISH_MULTIPV=3
+      - STOCKFISH_THREADS=2
+      - STOCKFISH_HASH=256
+    restart: unless-stopped

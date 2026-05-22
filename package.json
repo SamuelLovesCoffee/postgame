@@ -1,0 +1,17 @@
+{
+  "name": "postgame",
+  "version": "1.0.0",
+  "description": "AI chess coach — post-game analysis with narrative coaching",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "chess.js": "^0.13.4",
+    "anthropic": "^0.39.0",
+    "dotenv": "^16.4.5"
+  }
+}
