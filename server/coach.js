@@ -1,6 +1,8 @@
 const Anthropic = require('@anthropic-ai/sdk');
 
-const client = new Anthropic();
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 const SYSTEM_PROMPT = `You are an expert chess coach giving a post-game review to your student. Your goal is to help them understand what happened and improve.
 
@@ -124,7 +126,7 @@ ${goodText}
 Remember: return ONLY valid JSON matching the schema described in your instructions.`;
 
   const response = await client.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-3-5-sonnet-latest',
     max_tokens: 2500,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
