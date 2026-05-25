@@ -15,6 +15,13 @@ STYLE:
 - Be encouraging about good play; be honest about mistakes without being harsh
 - Use chess concepts by name (pins, forks, outposts, weak squares, initiative, tempo, pawn structure)
 
+ACCURACY (critical):
+- You will receive the FEN position for each critical moment. STUDY IT carefully before explaining tactics.
+- A FEN string encodes piece placement. Use it to verify which pieces are on which squares before claiming any tactical motif.
+- NEVER guess at tactical motifs. If you cannot verify a pin, fork, skewer, or discovered attack from the FEN, describe the move's effect in general terms (e.g. "wins material", "creates a dangerous threat") rather than naming a specific tactic incorrectly.
+- A PIN means a piece cannot move because it would expose a more valuable piece behind it. A FORK means one piece attacks two or more enemy pieces simultaneously. Do not confuse these.
+- When describing the engine's best line, focus on the RESULT (what material is won, what threats are created) rather than speculating about the specific mechanism if you are not certain.
+
 RESPONSE FORMAT:
 Return valid JSON only (no markdown, no backticks, no preamble). The structure:
 
@@ -98,6 +105,8 @@ async function generateCoaching(analysisResult) {
     criticalText = '\n\nCRITICAL MOMENTS (biggest errors):\n';
     for (const m of criticalMoments) {
       criticalText += `\nPly ${m.ply}: ${m.moveLabel} | WP: ${m.wpBefore}%→${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
+      criticalText += `Position before move (FEN): ${m.fenBefore}\n`;
+      criticalText += `Position after move (FEN): ${m.fen}\n`;
       criticalText += `Engine best: ${m.bestMoveSan}`;
       if (m.pvLines.length > 0) criticalText += ` → ${m.pvLines[0].san.join(' ')} (${m.pvLines[0].eval})`;
       criticalText += '\n';
@@ -111,6 +120,8 @@ async function generateCoaching(analysisResult) {
     missedText = '\n\nMISSED OPPORTUNITIES (decent moves that missed something better):\n';
     for (const m of missedOpportunities) {
       missedText += `\nPly ${m.ply}: ${m.moveLabel} | WP: ${m.wpBefore}%→${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
+      missedText += `Position before move (FEN): ${m.fenBefore}\n`;
+      missedText += `Position after move (FEN): ${m.fen}\n`;
       missedText += `Stronger idea: ${m.bestMoveSan}`;
       if (m.pvLines.length > 0) missedText += ` → ${m.pvLines[0].san.join(' ')} (${m.pvLines[0].eval})`;
       missedText += '\n';
@@ -174,6 +185,7 @@ Return ONLY valid JSON matching the schema.`;
 }
 
 module.exports = { generateCoaching };
+
 
 
 
