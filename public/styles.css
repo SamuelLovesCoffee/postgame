@@ -421,6 +421,24 @@ body {
   border-radius: var(--radius-sm); border-left: 3px solid var(--accent);
 }
 
+/* Missed idea cards */
+.critical-card.type-idea { border-left-color: var(--blue); }
+.cc-badge.idea {
+  background: var(--blue-soft); color: var(--blue);
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 2px 8px; border-radius: 3px;
+}
+
+/* Export button */
+.export-btn {
+  width: 100%; background: var(--bg-card); color: var(--text-2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 16px; font-family: var(--font-body); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s;
+  margin-top: 8px;
+}
+.export-btn:hover { background: var(--surface); color: var(--text); border-color: var(--accent); }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .analysis-grid { grid-template-columns: 1fr; }
