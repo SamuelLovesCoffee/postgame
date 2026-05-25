@@ -145,7 +145,7 @@ Return ONLY valid JSON matching the schema.`;
     max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
-    timeout: 120000,
+
   });
 
   const text = response.content
@@ -174,3 +174,4 @@ Return ONLY valid JSON matching the schema.`;
 }
 
 module.exports = { generateCoaching };
+
