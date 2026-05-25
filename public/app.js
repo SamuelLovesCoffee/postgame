@@ -3,17 +3,18 @@
 // ═══════════════════════════════════════
 let moves = [];
 let coaching = {};
+let analysisResult = null;
 let currentPly = 0;
 let flipped = false;
 let showBest = false;
 let playerColor = 'w';
+let animating = false;
 
 // Piece images
 const PIECE_CDN = 'https://lichess1.org/assets/piece/cburnett/';
 const pieceCache = {};
 let usePieceImg = true;
 
-// Preload pieces
 (async () => {
   const keys = ['wK','wQ','wR','wB','wN','wP','bK','bQ','bR','bB','bN','bP'];
   const results = await Promise.allSettled(keys.map(k => new Promise((ok, no) => {
@@ -26,7 +27,7 @@ let usePieceImg = true;
 })();
 
 // ═══════════════════════════════════════
-// API
+// API — Job-based with polling
 // ═══════════════════════════════════════
 async function startAnalysis() {
   const pgn = document.getElementById('pgnInput').value.trim();
@@ -39,61 +40,51 @@ async function startAnalysis() {
   btn.classList.add('loading');
   btn.disabled = true;
 
-  // Show loading
   document.getElementById('inputView').style.display = 'none';
   const loadingView = document.getElementById('loadingView');
   loadingView.style.display = 'flex';
   document.getElementById('loadingFill').style.width = '0%';
-  document.getElementById('loadingMsg').textContent = 'Starting analysis...';
+  document.getElementById('loadingMsg').textContent = 'Submitting game...';
+  document.getElementById('loadingTitle').textContent = 'Analysing your game...';
 
   try {
-    const response = await fetch('/api/analyse', {
+    // Submit job
+    const submitRes = await fetch('/api/analyse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pgn, playerColor }),
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || 'Analysis failed');
+    if (!submitRes.ok) {
+      const err = await submitRes.json().catch(() => ({}));
+      throw new Error(err.error || 'Submission failed');
     }
 
-    // Read the stream line by line
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
+    const { jobId } = await submitRes.json();
+
+    // Poll for progress
     let finalData = null;
+    while (!finalData) {
+      await new Promise(r => setTimeout(r, 1500));
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      const pollRes = await fetch(`/api/job/${jobId}`);
+      if (!pollRes.ok) throw new Error('Lost connection to analysis job');
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep incomplete line
+      const job = await pollRes.json();
 
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const msg = JSON.parse(line);
-          if (msg.type === 'progress') {
-            document.getElementById('loadingFill').style.width = msg.pct + '%';
-            document.getElementById('loadingMsg').textContent = msg.message;
-          } else if (msg.type === 'result') {
-            finalData = msg;
-          } else if (msg.type === 'error') {
-            throw new Error(msg.error);
-          }
-        } catch (e) {
-          if (e.message !== msg?.error) console.warn('Parse error:', e);
-        }
+      if (job.status === 'running') {
+        document.getElementById('loadingFill').style.width = job.progress + '%';
+        document.getElementById('loadingMsg').textContent = job.message;
+      } else if (job.status === 'error') {
+        throw new Error(job.error);
+      } else if (job.status === 'complete') {
+        finalData = job;
       }
     }
 
-    if (!finalData) throw new Error('No result received from server');
-
     moves = finalData.analysis.moves;
     coaching = finalData.coaching;
+    analysisResult = finalData;
 
     renderCoaching(finalData.analysis, finalData.coaching);
     loadingView.style.display = 'none';
@@ -111,7 +102,7 @@ async function startAnalysis() {
 }
 
 // ═══════════════════════════════════════
-// BOARD RENDERING
+// BOARD — with piece animation
 // ═══════════════════════════════════════
 function parseFEN(fen) {
   const board = [];
@@ -126,7 +117,24 @@ function parseFEN(fen) {
   return board;
 }
 
-function renderBoard(fen, fromSq, toSq) {
+function sqToVisual(file, rank) {
+  return flipped ? { vr: 7 - rank, vf: 7 - file } : { vr: rank, vf: file };
+}
+
+function sqNameToCoords(sq) {
+  return { f: sq.charCodeAt(0) - 97, r: 8 - parseInt(sq[1]) };
+}
+
+function mkPiece(code) {
+  if (usePieceImg && pieceCache[code]) {
+    const i = document.createElement('img');
+    i.src = pieceCache[code]; i.draggable = false;
+    return i;
+  }
+  return null;
+}
+
+function renderBoardStatic(fen, fromSq, toSq) {
   const board = parseFEN(fen);
   const el = document.getElementById('board');
   el.innerHTML = '';
@@ -140,17 +148,84 @@ function renderBoard(fen, fromSq, toSq) {
       const name = String.fromCharCode(97 + f) + (8 - r);
       if (name === fromSq || name === toSq) sq.classList.add('hl');
       if (board[r][f]) {
-        const piece = board[r][f];
-        if (usePieceImg && pieceCache[piece]) {
-          const img = document.createElement('img');
-          img.src = pieceCache[piece];
-          img.draggable = false;
-          sq.appendChild(img);
-        }
+        const piece = mkPiece(board[r][f]);
+        if (piece) sq.appendChild(piece);
       }
       el.appendChild(sq);
     }
   }
+}
+
+function renderBoardAnimated(newFen, fromSq, toSq, direction) {
+  if (animating || !fromSq || !toSq) {
+    renderBoardStatic(newFen, fromSq, toSq);
+    return;
+  }
+
+  const boardEl = document.getElementById('board');
+  const boardRect = boardEl.getBoundingClientRect();
+  const sqSize = boardRect.width / 8;
+  const newBoard = parseFEN(newFen);
+
+  const src = sqNameToCoords(direction === 'forward' ? fromSq : toSq);
+  const dst = sqNameToCoords(direction === 'forward' ? toSq : fromSq);
+  const movingPiece = newBoard[dst.r][dst.f];
+
+  if (!movingPiece || !pieceCache[movingPiece]) {
+    renderBoardStatic(newFen, fromSq, toSq);
+    return;
+  }
+
+  // Render board without the moving piece at destination
+  const temp = newBoard.map(r => [...r]);
+  temp[dst.r][dst.f] = null;
+
+  // Quick static render of the temp board
+  boardEl.innerHTML = '';
+  for (let vr = 0; vr < 8; vr++) {
+    for (let vf = 0; vf < 8; vf++) {
+      const r = flipped ? 7 - vr : vr;
+      const f = flipped ? 7 - vf : vf;
+      const sq = document.createElement('div');
+      sq.className = 'sq ' + ((r + f) % 2 === 0 ? 'l' : 'd');
+      const name = String.fromCharCode(97 + f) + (8 - r);
+      if (name === fromSq || name === toSq) sq.classList.add('hl');
+      if (temp[r][f]) {
+        const piece = mkPiece(temp[r][f]);
+        if (piece) sq.appendChild(piece);
+      }
+      boardEl.appendChild(sq);
+    }
+  }
+
+  // Create animated piece
+  animating = true;
+  const srcV = sqToVisual(src.f, src.r);
+  const dstV = sqToVisual(dst.f, dst.r);
+
+  const anim = document.createElement('div');
+  anim.style.cssText = `position:absolute;width:${sqSize}px;height:${sqSize}px;z-index:10;pointer-events:none;transition:left 0.18s ease-out,top 0.18s ease-out;left:${srcV.vf*sqSize}px;top:${srcV.vr*sqSize}px;`;
+  const img = document.createElement('img');
+  img.src = pieceCache[movingPiece];
+  img.style.cssText = `width:85%;height:85%;object-fit:contain;margin:7.5%;filter:drop-shadow(1px 2px 2px rgba(0,0,0,0.3))`;
+  anim.appendChild(img);
+
+  boardEl.style.position = 'relative';
+  boardEl.appendChild(anim);
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    anim.style.left = (dstV.vf * sqSize) + 'px';
+    anim.style.top = (dstV.vr * sqSize) + 'px';
+  });
+
+  const done = () => {
+    anim.remove();
+    renderBoardStatic(newFen, fromSq, toSq);
+    animating = false;
+  };
+  anim.addEventListener('transitionend', done, { once: true });
+  setTimeout(() => { if (animating) done(); }, 280);
 }
 
 // ═══════════════════════════════════════
@@ -161,14 +236,11 @@ function cpToWinPct(cp) {
 }
 
 function updateEval(m) {
-  // Get eval from White's perspective
   let cp, mate;
   if (!m) { cp = 0; mate = null; }
   else {
     cp = m.cpAfter || 0;
     mate = m.eval_mate;
-    // cpAfter is from side-to-move perspective. Convert.
-    // If ply is odd (white just moved, black to move), negate
     if (m.ply % 2 === 1) cp = -cp;
   }
 
@@ -182,11 +254,9 @@ function updateEval(m) {
   const top = document.getElementById('evalLabelTop');
   const bot = document.getElementById('evalLabelBot');
   if (str.startsWith('+') || str.startsWith('0')) {
-    bot.textContent = str.replace('+', '');
-    top.textContent = '';
+    bot.textContent = str.replace('+', ''); top.textContent = '';
   } else {
-    top.textContent = str.replace('-', '');
-    bot.textContent = '';
+    top.textContent = str.replace('-', ''); bot.textContent = '';
   }
 }
 
@@ -201,19 +271,15 @@ function drawArrow(uci) {
   const sqPct = 100 / 8;
   const ff = uci.charCodeAt(0) - 97, fr = 8 - parseInt(uci[1]);
   const tf = uci.charCodeAt(2) - 97, tr = 8 - parseInt(uci[3]);
-
   const fv = flipped ? { f: 7 - ff, r: 7 - fr } : { f: ff, r: fr };
   const tv = flipped ? { f: 7 - tf, r: 7 - tr } : { f: tf, r: tr };
-
   const x1 = fv.f * sqPct + sqPct / 2, y1 = fv.r * sqPct + sqPct / 2;
   const x2 = tv.f * sqPct + sqPct / 2, y2 = tv.r * sqPct + sqPct / 2;
-
-  const dx = x2 - x1, dy = y2 - y1;
-  const len = Math.sqrt(dx * dx + dy * dy);
+  const dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy);
 
   const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  line.setAttribute('x1', x1 + (dx / len) * 2); line.setAttribute('y1', y1 + (dy / len) * 2);
-  line.setAttribute('x2', x2 - (dx / len) * 3); line.setAttribute('y2', y2 - (dy / len) * 3);
+  line.setAttribute('x1', x1 + (dx/len)*2); line.setAttribute('y1', y1 + (dy/len)*2);
+  line.setAttribute('x2', x2 - (dx/len)*3); line.setAttribute('y2', y2 - (dy/len)*3);
   line.setAttribute('stroke', 'rgba(22,163,74,0.7)');
   line.setAttribute('stroke-width', '2.8');
   line.setAttribute('stroke-linecap', 'round');
@@ -228,79 +294,80 @@ function toggleBest() {
 }
 
 // ═══════════════════════════════════════
-// NAVIGATION
+// NAVIGATION — with animation
 // ═══════════════════════════════════════
 function goToMove(ply) {
   ply = Math.max(0, Math.min(ply, moves.length));
+  const prev = currentPly;
   currentPly = ply;
+  const isSingle = Math.abs(ply - prev) === 1;
+  const dir = ply > prev ? 'forward' : 'backward';
 
   if (ply === 0) {
-    renderBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', null, null);
+    const startFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    if (isSingle && prev === 1) {
+      renderBoardAnimated(startFen, moves[0].from, moves[0].to, 'backward');
+    } else {
+      renderBoardStatic(startFen, null, null);
+    }
     updateEval(null);
     drawArrow(moves.length > 0 ? moves[0].bestMove : null);
   } else {
     const m = moves[ply - 1];
-    renderBoard(m.fen, m.from, m.to);
+    if (isSingle) {
+      renderBoardAnimated(m.fen, m.from, m.to, dir);
+    } else {
+      renderBoardStatic(m.fen, m.from, m.to);
+    }
     updateEval(m);
-    // Best move is from position before this move
     drawArrow(m.bestMove);
   }
 
-  // Highlight active chip
   document.querySelectorAll('.move-chip').forEach(el => el.classList.remove('active'));
-  const activeChip = document.querySelector(`.move-chip[data-ply="${ply}"]`);
-  if (activeChip) {
-    activeChip.classList.add('active');
-    activeChip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
+  const ac = document.querySelector(`.move-chip[data-ply="${ply}"]`);
+  if (ac) { ac.classList.add('active'); ac.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 
-  // Highlight active critical card
   document.querySelectorAll('.critical-card').forEach(el => el.classList.remove('active'));
-  const activeCard = document.querySelector(`.critical-card[data-ply="${ply}"]`);
-  if (activeCard) activeCard.classList.add('active');
+  const card = document.querySelector(`.critical-card[data-ply="${ply}"]`);
+  if (card) card.classList.add('active');
 }
 
 // ═══════════════════════════════════════
-// COACHING NARRATIVE RENDERER
+// COACHING RENDERER
 // ═══════════════════════════════════════
 function renderCoaching(analysis, coach) {
   const col = document.getElementById('coachCol');
   col.innerHTML = '';
 
-  // 1. Summary card
-  const summaryCard = document.createElement('div');
-  summaryCard.className = 'coach-summary';
-  summaryCard.innerHTML = `
+  // Summary
+  const summary = document.createElement('div');
+  summary.className = 'coach-summary';
+  summary.innerHTML = `
     <h2>${analysis.headers.White || '?'} vs ${analysis.headers.Black || '?'}</h2>
     <div class="summary-text">${coach.summary || ''}</div>
     ${analysis.openingName ? `<span class="opening-tag">${analysis.openingName}</span>` : ''}
     ${coach.opening ? `<div class="summary-text" style="margin-top:8px">${coach.opening}</div>` : ''}
   `;
-  col.appendChild(summaryCard);
+  col.appendChild(summary);
 
-  // 2. Build the coaching timeline
-  // Map critical moments by ply for quick lookup
+  // Map critical moments + missed ideas by ply
   const critByPly = {};
   (coach.criticalMoments || []).forEach(cm => { critByPly[cm.ply] = cm; });
+  const missedByPly = {};
+  (coach.missedIdeas || []).forEach(mi => { missedByPly[mi.ply] = mi; });
 
-  // Group moves into segments
-  const segments = coach.segments || [];
-  if (segments.length === 0) {
-    // Fallback: one segment for the whole game
-    segments.push({ startPly: 1, endPly: analysis.moves.length, title: 'Game', narrative: '' });
-  }
+  // Segments
+  const segments = coach.segments || [{ startPly: 1, endPly: analysis.moves.length, title: 'Game', narrative: '' }];
 
   for (const seg of segments) {
     const segEl = document.createElement('div');
     segEl.className = 'segment';
 
-    // Segment header
     const header = document.createElement('div');
     header.className = 'segment-header';
     header.textContent = seg.title || 'Continuation';
     segEl.appendChild(header);
 
-    // Segment narrative
     if (seg.narrative) {
       const narr = document.createElement('div');
       narr.className = 'segment-narrative';
@@ -308,12 +375,11 @@ function renderCoaching(analysis, coach) {
       segEl.appendChild(narr);
     }
 
-    // Move chips for this segment
-    const moveGroup = document.createElement('div');
-    moveGroup.className = 'move-group';
-
     const startPly = seg.startPly || 1;
     const endPly = Math.min(seg.endPly || analysis.moves.length, analysis.moves.length);
+
+    let currentGroup = document.createElement('div');
+    currentGroup.className = 'move-group';
 
     for (let i = startPly - 1; i < endPly; i++) {
       const m = analysis.moves[i];
@@ -323,76 +389,63 @@ function renderCoaching(analysis, coach) {
       chip.className = 'move-chip';
       chip.dataset.ply = m.ply;
       if (m.isBook) chip.classList.add('book');
-
       const numStr = m.color === 'w' ? `<span class="num">${m.moveNumber}.</span>` : '';
       chip.innerHTML = numStr + m.san;
       chip.onclick = () => goToMove(m.ply);
-      moveGroup.appendChild(chip);
+      currentGroup.appendChild(chip);
 
-      // Insert critical moment card after the move it references
-      if (critByPly[m.ply]) {
-        // Close current move group, insert card, start new group
-        segEl.appendChild(moveGroup.cloneNode(true));
-        moveGroup.innerHTML = '';
+      // Insert cards after the relevant move
+      if (critByPly[m.ply] || missedByPly[m.ply]) {
+        segEl.appendChild(currentGroup);
+        currentGroup = document.createElement('div');
+        currentGroup.className = 'move-group';
 
-        const cm = critByPly[m.ply];
-        segEl.appendChild(makeCriticalCard(cm, m));
-
-        // Re-attach onclick handlers (cloneNode doesn't copy them)
-        const lastGroup = segEl.querySelector('.move-group:last-of-type');
-        if (lastGroup) {
-          lastGroup.querySelectorAll('.move-chip').forEach(chip => {
-            chip.onclick = () => goToMove(parseInt(chip.dataset.ply));
-          });
+        if (critByPly[m.ply]) {
+          segEl.appendChild(makeCriticalCard(critByPly[m.ply]));
+        }
+        if (missedByPly[m.ply]) {
+          segEl.appendChild(makeMissedCard(missedByPly[m.ply]));
         }
       }
     }
 
-    // Append remaining move chips
-    if (moveGroup.children.length > 0) {
-      segEl.appendChild(moveGroup);
-      moveGroup.querySelectorAll('.move-chip').forEach(chip => {
-        chip.onclick = () => goToMove(parseInt(chip.dataset.ply));
-      });
-    }
-
+    if (currentGroup.children.length > 0) segEl.appendChild(currentGroup);
     col.appendChild(segEl);
   }
 
-  // 3. Takeaways card
+  // Takeaways
   const takeaways = document.createElement('div');
   takeaways.className = 'takeaways';
-
-  let takeawayHTML = '<h3>Takeaways</h3>';
-
+  let html = '<h3>Takeaways</h3>';
   if (coach.strengths && coach.strengths.length) {
-    takeawayHTML += `<div class="takeaway-section"><h4>Strengths</h4><ul class="takeaway-list strengths">${coach.strengths.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+    html += `<div class="takeaway-section"><h4>Strengths</h4><ul class="takeaway-list strengths">${coach.strengths.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
   }
   if (coach.improvementAreas && coach.improvementAreas.length) {
-    takeawayHTML += `<div class="takeaway-section"><h4>Areas to improve</h4><ul class="takeaway-list areas">${coach.improvementAreas.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+    html += `<div class="takeaway-section"><h4>Areas to improve</h4><ul class="takeaway-list areas">${coach.improvementAreas.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
   }
   if (coach.studyRecommendation) {
-    takeawayHTML += `<div class="takeaway-section"><h4>What to study</h4><div class="study-rec">${coach.studyRecommendation}</div></div>`;
+    html += `<div class="takeaway-section"><h4>What to study</h4><div class="study-rec">${coach.studyRecommendation}</div></div>`;
   }
-
-  takeaways.innerHTML = takeawayHTML;
+  takeaways.innerHTML = html;
   col.appendChild(takeaways);
+
+  // Export button
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'export-btn';
+  exportBtn.textContent = '📥 Export coaching report';
+  exportBtn.onclick = exportReport;
+  col.appendChild(exportBtn);
 }
 
-function makeCriticalCard(cm, moveData) {
+function makeCriticalCard(cm) {
   const card = document.createElement('div');
   const type = cm.type || 'mistake';
   card.className = `critical-card type-${type}`;
   card.dataset.ply = cm.ply;
   card.onclick = () => goToMove(cm.ply);
-
-  const badgeClass = ['blunder', 'mistake', 'inaccuracy'].includes(type) ? type : 'mistake';
-
+  const badgeClass = ['blunder','mistake','inaccuracy'].includes(type) ? type : 'mistake';
   card.innerHTML = `
-    <div class="cc-header">
-      <span class="cc-badge ${badgeClass}">${type}</span>
-      <span class="cc-move">${cm.moveLabel || ''}</span>
-    </div>
+    <div class="cc-header"><span class="cc-badge ${badgeClass}">${type}</span><span class="cc-move">${cm.moveLabel || ''}</span></div>
     <div class="cc-title">${cm.title || ''}</div>
     <div class="cc-explanation">${cm.explanation || ''}</div>
     ${cm.concept ? `<span class="cc-concept">${cm.concept}</span>` : ''}
@@ -401,13 +454,99 @@ function makeCriticalCard(cm, moveData) {
   return card;
 }
 
+function makeMissedCard(mi) {
+  const card = document.createElement('div');
+  card.className = 'critical-card type-idea';
+  card.dataset.ply = mi.ply;
+  card.onclick = () => goToMove(mi.ply);
+  card.innerHTML = `
+    <div class="cc-header"><span class="cc-badge idea">💡 idea</span><span class="cc-move">${mi.moveLabel || ''}</span></div>
+    <div class="cc-title">${mi.title || ''}</div>
+    <div class="cc-explanation">${mi.explanation || ''}</div>
+    ${mi.engineLine ? `<div class="cc-tip">Engine line: ${mi.engineLine}</div>` : ''}
+  `;
+  return card;
+}
+
+// ═══════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════
+function exportReport() {
+  if (!coaching || !analysisResult) return;
+  const a = analysisResult.analysis;
+  const c = coaching;
+
+  let md = `# postgame Coaching Report\n\n`;
+  md += `**${a.headers.White || '?'} vs ${a.headers.Black || '?'}** — ${a.headers.Result || '?'}\n`;
+  md += `**Opening:** ${a.openingName || a.headers.ECO || 'Unknown'}\n`;
+  md += `**Reviewed as:** ${a.playerColor === 'w' ? 'White' : 'Black'}\n\n`;
+  md += `---\n\n## Summary\n\n${c.summary || ''}\n\n`;
+
+  if (c.opening) md += `**Opening:** ${c.opening}\n\n`;
+
+  if (c.segments && c.segments.length) {
+    md += `---\n\n## Game Phases\n\n`;
+    for (const seg of c.segments) {
+      md += `### ${seg.title}\n\n${seg.narrative || ''}\n\n`;
+    }
+  }
+
+  if (c.criticalMoments && c.criticalMoments.length) {
+    md += `---\n\n## Critical Moments\n\n`;
+    for (const cm of c.criticalMoments) {
+      md += `### ${cm.moveLabel} — ${cm.title}\n\n`;
+      md += `**${(cm.type || 'mistake').toUpperCase()}**\n\n`;
+      md += `${cm.explanation || ''}\n\n`;
+      if (cm.concept) md += `**Concept:** ${cm.concept}\n\n`;
+      if (cm.studyTip) md += `> 💡 ${cm.studyTip}\n\n`;
+    }
+  }
+
+  if (c.missedIdeas && c.missedIdeas.length) {
+    md += `---\n\n## Missed Ideas\n\n`;
+    for (const mi of c.missedIdeas) {
+      md += `### ${mi.moveLabel} — ${mi.title}\n\n`;
+      md += `${mi.explanation || ''}\n\n`;
+      if (mi.engineLine) md += `**Engine line:** ${mi.engineLine}\n\n`;
+    }
+  }
+
+  if (c.strengths && c.strengths.length) {
+    md += `---\n\n## Strengths\n\n`;
+    c.strengths.forEach(s => { md += `- ${s}\n`; });
+    md += '\n';
+  }
+
+  if (c.improvementAreas && c.improvementAreas.length) {
+    md += `## Areas to Improve\n\n`;
+    c.improvementAreas.forEach(s => { md += `- ${s}\n`; });
+    md += '\n';
+  }
+
+  if (c.studyRecommendation) {
+    md += `---\n\n## Study Recommendation\n\n${c.studyRecommendation}\n`;
+  }
+
+  // Download as .md file
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const white = (a.headers.White || 'white').replace(/\s+/g, '-');
+  const black = (a.headers.Black || 'black').replace(/\s+/g, '-');
+  link.download = `postgame-${white}-vs-${black}.md`;
+  link.href = url;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 // ═══════════════════════════════════════
 // UI HELPERS
 // ═══════════════════════════════════════
 function showError(msg) {
   const el = document.getElementById('errorMsg');
-  el.textContent = msg;
-  el.style.display = 'inline';
+  el.textContent = msg; el.style.display = 'inline';
   setTimeout(() => { el.style.display = 'none'; }, 6000);
 }
 
