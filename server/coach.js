@@ -11,6 +11,7 @@ STYLE:
 - Be concrete: reference specific moves, squares, and pieces
 - Explain the WHY, not just the what — strategic concepts, tactical patterns, positional ideas
 - When the student's move was wrong, explain what the engine move achieves that theirs didn't
+- When the student missed an opportunity, explain the idea they could have played
 - Be encouraging about good play; be honest about mistakes without being harsh
 - Use chess concepts by name (pins, forks, outposts, weak squares, initiative, tempo, pawn structure)
 
@@ -19,13 +20,13 @@ Return valid JSON only (no markdown, no backticks, no preamble). The structure:
 
 {
   "summary": "2-3 sentence overall assessment of the game",
-  "opening": "Brief comment on the opening phase and how it went for the student (1-2 sentences). Include the opening name if known.",
+  "opening": "Brief comment on the opening phase (1-2 sentences). Include the opening name if known.",
   "segments": [
     {
       "startPly": 1,
       "endPly": 8,
-      "title": "Short phase title (e.g. 'Opening preparation', 'Middlegame initiative')",
-      "narrative": "Coaching commentary for this chunk of moves. 2-4 sentences. Reference specific moves."
+      "title": "Short phase title",
+      "narrative": "Coaching commentary for this chunk. 2-3 sentences. Reference specific moves."
     }
   ],
   "criticalMoments": [
@@ -33,36 +34,39 @@ Return valid JSON only (no markdown, no backticks, no preamble). The structure:
       "ply": 14,
       "moveLabel": "7...Nf6",
       "type": "mistake",
-      "title": "Short title for the mistake (e.g. 'Missing the fork')",
-      "explanation": "Detailed explanation: what the student played, why it was wrong, what the engine suggests instead and why that's better. 3-5 sentences. Be specific about the resulting position.",
-      "concept": "The underlying chess concept (e.g. 'piece coordination', 'central control', 'king safety')",
-      "studyTip": "One concrete thing the student can practise to avoid this pattern"
+      "title": "Short title (e.g. 'Missing the fork')",
+      "explanation": "What the student played, why it was wrong, what the engine suggests and why. 2-4 sentences.",
+      "concept": "The chess concept (e.g. 'piece coordination', 'central control')",
+      "studyTip": "One concrete thing to practise"
     }
   ],
-  "strengths": ["Pattern 1 the student showed", "Pattern 2"],
-  "improvementAreas": ["Area 1 to work on", "Area 2"],
-  "studyRecommendation": "One specific, actionable study recommendation based on the patterns in this game"
+  "missedIdeas": [
+    {
+      "ply": 20,
+      "moveLabel": "10...Be7",
+      "title": "Short title (e.g. 'Knight outpost on d4')",
+      "explanation": "What the student played was okay, but there was a stronger idea. Explain the idea and the resulting position. 2-3 sentences.",
+      "engineLine": "The engine's preferred continuation in words"
+    }
+  ],
+  "strengths": ["Pattern 1", "Pattern 2"],
+  "improvementAreas": ["Area 1", "Area 2"],
+  "studyRecommendation": "One specific, actionable study recommendation"
 }
 
 RULES:
-- segments should cover the whole game in 3-6 chunks, grouping moves by phase/theme
-- criticalMoments are only for the student's side, only non-book moves with significant errors
-- Include at most 5 critical moments; focus on the most instructive ones
-- If the student played well, say so — don't invent problems
+- segments: 3-5 chunks covering the whole game, grouped by phase/theme
+- criticalMoments: only student's side, max 4, most instructive
+- missedIdeas: max 3, positions where a decent move missed something much stronger
+- Keep explanations concise: 2-3 sentences each, not 5
 - Every move reference must use standard notation (e.g. "7...Nf6", "12. Bxc6")
-- The ply values must match the data provided
-- Return ONLY valid JSON
-- Keep explanations concise — 2-3 sentences per critical moment, not 5
-- For games over 30 moves, limit to 4 segments and 4 critical moments`;
+- Ply values must match the data provided
+- Return ONLY valid JSON`;
 
-/**
- * Generate coaching review from analysis data
- */
 async function generateCoaching(analysisResult) {
-  const { headers, openingName, playerColor, moves, criticalMoments, goodMoments, bookDepth } = analysisResult;
+  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, bookDepth } = analysisResult;
   const color = playerColor === 'w' ? 'White' : 'Black';
 
-  // Build annotated move text for the prompt
   let moveText = '';
   for (const m of moves) {
     const prefix = m.color === 'w' ? `${m.moveNumber}. ` : '';
@@ -75,61 +79,70 @@ async function generateCoaching(analysisResult) {
       else if (m.wpLoss > 8) annotation = ' ? MISTAKE';
       else if (m.wpLoss > 5) annotation = ' ?! INACCURACY';
       else if (m.isEngineTop) annotation = ' ✓ BEST';
+      else if (m.isMissedOpportunity) annotation = ' △ MISSED IDEA';
 
       if (m.wpLoss > 3 && m.bestMoveSan) {
         annotation += ` (best: ${m.bestMoveSan})`;
+        if (m.pvLines.length > 0) {
+          annotation += ` → ${m.pvLines[0].san.join(' ')}`;
+        }
       }
     }
 
     moveText += `${prefix}${m.san}${bookTag}${evalTag}${annotation}\n`;
   }
 
-  // Build critical moments detail
+  // Critical moments detail
   let criticalText = '';
   if (criticalMoments.length > 0) {
-    criticalText = '\n\nCRITICAL MOMENTS FOR THE STUDENT (most significant Win% drops):\n';
-    for (const cm of criticalMoments) {
-      const m = cm;
-      criticalText += `\n--- Ply ${m.ply}: ${m.moveLabel} ---\n`;
-      criticalText += `Position eval before: ${m.evalBefore} | After: ${m.evalAfterWhitePersp}\n`;
-      criticalText += `Student's Win% dropped: ${m.wpBefore}% → ${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
-      criticalText += `Engine's best: ${m.bestMoveSan}\n`;
-      if (m.pvLines.length > 0) {
-        criticalText += `Engine's top line: ${m.pvLines[0].san.join(' ')} (eval: ${m.pvLines[0].eval})\n`;
-      }
-      if (m.pvLines.length > 1) {
-        criticalText += `Alternative: ${m.pvLines[1].san.join(' ')} (eval: ${m.pvLines[1].eval})\n`;
-      }
+    criticalText = '\n\nCRITICAL MOMENTS (biggest errors):\n';
+    for (const m of criticalMoments) {
+      criticalText += `\nPly ${m.ply}: ${m.moveLabel} | WP: ${m.wpBefore}%→${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
+      criticalText += `Engine best: ${m.bestMoveSan}`;
+      if (m.pvLines.length > 0) criticalText += ` → ${m.pvLines[0].san.join(' ')} (${m.pvLines[0].eval})`;
+      criticalText += '\n';
+      if (m.pvLines.length > 1) criticalText += `Alt: ${m.pvLines[1].san.join(' ')} (${m.pvLines[1].eval})\n`;
     }
   }
 
-  // Build good moments
+  // Missed opportunities
+  let missedText = '';
+  if (missedOpportunities && missedOpportunities.length > 0) {
+    missedText = '\n\nMISSED OPPORTUNITIES (decent moves that missed something better):\n';
+    for (const m of missedOpportunities) {
+      missedText += `\nPly ${m.ply}: ${m.moveLabel} | WP: ${m.wpBefore}%→${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
+      missedText += `Stronger idea: ${m.bestMoveSan}`;
+      if (m.pvLines.length > 0) missedText += ` → ${m.pvLines[0].san.join(' ')} (${m.pvLines[0].eval})`;
+      missedText += '\n';
+    }
+  }
+
+  // Good moves
   let goodText = '';
   if (goodMoments.length > 0) {
-    goodText = '\n\nGOOD MOVES BY THE STUDENT:\n';
+    goodText = '\n\nGOOD MOVES:\n';
     for (const m of goodMoments) {
-      goodText += `- ${m.moveLabel}: matched engine's top choice in a meaningful position\n`;
+      goodText += `- ${m.moveLabel}: matched engine's top choice\n`;
     }
   }
 
   const userPrompt = `Analyse this game for the student who played ${color}.
 
-GAME INFO:
-White: ${headers.White || '?'} | Black: ${headers.Black || '?'}
-Result: ${headers.Result || '?'}
+Game: ${headers.White || '?'} vs ${headers.Black || '?'}, ${headers.Result || '?'}
 Opening: ${openingName || headers.ECO || 'Unknown'}
-Book depth: ${bookDepth} positions in opening theory
+Book depth: ${bookDepth} plies
 
 ANNOTATED MOVES:
 ${moveText}
 ${criticalText}
+${missedText}
 ${goodText}
 
-Remember: return ONLY valid JSON matching the schema described in your instructions.`;
+Return ONLY valid JSON matching the schema.`;
 
   const response = await client.messages.create({
     model: 'claude-opus-4-7',
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
   });
@@ -139,7 +152,6 @@ Remember: return ONLY valid JSON matching the schema described in your instructi
     .map((b) => b.text)
     .join('');
 
-  // Parse JSON (handle potential markdown fences)
   const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
   try {
@@ -147,15 +159,15 @@ Remember: return ONLY valid JSON matching the schema described in your instructi
   } catch (err) {
     console.error('Failed to parse coaching JSON:', err.message);
     console.error('Raw response:', text.slice(0, 500));
-    // Return a fallback structure
     return {
       summary: text.slice(0, 300),
       opening: '',
       segments: [],
       criticalMoments: [],
+      missedIdeas: [],
       strengths: [],
       improvementAreas: [],
-      studyRecommendation: 'Review this game carefully and note where the evaluation shifted.',
+      studyRecommendation: 'Review this game and note where the evaluation shifted.',
     };
   }
 }
