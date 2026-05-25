@@ -141,10 +141,11 @@ ${goodText}
 Return ONLY valid JSON matching the schema.`;
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-7',
-    max_tokens: 8192,
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
+    timeout: 120000,
   });
 
   const text = response.content
