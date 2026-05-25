@@ -18,22 +18,15 @@ function formatEval(ev) {
   return (v >= 0 ? '+' : '') + v.toFixed(2);
 }
 
-// Convert UCI move to SAN in a given position
 function uciToSan(fen, uci) {
   if (!uci || uci.length < 4) return uci;
   try {
     const chess = new Chess(fen);
-    const from = uci.slice(0, 2);
-    const to = uci.slice(2, 4);
-    const promotion = uci.length > 4 ? uci[4] : undefined;
-    const move = chess.move({ from, to, promotion });
+    const move = chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.length > 4 ? uci[4] : undefined });
     return move ? move.san : uci;
-  } catch {
-    return uci;
-  }
+  } catch { return uci; }
 }
 
-// Convert a PV line (array of UCI moves) to SAN from a starting FEN
 function pvToSan(fen, uciMoves, maxMoves = 5) {
   const sans = [];
   const chess = new Chess(fen);
@@ -41,21 +34,43 @@ function pvToSan(fen, uciMoves, maxMoves = 5) {
     const uci = uciMoves[i];
     if (!uci || uci.length < 4) break;
     try {
-      const move = chess.move({
-        from: uci.slice(0, 2),
-        to: uci.slice(2, 4),
-        promotion: uci.length > 4 ? uci[4] : undefined,
-      });
+      const move = chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.length > 4 ? uci[4] : undefined });
       if (!move) break;
       sans.push(move.san);
-    } catch {
-      break;
-    }
+    } catch { break; }
   }
   return sans;
 }
 
-// Check Lichess opening explorer
+// ── Lichess Cloud Eval (cache layer) ──
+async function lichessCloudEval(fen) {
+  try {
+    const url = 'https://lichess.org/api/cloud-eval?fen=' + encodeURIComponent(fen) + '&multiPv=3';
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d.pvs || !d.pvs.length) return null;
+
+    const pvs = d.pvs.map((pv, idx) => ({
+      rank: idx + 1,
+      cp: pv.cp || 0,
+      mate: pv.mate != null ? pv.mate : null,
+      line: pv.moves ? pv.moves.split(' ') : [],
+      depth: d.depth || 30,
+    }));
+
+    const top = pvs[0];
+    return {
+      bestMove: top.line[0] || '',
+      evaluation: { cp: top.cp, mate: top.mate },
+      pvs,
+      depth: d.depth || 30,
+      source: 'cloud',
+    };
+  } catch { return null; }
+}
+
+// ── Lichess Opening Explorer ──
 async function checkOpeningBook(fen) {
   try {
     const url = `https://explorer.lichess.ovh/lichess?fen=${encodeURIComponent(fen)}&speeds=bullet,blitz,rapid,classical&ratings=1600,1800,2000,2200,2500&topGames=0&recentGames=0`;
@@ -64,35 +79,23 @@ async function checkOpeningBook(fen) {
     const d = await r.json();
     const total = (d.white || 0) + (d.draws || 0) + (d.black || 0);
     if (total < 10) return null;
-    return {
-      inBook: true,
-      opening: d.opening,
-      totalGames: total,
-    };
-  } catch {
-    return null;
-  }
+    return { inBook: true, opening: d.opening, totalGames: total };
+  } catch { return null; }
 }
 
 /**
- * Run full analysis pipeline.
- *
- * @param {string} pgn — the PGN text
- * @param {string} playerColor — 'w' or 'b'
- * @param {StockfishEngine} engine — initialised engine instance
- * @param {function} onProgress — callback(pct, message)
- * @returns {object} — full analysis result
+ * Full analysis pipeline with speed optimisations:
+ * 1. Book positions: no engine eval needed
+ * 2. Lichess cloud eval: instant, depth 30+
+ * 3. Local Stockfish: only for positions not in cloud
  */
 async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
   const chess = new Chess();
-  if (!chess.load_pgn(pgn)) {
-    throw new Error('Invalid PGN');
-  }
+  if (!chess.load_pgn(pgn)) throw new Error('Invalid PGN');
 
   const moves = chess.history({ verbose: true });
   if (!moves.length) throw new Error('No moves found in PGN');
 
-  // Parse headers
   const headers = {};
   (pgn.match(/\[(\w+)\s+"([^"]*)"\]/g) || []).forEach((h) => {
     const m = h.match(/\[(\w+)\s+"([^"]*)"\]/);
@@ -107,7 +110,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
     positions.push({ fen: chess.fen(), move: mv });
   }
 
-  // Phase 1: Opening book
+  // Phase 1: Opening book (fast, sequential until out of book)
   onProgress(0, 'Checking opening book...');
   const bookPositions = new Set();
   let openingName = null;
@@ -117,30 +120,49 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
     if (bookData && bookData.inBook) {
       bookPositions.add(positions[i].fen);
       if (bookData.opening && bookData.opening.name) openingName = bookData.opening.name;
-    } else {
-      break;
-    }
+    } else break;
   }
+  const bookDepth = bookPositions.size;
 
-  // Phase 2: Engine evaluation
-  onProgress(10, 'Running engine analysis...');
+  // Phase 2: Evaluate positions
+  onProgress(5, 'Evaluating positions...');
   await engine.newGame();
 
   const evals = [];
-  for (let i = 0; i < positions.length; i++) {
-    const pct = 10 + Math.round((i / positions.length) * 80);
-    onProgress(pct, `Evaluating position ${i + 1}/${positions.length}`);
+  let cloudHits = 0, localEvals = 0;
 
-    const c = new Chess(positions[i].fen);
+  for (let i = 0; i < positions.length; i++) {
+    const pct = 5 + Math.round((i / positions.length) * 85);
+    onProgress(pct, `Position ${i + 1}/${positions.length} (cloud: ${cloudHits}, local: ${localEvals})`);
+
+    const fen = positions[i].fen;
+    const c = new Chess(fen);
+
+    // Terminal positions
     if (c.game_over()) {
-      if (c.in_checkmate()) {
-        evals.push({ bestMove: '', evaluation: { cp: -30000, mate: 0 }, pvs: [], depth: 0 });
-      } else {
-        evals.push({ bestMove: '', evaluation: { cp: 0, mate: null }, pvs: [], depth: 0 });
-      }
-    } else {
-      evals.push(await engine.evaluate(positions[i].fen, engine.depth));
+      evals.push(c.in_checkmate()
+        ? { bestMove: '', evaluation: { cp: -30000, mate: 0 }, pvs: [], depth: 0, source: 'terminal' }
+        : { bestMove: '', evaluation: { cp: 0, mate: null }, pvs: [], depth: 0, source: 'terminal' });
+      continue;
     }
+
+    // Book positions: still need eval for Win% but try cloud first (usually cached)
+    // Try Lichess cloud eval (free, instant, depth 30+)
+    const cloud = await lichessCloudEval(fen);
+    if (cloud) {
+      evals.push(cloud);
+      cloudHits++;
+      continue;
+    }
+
+    // Local Stockfish fallback — use adaptive depth
+    // Critical positions (player's turn, non-book) get full depth
+    // Less critical positions get reduced depth for speed
+    const isPlayerTurn = (i % 2 === 0 && playerColor === 'w') || (i % 2 === 1 && playerColor === 'b');
+    const depth = isPlayerTurn ? engine.depth : Math.max(14, engine.depth - 4);
+
+    evals.push(await engine.evaluate(fen, depth));
+    localEvals++;
   }
 
   // Phase 3: Build annotated moves
@@ -153,21 +175,17 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
     const evAfter = evals[i];
     const fenBefore = positions[i - 1].fen;
 
-    // Win% from mover's perspective
     const wpBefore = evalToWinPct(evBefore.evaluation);
     const wpAfterOpp = evalToWinPct(evAfter.evaluation);
     const wpAfterMover = 100 - wpAfterOpp;
     const wpLoss = Math.max(0, wpBefore - wpAfterMover);
 
-    // Move matching
     const playedUCI = move.from + move.to + (move.promotion || '');
     const isEngineTop = evBefore.bestMove === playedUCI;
     const isBook = bookPositions.has(fenBefore);
 
-    // Best move in SAN
     const bestMoveSan = uciToSan(fenBefore, evBefore.bestMove);
 
-    // Top PV lines in SAN
     const pvLines = (evBefore.pvs || []).slice(0, 3).map((pv) => ({
       rank: pv.rank,
       cp: pv.cp,
@@ -176,10 +194,14 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
       eval: formatEval({ cp: pv.cp, mate: pv.mate }),
     }));
 
-    // Move number
     const moveNumber = Math.floor((i - 1) / 2) + 1;
-    const isWhite = move.color === 'w';
-    const moveLabel = isWhite ? `${moveNumber}. ${move.san}` : `${moveNumber}...${move.san}`;
+    const moveLabel = move.color === 'w' ? `${moveNumber}. ${move.san}` : `${moveNumber}...${move.san}`;
+
+    // Detect missed opportunities: player played okay (wpLoss < 3) but there was something much better
+    const isMissedOpportunity = !isBook && move.color === playerColor && !isEngineTop
+      && wpLoss >= 2 && wpLoss < 8
+      && pvLines.length > 0
+      && wpBefore < 70; // not already winning easily
 
     annotatedMoves.push({
       ply: i,
@@ -191,8 +213,6 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
       to: move.to,
       fen: positions[i].fen,
       fenBefore,
-
-      // Engine data
       evalBefore: formatEval(evBefore.evaluation),
       evalAfter: formatEval(evAfter.evaluation),
       evalAfterWhitePersp: formatEval(
@@ -202,36 +222,37 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
       ),
       cpBefore: evBefore.evaluation.cp,
       cpAfter: evAfter.evaluation.cp,
-
-      // Win%
       wpBefore: Math.round(wpBefore * 10) / 10,
       wpAfterMover: Math.round(wpAfterMover * 10) / 10,
       wpLoss: Math.round(wpLoss * 10) / 10,
-
-      // Best move
       bestMove: evBefore.bestMove,
       bestMoveSan,
       isEngineTop,
       pvLines,
-
-      // Classification
       isBook,
       isSacrifice: !!move.captured && move.piece !== 'p',
+      isMissedOpportunity,
     });
   }
 
-  // Identify critical moments (for the player)
+  // Critical moments (mistakes/blunders)
   const criticalMoments = annotatedMoves
     .filter((m) => m.color === playerColor && !m.isBook && m.wpLoss > 5)
     .sort((a, b) => b.wpLoss - a.wpLoss)
-    .slice(0, 8);
+    .slice(0, 6);
 
-  // Also identify good moments for the player
+  // Missed opportunities
+  const missedOpportunities = annotatedMoves
+    .filter((m) => m.isMissedOpportunity)
+    .sort((a, b) => b.wpLoss - a.wpLoss)
+    .slice(0, 4);
+
+  // Good moves
   const goodMoments = annotatedMoves
     .filter((m) => m.color === playerColor && m.isEngineTop && !m.isBook && m.wpBefore > 30 && m.wpBefore < 80)
     .slice(0, 5);
 
-  onProgress(100, 'Done');
+  onProgress(92, 'Analysis complete');
 
   return {
     headers,
@@ -240,8 +261,9 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
     totalMoves: annotatedMoves.length,
     moves: annotatedMoves,
     criticalMoments,
+    missedOpportunities,
     goodMoments,
-    bookDepth: Array.from(bookPositions).length,
+    bookDepth,
   };
 }
 
