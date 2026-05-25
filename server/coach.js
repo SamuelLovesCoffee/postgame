@@ -141,7 +141,7 @@ ${goodText}
 Return ONLY valid JSON matching the schema.`;
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-opus-4-7',
     max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
@@ -174,4 +174,5 @@ Return ONLY valid JSON matching the schema.`;
 }
 
 module.exports = { generateCoaching };
+
 
