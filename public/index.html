@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>postgame — AI Chess Coach</title>
-<meta name="description" content="Not just move ratings. A real coach explains your chess games: what went wrong, why, and what to study next.">
+<meta name="description" content="Not move ratings. Real coaching. An AI coach explains your chess games: what went wrong, why, and what to study next.">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
@@ -18,7 +18,7 @@
           <button class="hdr-btn primary" onclick="showAuthModal('signup')">Sign up free</button>
         </div>
         <div id="userInfo" class="user-info" style="display:none">
-          <span class="credit-badge" id="creditBadge" title="Analysis credits">0</span>
+          <span class="credit-badge" id="creditBadge">0</span>
           <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
           <button class="hdr-btn" onclick="showHistory()">My games</button>
           <button class="hdr-btn subtle" onclick="logout()">Log out</button>
@@ -27,20 +27,18 @@
     </div>
   </header>
 
-  <!-- AUTH MODAL -->
+  <!-- Modals -->
   <div class="modal-overlay" id="authModal" style="display:none">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('authModal')">✕</button>
       <h2 id="authModalTitle">Log in</h2>
-      <input type="email" id="authEmail" placeholder="Email" class="modal-input">
-      <input type="password" id="authPassword" placeholder="Password" class="modal-input">
+      <input type="email" id="authEmail" placeholder="Email" class="modal-input" autocomplete="email">
+      <input type="password" id="authPassword" placeholder="Password" class="modal-input" autocomplete="current-password">
       <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
       <div class="modal-error" id="authError"></div>
       <div class="modal-switch" id="authSwitch">Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a></div>
     </div>
   </div>
-
-  <!-- CREDITS MODAL -->
   <div class="modal-overlay" id="creditsModal" style="display:none">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('creditsModal')">✕</button>
@@ -49,8 +47,6 @@
       <div id="packageList" class="package-list"></div>
     </div>
   </div>
-
-  <!-- HISTORY MODAL -->
   <div class="modal-overlay" id="historyModal" style="display:none">
     <div class="modal-card modal-wide">
       <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
@@ -59,122 +55,118 @@
     </div>
   </div>
 
-  <!-- ═══ LANDING PAGE (logged out) ═══ -->
+  <!-- ═══ LANDING (logged out) ═══ -->
   <main class="landing" id="landingView">
-
-    <!-- Hero -->
     <section class="hero">
-      <div class="hero-inner">
-        <h1>Your chess games,<br>explained by a coach.</h1>
-        <p class="hero-sub">Not accuracy scores. Not coloured dots. A real explanation of what happened, why your moves were wrong, and exactly what to study to stop making the same mistakes.</p>
-        <div class="hero-cta">
-          <button class="cta-btn" onclick="showAuthModal('signup')">Try free — 1 game included</button>
-          <span class="hero-note">No card required</span>
-        </div>
-      </div>
+      <p class="hero-eyebrow">AI-powered post-game coaching</p>
+      <h1>Stop guessing<br>why you lost.</h1>
+      <p class="hero-sub">Other tools tell you the move was bad. We explain <em>why</em>, name the concept you missed, and tell you exactly what to study.</p>
+      <button class="cta-btn" onclick="showAuthModal('signup')">Analyse your first game free</button>
     </section>
 
-    <!-- Comparison -->
-    <section class="section compare-section">
-      <div class="section-inner">
-        <h2>You already know the move was bad.<br>But do you know <em>why</em>?</h2>
-        <div class="compare-grid">
-          <div class="compare-card old">
-            <h3>Chess.com / Lichess</h3>
-            <div class="compare-example">
-              <div class="ce-line"><span class="dot red"></span> 13...O-O-O <span class="tag-bad">Blunder</span></div>
-              <div class="ce-line muted">Best was 13...Bg4</div>
-              <div class="ce-line muted">Accuracy: 42%</div>
-            </div>
-            <p class="compare-verdict">Tells you <em>what</em>. Leaves you to figure out the rest.</p>
+    <!-- Bento Grid -->
+    <section class="bento">
+      <div class="bento-grid">
+        <!-- Large card: coaching example -->
+        <div class="bento-card bento-main">
+          <div class="bento-label">Real coaching, not labels</div>
+          <div class="bento-coach-demo">
+            <div class="bcd-badge">Blunder</div>
+            <div class="bcd-move">13...O-O-O</div>
+            <p class="bcd-text"><strong>Castling into a pin.</strong> After 14. Bf5, your queen on d7 is pinned against the king. The bishop attacks it and there's no escape without losing material. The engine preferred 13...Bg4, developing with tempo.</p>
+            <span class="bcd-concept">Concept: absolute pin</span>
+            <span class="bcd-tip">💡 Practise pin puzzles on Lichess</span>
           </div>
-          <div class="compare-card new">
-            <h3>postgame</h3>
-            <div class="compare-example coach-ex">
-              <p><strong>13...O-O-O walks into a pin.</strong> After 14. Bf5, your queen on d7 is pinned against the king on c8. The bishop attacks the queen and there's no way to break the pin without losing material. The engine preferred 13...Bg4, developing with tempo by attacking the queen and keeping your king flexible.</p>
-              <span class="concept-tag">Concept: absolute pin</span>
-              <span class="tip-tag">💡 Practise pin tactics on Lichess puzzles filtered by "pin" theme</span>
-            </div>
-            <p class="compare-verdict">Tells you <em>why</em>, names the concept, and gives you homework.</p>
-          </div>
+          <p class="bento-desc">Every critical moment gets a coaching card explaining the tactic, the strategy, and what to practise.</p>
         </div>
-      </div>
-    </section>
 
-    <!-- How it works -->
-    <section class="section steps-section">
-      <div class="section-inner">
-        <h2>Three minutes from game to lesson</h2>
-        <div class="steps-grid">
-          <div class="step">
-            <span class="step-num">1</span>
-            <h3>Paste your PGN</h3>
-            <p>Copy it from Chess.com, Lichess, or any chess app. Select which colour you played.</p>
+        <!-- Comparison card -->
+        <div class="bento-card bento-compare">
+          <div class="bento-label">Chess.com / Lichess</div>
+          <div class="bento-compare-list">
+            <div class="bcl-row"><span class="bcl-dot red"></span> 13...O-O-O — Blunder</div>
+            <div class="bcl-row muted">Best: 13...Bg4</div>
+            <div class="bcl-row muted">Accuracy: 42%</div>
           </div>
-          <div class="step">
-            <span class="step-num">2</span>
-            <h3>Engine + AI coach</h3>
-            <p>Stockfish finds the critical positions. Claude reads the whole game and writes a coaching narrative.</p>
-          </div>
-          <div class="step">
-            <span class="step-num">3</span>
-            <h3>Learn and improve</h3>
-            <p>Navigate the board while reading coaching cards that explain each mistake, missed idea, and what to study.</p>
-          </div>
+          <div class="bento-vs">vs</div>
+          <div class="bento-label" style="color:var(--green)">postgame</div>
+          <p class="bento-desc">A paragraph of explanation, the chess concept by name, and a concrete study recommendation.</p>
+        </div>
+
+        <!-- How it works -->
+        <div class="bento-card bento-steps">
+          <div class="bento-label">How it works</div>
+          <div class="bento-step"><span>1</span> Paste your PGN</div>
+          <div class="bento-step"><span>2</span> Stockfish + Claude AI analyse</div>
+          <div class="bento-step"><span>3</span> Read, learn, improve</div>
+          <p class="bento-desc">Three minutes from game to lesson. Works with any PGN from any chess site.</p>
+        </div>
+
+        <!-- Missed ideas -->
+        <div class="bento-card">
+          <div class="bento-icon">💡</div>
+          <div class="bento-label">Missed ideas</div>
+          <p class="bento-desc">Your move was fine, but there was something better. We flag positions where you missed a tactic or a stronger plan.</p>
+        </div>
+
+        <!-- Study recs -->
+        <div class="bento-card">
+          <div class="bento-icon">📚</div>
+          <div class="bento-label">Study recommendations</div>
+          <p class="bento-desc">Every review ends with concrete homework: what concept to study, what puzzles to solve, what patterns to recognise.</p>
+        </div>
+
+        <!-- Export -->
+        <div class="bento-card">
+          <div class="bento-icon">📥</div>
+          <div class="bento-label">Export your review</div>
+          <p class="bento-desc">Download the full coaching report as Markdown. Share it with your coach, your club, or just keep it for yourself.</p>
         </div>
       </div>
     </section>
 
     <!-- Pricing -->
-    <section class="section pricing-section" id="pricing">
-      <div class="section-inner">
-        <h2>Simple pricing</h2>
-        <p class="pricing-sub">One credit = one game analysed. No subscriptions.</p>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <div class="price-name">Try</div>
-            <div class="price-amount">Free</div>
-            <div class="price-detail">1 analysis</div>
-            <button class="price-btn" onclick="showAuthModal('signup')">Sign up</button>
-          </div>
-          <div class="price-card featured">
-            <div class="price-badge">Most popular</div>
-            <div class="price-name">Starter</div>
-            <div class="price-amount">$4.99</div>
-            <div class="price-detail">10 analyses · $0.50 each</div>
-            <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
-          </div>
-          <div class="price-card">
-            <div class="price-name">Club</div>
-            <div class="price-amount">$14.99</div>
-            <div class="price-detail">40 analyses · $0.37 each</div>
-            <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
-          </div>
-          <div class="price-card">
-            <div class="price-name">Serious</div>
-            <div class="price-amount">$29.99</div>
-            <div class="price-detail">100 analyses · $0.30 each</div>
-            <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
-          </div>
+    <section class="pricing" id="pricing">
+      <h2>Simple pricing</h2>
+      <p class="pricing-sub">One credit, one game. No subscriptions.</p>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-name">Try</div>
+          <div class="price-amount">Free</div>
+          <div class="price-detail">1 analysis included with signup</div>
+          <button class="price-btn" onclick="showAuthModal('signup')">Sign up</button>
+        </div>
+        <div class="price-card featured">
+          <div class="price-badge">Popular</div>
+          <div class="price-name">Starter</div>
+          <div class="price-amount">$4.99</div>
+          <div class="price-detail">10 analyses · $0.50 each</div>
+          <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
+        </div>
+        <div class="price-card">
+          <div class="price-name">Club</div>
+          <div class="price-amount">$14.99</div>
+          <div class="price-detail">40 analyses · $0.37 each</div>
+          <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
+        </div>
+        <div class="price-card">
+          <div class="price-name">Serious</div>
+          <div class="price-amount">$29.99</div>
+          <div class="price-detail">100 analyses · $0.30 each</div>
+          <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
         </div>
       </div>
     </section>
 
-    <!-- Final CTA -->
-    <section class="section final-cta">
-      <div class="section-inner" style="text-align:center">
-        <h2>Stop guessing why you lost.</h2>
-        <p style="color:var(--text-2);font-size:16px;margin:12px 0 24px">Your first game analysis is free.</p>
-        <button class="cta-btn" onclick="showAuthModal('signup')">Analyse my game</button>
-      </div>
+    <section class="final-cta">
+      <h2>Your first analysis is free.</h2>
+      <button class="cta-btn" onclick="showAuthModal('signup')">Get started</button>
     </section>
 
-    <footer class="site-footer">
-      <p>postgame — AI chess coaching</p>
-    </footer>
+    <footer class="site-footer"><p>postgame</p></footer>
   </main>
 
-  <!-- ═══ INPUT VIEW (logged in) ═══ -->
+  <!-- ═══ INPUT (logged in) ═══ -->
   <main class="input-view" id="inputView" style="display:none">
     <div class="input-card">
       <h1>Analyse a game</h1>
@@ -188,22 +180,22 @@
     </div>
   </main>
 
-  <!-- LOADING VIEW -->
+  <!-- LOADING -->
   <main class="loading-view" id="loadingView" style="display:none">
     <div class="loading-card">
       <div class="loading-anim"><span>♞</span></div>
       <h2 id="loadingTitle">Analysing your game...</h2>
-      <p id="loadingMsg">Evaluating positions with Stockfish</p>
+      <p id="loadingMsg">Evaluating positions</p>
       <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
     </div>
   </main>
 
-  <!-- ANALYSIS VIEW -->
+  <!-- ANALYSIS -->
   <main class="analysis-view" id="analysisView" style="display:none">
     <div class="analysis-grid">
       <div class="board-col">
         <div class="board-wrap">
-          <div class="eval-bar">
+          <div class="eval-bar" id="evalBar">
             <div class="eval-bar-white" id="evalBarWhite" style="height:50%"></div>
             <div class="eval-bar-black" id="evalBarBlack" style="height:50%"></div>
             <span class="eval-label eval-label-top" id="evalLabelTop"></span>
