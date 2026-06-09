@@ -59,10 +59,11 @@ setInterval(() => {
 
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, firstName, lastName, rating, chessUsername } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    await signUp(email, password);
+    if (!firstName) return res.status(400).json({ error: 'First name is required' });
+    await signUp(email, password, { firstName, lastName, rating, chessUsername });
     // Don't auto-sign-in; user must confirm email first
     res.json({ needsConfirmation: true, message: 'Check your email for a confirmation link.' });
   } catch (err) {
@@ -256,5 +257,6 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
