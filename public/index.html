@@ -3,23 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>postgame</title>
+<title>postgame — AI Chess Coach</title>
+<meta name="description" content="Not just move ratings. A real coach explains your chess games: what went wrong, why, and what to study next.">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <header class="header">
     <div class="header-inner">
-      <a href="/" class="logo">
-        <span class="logo-text">post<em>game</em></span>
-      </a>
+      <a href="/" class="logo"><span class="logo-text">post<em>game</em></span></a>
       <div class="header-right">
-        <!-- Logged out -->
         <div id="authBtns" class="auth-btns">
           <button class="hdr-btn" onclick="showAuthModal('login')">Log in</button>
-          <button class="hdr-btn primary" onclick="showAuthModal('signup')">Sign up</button>
+          <button class="hdr-btn primary" onclick="showAuthModal('signup')">Sign up free</button>
         </div>
-        <!-- Logged in -->
         <div id="userInfo" class="user-info" style="display:none">
           <span class="credit-badge" id="creditBadge" title="Analysis credits">0</span>
           <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
@@ -30,7 +27,7 @@
     </div>
   </header>
 
-  <!-- Auth Modal -->
+  <!-- AUTH MODAL -->
   <div class="modal-overlay" id="authModal" style="display:none">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('authModal')">✕</button>
@@ -39,13 +36,11 @@
       <input type="password" id="authPassword" placeholder="Password" class="modal-input">
       <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
       <div class="modal-error" id="authError"></div>
-      <div class="modal-switch" id="authSwitch">
-        Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a>
-      </div>
+      <div class="modal-switch" id="authSwitch">Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a></div>
     </div>
   </div>
 
-  <!-- Credits Modal -->
+  <!-- CREDITS MODAL -->
   <div class="modal-overlay" id="creditsModal" style="display:none">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('creditsModal')">✕</button>
@@ -55,7 +50,7 @@
     </div>
   </div>
 
-  <!-- History Modal -->
+  <!-- HISTORY MODAL -->
   <div class="modal-overlay" id="historyModal" style="display:none">
     <div class="modal-card modal-wide">
       <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
@@ -64,27 +59,132 @@
     </div>
   </div>
 
-  <!-- INPUT VIEW -->
-  <main class="input-view" id="inputView">
+  <!-- ═══ LANDING PAGE (logged out) ═══ -->
+  <main class="landing" id="landingView">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>Your chess games,<br>explained by a coach.</h1>
+        <p class="hero-sub">Not accuracy scores. Not coloured dots. A real explanation of what happened, why your moves were wrong, and exactly what to study to stop making the same mistakes.</p>
+        <div class="hero-cta">
+          <button class="cta-btn" onclick="showAuthModal('signup')">Try free — 1 game included</button>
+          <span class="hero-note">No card required</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="section compare-section">
+      <div class="section-inner">
+        <h2>You already know the move was bad.<br>But do you know <em>why</em>?</h2>
+        <div class="compare-grid">
+          <div class="compare-card old">
+            <h3>Chess.com / Lichess</h3>
+            <div class="compare-example">
+              <div class="ce-line"><span class="dot red"></span> 13...O-O-O <span class="tag-bad">Blunder</span></div>
+              <div class="ce-line muted">Best was 13...Bg4</div>
+              <div class="ce-line muted">Accuracy: 42%</div>
+            </div>
+            <p class="compare-verdict">Tells you <em>what</em>. Leaves you to figure out the rest.</p>
+          </div>
+          <div class="compare-card new">
+            <h3>postgame</h3>
+            <div class="compare-example coach-ex">
+              <p><strong>13...O-O-O walks into a pin.</strong> After 14. Bf5, your queen on d7 is pinned against the king on c8. The bishop attacks the queen and there's no way to break the pin without losing material. The engine preferred 13...Bg4, developing with tempo by attacking the queen and keeping your king flexible.</p>
+              <span class="concept-tag">Concept: absolute pin</span>
+              <span class="tip-tag">💡 Practise pin tactics on Lichess puzzles filtered by "pin" theme</span>
+            </div>
+            <p class="compare-verdict">Tells you <em>why</em>, names the concept, and gives you homework.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section steps-section">
+      <div class="section-inner">
+        <h2>Three minutes from game to lesson</h2>
+        <div class="steps-grid">
+          <div class="step">
+            <span class="step-num">1</span>
+            <h3>Paste your PGN</h3>
+            <p>Copy it from Chess.com, Lichess, or any chess app. Select which colour you played.</p>
+          </div>
+          <div class="step">
+            <span class="step-num">2</span>
+            <h3>Engine + AI coach</h3>
+            <p>Stockfish finds the critical positions. Claude reads the whole game and writes a coaching narrative.</p>
+          </div>
+          <div class="step">
+            <span class="step-num">3</span>
+            <h3>Learn and improve</h3>
+            <p>Navigate the board while reading coaching cards that explain each mistake, missed idea, and what to study.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section pricing-section" id="pricing">
+      <div class="section-inner">
+        <h2>Simple pricing</h2>
+        <p class="pricing-sub">One credit = one game analysed. No subscriptions.</p>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <div class="price-name">Try</div>
+            <div class="price-amount">Free</div>
+            <div class="price-detail">1 analysis</div>
+            <button class="price-btn" onclick="showAuthModal('signup')">Sign up</button>
+          </div>
+          <div class="price-card featured">
+            <div class="price-badge">Most popular</div>
+            <div class="price-name">Starter</div>
+            <div class="price-amount">$4.99</div>
+            <div class="price-detail">10 analyses · $0.50 each</div>
+            <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
+          </div>
+          <div class="price-card">
+            <div class="price-name">Club</div>
+            <div class="price-amount">$14.99</div>
+            <div class="price-detail">40 analyses · $0.37 each</div>
+            <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
+          </div>
+          <div class="price-card">
+            <div class="price-name">Serious</div>
+            <div class="price-amount">$29.99</div>
+            <div class="price-detail">100 analyses · $0.30 each</div>
+            <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="section final-cta">
+      <div class="section-inner" style="text-align:center">
+        <h2>Stop guessing why you lost.</h2>
+        <p style="color:var(--text-2);font-size:16px;margin:12px 0 24px">Your first game analysis is free.</p>
+        <button class="cta-btn" onclick="showAuthModal('signup')">Analyse my game</button>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>postgame — AI chess coaching</p>
+    </footer>
+  </main>
+
+  <!-- ═══ INPUT VIEW (logged in) ═══ -->
+  <main class="input-view" id="inputView" style="display:none">
     <div class="input-card">
-      <h1>Understand your game.</h1>
-      <p class="subtitle">Not just what went wrong — <em>why</em>, and what to study next.</p>
+      <h1>Analyse a game</h1>
+      <p class="subtitle">Paste your PGN and select your colour.</p>
       <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here..."></textarea>
       <div class="input-row">
-        <div class="select-wrap">
-          <select id="playerColor">
-            <option value="w">I played White</option>
-            <option value="b">I played Black</option>
-          </select>
-        </div>
-        <button class="analyse-btn" id="analyseBtn" onclick="startAnalysis()">
-          <span class="btn-text">Analyse</span>
-          <span class="btn-spinner"></span>
-        </button>
+        <div class="select-wrap"><select id="playerColor"><option value="w">I played White</option><option value="b">I played Black</option></select></div>
+        <button class="analyse-btn" id="analyseBtn" onclick="startAnalysis()"><span class="btn-text">Analyse</span><span class="btn-spinner"></span></button>
       </div>
-      <div class="input-footer">
-        <span class="input-error" id="errorMsg"></span>
-      </div>
+      <div class="input-footer"><span class="input-error" id="errorMsg"></span></div>
     </div>
   </main>
 
@@ -127,9 +227,7 @@
       </div>
       <div class="coach-col" id="coachCol"></div>
     </div>
-    <div class="analysis-footer">
-      <button class="new-game-btn" onclick="showInput()">← New game</button>
-    </div>
+    <div class="analysis-footer"><button class="new-game-btn" onclick="showInput()">← New game</button></div>
   </main>
 
   <script src="/app.js"></script>
