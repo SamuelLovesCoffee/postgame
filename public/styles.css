@@ -204,26 +204,12 @@ body {
 .board-col { position: sticky; top: 80px; align-self: start; }
 .board-wrap { display: flex; gap: 0; }
 
-.eval-bar {
-  width: 22px; border-radius: 4px; overflow: hidden;
-  position: relative; border: 1px solid var(--border);
-  margin-right: 6px; flex-shrink: 0;
-}
-.eval-bar-white {
-  background: #eee; width: 100%; position: absolute; bottom: 0;
-  transition: height 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-.eval-bar-black {
-  background: #222; width: 100%; position: absolute; top: 0;
-  transition: height 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-.eval-label {
-  position: absolute; width: 100%; text-align: center;
-  font-family: var(--font-mono); font-size: 8px; font-weight: 600;
-  z-index: 2; padding: 2px 0;
-}
-.eval-label-top { top: 2px; color: #888; }
-.eval-label-bot { bottom: 2px; color: #555; }
+
+
+
+
+
+
 
 .board-container { position: relative; }
 .board {
@@ -261,12 +247,7 @@ body {
   cursor: pointer; font-size: 13px; transition: background 0.15s;
 }
 .board-nav button:hover { background: var(--surface); }
-.eval-display {
-  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-  min-width: 64px; text-align: center;
-  padding: 5px 8px; background: var(--bg-card);
-  border-radius: var(--radius-sm); border: 1px solid var(--border);
-}
+
 .best-toggle {
   width: auto !important; padding: 0 10px !important;
   font-size: 11px !important; font-family: var(--font-body) !important;
@@ -457,11 +438,11 @@ body {
     width: min(58vw, 280px);
     height: min(58vw, 280px);
   }
-  .eval-bar { width: 18px; margin-right: 5px; }
-  .eval-label { font-size: 7px; }
+  
+  
   .board-nav { margin-top: 6px; gap: 4px; }
   .board-nav button { width: 32px; height: 28px; font-size: 12px; }
-  .eval-display { font-size: 11px; min-width: 56px; padding: 4px 6px; }
+  
   .best-toggle { font-size: 10px !important; padding: 0 8px !important; }
 
   /* Arrow overlay scales with board */
@@ -781,7 +762,7 @@ body {
   .pricing-grid { grid-template-columns: repeat(2, 1fr); }
 
   /* Board: hide eval bar on mobile, fix position */
-  #evalBar { display: none; }
+
   .board-col {
     position: sticky; top: 49px; z-index: 30;
     background: var(--bg); padding: 8px 8px 4px;
@@ -791,7 +772,7 @@ body {
   .board { width: min(60vw, 280px); height: min(60vw, 280px); }
   .board-nav { margin-top: 4px; gap: 4px; }
   .board-nav button { width: 32px; height: 28px; font-size: 12px; }
-  .eval-display { font-size: 11px; min-width: 52px; padding: 4px 6px; }
+  
   .best-toggle { font-size: 10px !important; padding: 0 7px !important; }
   .coach-col { padding: 12px; }
 }
@@ -813,3 +794,8 @@ body {
 }
 .footer-links a:hover { color: var(--text); }
 
+
+
+/* ── Signup form ── */
+.name-row { display: flex; gap: 8px; }
+.modal-input.half { flex: 1; }
