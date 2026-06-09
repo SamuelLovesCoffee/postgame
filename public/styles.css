@@ -500,3 +500,100 @@ body {
 }
 
 
+
+
+/* ── Header Auth ── */
+.header-right { display: flex; align-items: center; gap: 8px; }
+.auth-btns, .user-info { display: flex; align-items: center; gap: 6px; }
+.hdr-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-2);
+  border-radius: var(--radius-sm); padding: 6px 14px;
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.hdr-btn:hover { border-color: var(--accent); color: var(--text); }
+.hdr-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hdr-btn.primary:hover { background: #f05a73; }
+.hdr-btn.subtle { border: none; color: var(--text-3); padding: 6px 8px; }
+.hdr-btn.subtle:hover { color: var(--text); }
+.credit-badge {
+  background: var(--green-soft); color: var(--green);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px; min-width: 28px; text-align: center;
+}
+
+/* ── Modals ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-card {
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px; width: 100%; max-width: 400px;
+  position: relative;
+}
+.modal-wide { max-width: 560px; }
+.modal-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  color: var(--text-3); font-size: 18px; cursor: pointer; padding: 4px;
+}
+.modal-close:hover { color: var(--text); }
+.modal-card h2 { font-family: var(--font-display); font-size: 22px; font-weight: 500; margin-bottom: 16px; }
+.modal-sub { color: var(--text-2); font-size: 14px; margin-bottom: 16px; }
+.modal-input {
+  width: 100%; background: var(--bg-input); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 16px;
+  padding: 10px 14px; margin-bottom: 10px; transition: border-color 0.2s;
+}
+.modal-input:focus { outline: none; border-color: var(--accent); }
+.modal-btn {
+  width: 100%; background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius-sm); padding: 11px; font-size: 15px;
+  font-weight: 600; cursor: pointer; margin-top: 6px; transition: background 0.2s;
+}
+.modal-btn:hover { background: #f05a73; }
+.modal-error { color: var(--red); font-size: 13px; margin-top: 8px; min-height: 18px; }
+.modal-switch { font-size: 13px; color: var(--text-3); margin-top: 12px; text-align: center; }
+.modal-switch a { color: var(--accent); }
+
+/* ── Packages ── */
+.package-list { display: flex; flex-direction: column; gap: 8px; }
+.package-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px 16px; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 14px; text-align: left; width: 100%;
+  font-family: var(--font-body); color: var(--text);
+}
+.package-card:hover { border-color: var(--accent); background: var(--surface); }
+.pkg-credits {
+  font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+  color: var(--green); min-width: 40px;
+}
+.pkg-label { font-size: 14px; }
+
+/* ── History ── */
+.history-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; }
+.history-item {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 14px; cursor: pointer; transition: all 0.15s;
+}
+.history-item:hover { border-color: var(--accent); }
+.hi-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.hi-header strong { font-size: 14px; }
+.hi-date { font-size: 12px; color: var(--text-3); }
+.hi-meta { font-size: 12px; color: var(--text-3); margin-bottom: 4px; }
+.hi-summary { font-size: 13px; color: var(--text-2); line-height: 1.4; }
+
+/* ── Mobile header adjustments ── */
+@media (max-width: 900px) {
+  .header-right { gap: 4px; }
+  .hdr-btn { padding: 5px 8px; font-size: 11px; }
+  .credit-badge { font-size: 11px; padding: 3px 8px; }
+  .modal-card { padding: 20px; margin: 10px; }
+}
+@media (max-width: 500px) {
+  .hdr-btn.subtle { display: none; }
+}
