@@ -21,14 +21,20 @@ const PACKAGES = [
 
 // ── Auth helpers ──
 
-async function signUp(email, password) {
+async function signUp(email, password, metadata = {}) {
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: false,
+    user_metadata: {
+      first_name: metadata.firstName || '',
+      last_name: metadata.lastName || '',
+      chess_rating: metadata.rating || null,
+      chess_username: metadata.chessUsername || null,
+    },
   });
   if (error) throw new Error(error.message);
-  return { user: { id: data.user.id, email: data.user.email } };
+  return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
 }
 
 async function signIn(email, password) {
@@ -210,4 +216,5 @@ module.exports = {
   createCheckoutSession, handleStripeWebhook,
   PACKAGES,
 };
+
 
