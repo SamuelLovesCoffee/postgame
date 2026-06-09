@@ -783,7 +783,7 @@ body {
   /* Board: hide eval bar on mobile, fix position */
   #evalBar { display: none; }
   .board-col {
-    position: sticky; top: 0; z-index: 40;
+    position: sticky; top: 49px; z-index: 30;
     background: var(--bg); padding: 8px 8px 4px;
     border-bottom: 1px solid var(--border);
   }
@@ -812,3 +812,4 @@ body {
   transition: color 0.15s;
 }
 .footer-links a:hover { color: var(--text); }
+
