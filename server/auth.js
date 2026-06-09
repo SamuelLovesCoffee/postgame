@@ -25,7 +25,7 @@ async function signUp(email, password) {
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
-    email_confirm: true, // auto-confirm for now
+    email_confirm: false,
   });
   if (error) throw new Error(error.message);
   return { user: { id: data.user.id, email: data.user.email } };
@@ -210,3 +210,4 @@ module.exports = {
   createCheckoutSession, handleStripeWebhook,
   PACKAGES,
 };
+
