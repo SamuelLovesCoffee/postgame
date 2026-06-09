@@ -22,18 +22,27 @@ const PACKAGES = [
 // ── Auth helpers ──
 
 async function signUp(email, password, metadata = {}) {
-  const { data, error } = await supabase.auth.admin.createUser({
+  // Use anon client signUp (not admin.createUser) so Supabase triggers
+  // the normal confirmation email flow via configured SMTP
+  const { createClient: mkClient } = require('@supabase/supabase-js');
+  const anonClient = mkClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+  );
+  const { data, error } = await anonClient.auth.signUp({
     email,
     password,
-    email_confirm: false,
-    user_metadata: {
-      first_name: metadata.firstName || '',
-      last_name: metadata.lastName || '',
-      chess_rating: metadata.rating || null,
-      chess_username: metadata.chessUsername || null,
+    options: {
+      data: {
+        first_name: metadata.firstName || '',
+        last_name: metadata.lastName || '',
+        chess_rating: metadata.rating || null,
+        chess_username: metadata.chessUsername || null,
+      },
     },
   });
   if (error) throw new Error(error.message);
+  if (!data.user) throw new Error('Signup failed');
   return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
 }
 
@@ -216,5 +225,6 @@ module.exports = {
   createCheckoutSession, handleStripeWebhook,
   PACKAGES,
 };
+
 
 
