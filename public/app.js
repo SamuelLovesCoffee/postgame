@@ -163,8 +163,19 @@ async function loadAnalysis(id) {
     const data = await r.json();
     if (!data.coaching) throw new Error('No coaching data');
 
-    // Rebuild moves from PGN for board replay
-    const replayMoves = parsePGNtoMoves(data.pgn, data.player_color);
+    // Rebuild moves from PGN via server-side parsing
+    let replayMoves = [];
+    try {
+      const pr = await fetch('/api/parse-pgn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pgn: data.pgn, playerColor: data.player_color }),
+      });
+      if (pr.ok) {
+        const pd = await pr.json();
+        replayMoves = pd.moves || [];
+      }
+    } catch (e) { console.warn('PGN parse failed:', e); }
 
     coaching = data.coaching;
     moves = replayMoves;
@@ -180,17 +191,7 @@ async function loadAnalysis(id) {
   } catch (err) { console.error(err); showError('Failed to load analysis'); }
 }
 
-// Parse PGN into minimal move objects for board replay (no engine data)
-function parsePGNtoMoves(pgn, pc) {
-  if (!pgn) return [];
-  // Use a simple regex-based PGN parser since we don't have chess.js on client
-  // We need: fen, from, to, san, color, moveNumber, ply for each move
-  // Since we can't generate FEN without a full chess engine, we'll send the PGN
-  // to a lightweight server endpoint instead
-  // For now, return empty - the coaching cards still work without board replay
-  // TODO: add /api/parse-pgn endpoint
-  return [];
-}
+
 
 // ═══════════════════════════════════════
 // GAME STATE
@@ -495,4 +496,5 @@ if(window.location.search.includes('payment=success')){
   setTimeout(()=>{alert('Payment successful! Credits have been added.');checkAuth();},500);
   history.replaceState(null,'','/');
 }
+
 
