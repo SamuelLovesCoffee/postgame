@@ -13,16 +13,63 @@
       <a href="/" class="logo">
         <span class="logo-text">post<em>game</em></span>
       </a>
-      <span class="header-tag">AI Chess Coach</span>
+      <div class="header-right">
+        <!-- Logged out -->
+        <div id="authBtns" class="auth-btns">
+          <button class="hdr-btn" onclick="showAuthModal('login')">Log in</button>
+          <button class="hdr-btn primary" onclick="showAuthModal('signup')">Sign up</button>
+        </div>
+        <!-- Logged in -->
+        <div id="userInfo" class="user-info" style="display:none">
+          <span class="credit-badge" id="creditBadge" title="Analysis credits">0</span>
+          <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
+          <button class="hdr-btn" onclick="showHistory()">My games</button>
+          <button class="hdr-btn subtle" onclick="logout()">Log out</button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- ── INPUT VIEW ── -->
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal" style="display:none">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('authModal')">✕</button>
+      <h2 id="authModalTitle">Log in</h2>
+      <input type="email" id="authEmail" placeholder="Email" class="modal-input">
+      <input type="password" id="authPassword" placeholder="Password" class="modal-input">
+      <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
+      <div class="modal-error" id="authError"></div>
+      <div class="modal-switch" id="authSwitch">
+        Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credits Modal -->
+  <div class="modal-overlay" id="creditsModal" style="display:none">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('creditsModal')">✕</button>
+      <h2>Buy credits</h2>
+      <p class="modal-sub">Each credit = one game analysis</p>
+      <div id="packageList" class="package-list"></div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div class="modal-overlay" id="historyModal" style="display:none">
+    <div class="modal-card modal-wide">
+      <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+      <h2>My games</h2>
+      <div id="historyList" class="history-list"></div>
+    </div>
+  </div>
+
+  <!-- INPUT VIEW -->
   <main class="input-view" id="inputView">
     <div class="input-card">
       <h1>Understand your game.</h1>
       <p class="subtitle">Not just what went wrong — <em>why</em>, and what to study next.</p>
-      <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here...&#10;&#10;1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ..."></textarea>
+      <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here..."></textarea>
       <div class="input-row">
         <div class="select-wrap">
           <select id="playerColor">
@@ -41,23 +88,19 @@
     </div>
   </main>
 
-  <!-- ── LOADING VIEW ── -->
+  <!-- LOADING VIEW -->
   <main class="loading-view" id="loadingView" style="display:none">
     <div class="loading-card">
-      <div class="loading-anim">
-        <span>♞</span>
-      </div>
+      <div class="loading-anim"><span>♞</span></div>
       <h2 id="loadingTitle">Analysing your game...</h2>
       <p id="loadingMsg">Evaluating positions with Stockfish</p>
       <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
     </div>
   </main>
 
-  <!-- ── ANALYSIS VIEW ── -->
+  <!-- ANALYSIS VIEW -->
   <main class="analysis-view" id="analysisView" style="display:none">
     <div class="analysis-grid">
-
-      <!-- Board Column -->
       <div class="board-col">
         <div class="board-wrap">
           <div class="eval-bar">
@@ -82,11 +125,7 @@
           <button class="best-toggle" id="bestToggle" onclick="toggleBest()">Best move</button>
         </div>
       </div>
-
-      <!-- Coaching Column -->
-      <div class="coach-col" id="coachCol">
-        <!-- Rendered by JS -->
-      </div>
+      <div class="coach-col" id="coachCol"></div>
     </div>
     <div class="analysis-footer">
       <button class="new-game-btn" onclick="showInput()">← New game</button>
@@ -96,4 +135,3 @@
   <script src="/app.js"></script>
 </body>
 </html>
-
