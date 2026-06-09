@@ -48,12 +48,14 @@ function showLoggedOut() {
 
 function showAuthModal(mode) {
   authMode = mode;
-  document.getElementById('authModalTitle').textContent = mode === 'login' ? 'Log in' : 'Sign up';
+  document.getElementById('authModalTitle').textContent = mode === 'login' ? 'Log in' : 'Create account';
   document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Log in' : 'Sign up';
   document.getElementById('authSwitch').innerHTML = mode === 'login'
     ? 'Don\'t have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a>'
     : 'Already have an account? <a href="#" onclick="toggleAuthMode();return false">Log in</a>';
   document.getElementById('authError').textContent = '';
+  document.getElementById('nameRow').style.display = mode === 'signup' ? 'flex' : 'none';
+  document.getElementById('optionalFields').style.display = mode === 'signup' ? 'block' : 'none';
   document.getElementById('authModal').style.display = 'flex';
 }
 
@@ -70,11 +72,19 @@ async function submitAuth() {
   if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
 
   const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
+  const body = { email, password };
+  if (authMode === 'signup') {
+    body.firstName = (document.getElementById('authFirstName').value || '').trim();
+    body.lastName = (document.getElementById('authLastName').value || '').trim();
+    body.rating = document.getElementById('authRating').value || null;
+    body.chessUsername = (document.getElementById('authChessUsername').value || '').trim() || null;
+    if (!body.firstName) { errEl.textContent = 'First name is required'; return; }
+  }
   try {
     const r = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(body),
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'Failed');
@@ -193,8 +203,8 @@ async function loadAnalysis(id) {
     analysisResult = { analysis: { headers: data.headers || {}, openingName: data.opening_name, moves: replayMoves, playerColor: data.player_color, bookDepth: 0 }, coaching: data.coaching };
 
     hasEngineData = false;
-    document.getElementById('evalBar').style.display = 'none';
-    document.getElementById('evalDisplay').style.display = 'none';
+
+
     document.getElementById('bestToggle').style.display = 'none';
     renderCoaching(analysisResult.analysis, data.coaching);
     document.getElementById('landingView').style.display = 'none';
@@ -278,8 +288,8 @@ async function startAnalysis() {
     coaching = finalData.coaching;
     analysisResult = finalData;
     hasEngineData = true;
-    document.getElementById('evalBar').style.display = '';
-    document.getElementById('evalDisplay').style.display = '';
+
+
     document.getElementById('bestToggle').style.display = '';
     renderCoaching(finalData.analysis, finalData.coaching);
     document.getElementById('loadingView').style.display = 'none';
@@ -358,18 +368,7 @@ function renderBoardAnimated(newFen,from,to,dir) {
 // EVAL + ARROWS + NAV
 // ═══════════════════════════════════════
 function cpToWinPct(cp){return 50+50*(2/(1+Math.exp(-0.00368208*cp))-1);}
-function updateEval(m){
-  let cp=0,mate=null;
-  if(m){cp=m.cpAfter||0;if(m.ply%2===1)cp=-cp;}
-  const wpct=mate!=null?(mate>0?97:3):Math.max(3,Math.min(97,cpToWinPct(cp)));
-  document.getElementById('evalBarWhite').style.height=wpct+'%';
-  document.getElementById('evalBarBlack').style.height=(100-wpct)+'%';
-  const str=m?m.evalAfterWhitePersp:'+0.00';
-  document.getElementById('evalDisplay').textContent=str;
-  const t=document.getElementById('evalLabelTop'),b=document.getElementById('evalLabelBot');
-  if(str.startsWith('+')||str.startsWith('0')){b.textContent=str.replace('+','');t.textContent='';}
-  else{t.textContent=str.replace('-','');b.textContent='';}
-}
+function updateEval(m){}
 function drawArrow(uci){
   const svg=document.getElementById('arrowSvg');
   while(svg.childNodes.length>1)svg.removeChild(svg.lastChild);
@@ -515,6 +514,7 @@ if(window.location.search.includes('payment=success')){
   setTimeout(()=>{alert('Payment successful! Credits have been added.');checkAuth();},500);
   history.replaceState(null,'','/');
 }
+
 
 
 
