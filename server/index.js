@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const StockfishEngine = require('./stockfish');
 const { analysePGN } = require('./analysis');
+const { Chess } = require('chess.js');
 const { generateCoaching } = require('./coach');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
@@ -196,6 +197,41 @@ app.get('/api/history/:id', authMiddleware, async (req, res) => {
   res.json(analysis);
 });
 
+
+// ═══ PGN PARSE (for history replay) ═══
+app.post('/api/parse-pgn', (req, res) => {
+  try {
+    const { pgn, playerColor } = req.body;
+    const chess = new Chess();
+    if (!chess.load_pgn(pgn)) return res.status(400).json({ error: 'Invalid PGN' });
+    const history = chess.history({ verbose: true });
+    chess.reset();
+    const movesOut = [];
+    for (let i = 0; i < history.length; i++) {
+      const mv = history[i];
+      chess.move(mv.san);
+      movesOut.push({
+        ply: i + 1,
+        moveNumber: Math.floor(i / 2) + 1,
+        san: mv.san,
+        moveLabel: mv.color === 'w' ? `${Math.floor(i/2)+1}. ${mv.san}` : `${Math.floor(i/2)+1}...${mv.san}`,
+        color: mv.color,
+        from: mv.from,
+        to: mv.to,
+        fen: chess.fen(),
+        isBook: false,
+        isEngineTop: false,
+        bestMove: '',
+        evalAfterWhitePersp: '',
+        cpAfter: 0,
+      });
+    }
+    res.json({ moves: movesOut });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ═══ UTILITY ═══
 
 app.get('/api/health', async (req, res) => {
@@ -221,3 +257,4 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
