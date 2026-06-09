@@ -1,6 +1,5 @@
-FROM node:20-slim
+FROM node:22-slim
 
-# Install Stockfish
 RUN apt-get update && \
     apt-get install -y stockfish && \
     rm -rf /var/lib/apt/lists/*
