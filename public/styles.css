@@ -597,3 +597,208 @@ body {
 @media (max-width: 500px) {
   .hdr-btn.subtle { display: none; }
 }
+
+
+/* ═══ LANDING PAGE ═══ */
+.landing { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+.hero {
+  text-align: center; padding: 60px 0 48px;
+}
+.hero-eyebrow {
+  font-size: 13px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--accent); margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: var(--font-display); font-size: clamp(32px, 6vw, 52px);
+  font-weight: 500; line-height: 1.1; letter-spacing: -1px; margin-bottom: 16px;
+}
+.hero-sub {
+  font-size: 17px; line-height: 1.6; color: var(--text-2);
+  max-width: 520px; margin: 0 auto 28px;
+}
+.hero-sub em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+.cta-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 10px; padding: 14px 32px;
+  font-family: var(--font-body); font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+.cta-btn:hover { background: #f05a73; }
+.cta-btn:active { transform: scale(0.98); }
+
+/* ═══ BENTO GRID ═══ */
+.bento { padding: 0 0 48px; }
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: auto;
+  gap: 12px;
+}
+.bento-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  transition: border-color 0.2s;
+}
+.bento-card:hover { border-color: var(--border-light); }
+
+.bento-main { grid-column: span 2; grid-row: span 2; }
+.bento-compare { grid-row: span 2; }
+.bento-steps { }
+
+.bento-label {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 12px;
+}
+.bento-icon {
+  font-size: 28px; margin-bottom: 10px;
+}
+.bento-desc {
+  font-size: 13.5px; line-height: 1.55; color: var(--text-2); margin-top: 10px;
+}
+
+/* Coach demo inside bento */
+.bento-coach-demo {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-left: 3px solid var(--red); border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 12px;
+}
+.bcd-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  background: var(--red-soft); color: var(--red);
+  padding: 2px 8px; border-radius: 3px; margin-bottom: 6px;
+}
+.bcd-move {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+  margin-bottom: 8px;
+}
+.bcd-text {
+  font-size: 13px; line-height: 1.6; color: var(--text-2); margin-bottom: 10px;
+}
+.bcd-text strong { color: var(--text); }
+.bcd-concept {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  color: var(--blue); background: var(--blue-soft);
+  padding: 3px 10px; border-radius: 4px; margin-right: 6px;
+}
+.bcd-tip {
+  display: inline-block; font-size: 11px; color: var(--text-3); font-style: italic;
+}
+
+/* Compare list inside bento */
+.bento-compare-list { margin-bottom: 12px; }
+.bcl-row {
+  font-family: var(--font-mono); font-size: 12.5px;
+  padding: 3px 0; display: flex; align-items: center; gap: 8px;
+}
+.bcl-row.muted { color: var(--text-3); padding-left: 20px; }
+.bcl-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.bcl-dot.red { background: var(--red); }
+.bento-vs {
+  text-align: center; font-size: 12px; font-weight: 700;
+  color: var(--text-3); padding: 8px 0; text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Steps inside bento */
+.bento-step {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13.5px; padding: 6px 0; color: var(--text-2);
+}
+.bento-step span {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+/* ═══ PRICING ═══ */
+.pricing {
+  padding: 48px 0; text-align: center;
+}
+.pricing h2 {
+  font-family: var(--font-display); font-size: 28px; font-weight: 500;
+  margin-bottom: 6px;
+}
+.pricing-sub { color: var(--text-2); font-size: 15px; margin-bottom: 32px; }
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.price-card {
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px 20px; text-align: center;
+  position: relative; transition: border-color 0.2s;
+}
+.price-card:hover { border-color: var(--border-light); }
+.price-card.featured { border-color: var(--accent); }
+.price-badge {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 3px 12px; border-radius: 20px; white-space: nowrap;
+}
+.price-name { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+.price-amount {
+  font-family: var(--font-display); font-size: 32px; font-weight: 500; margin-bottom: 4px;
+}
+.price-detail { font-size: 13px; color: var(--text-3); margin-bottom: 16px; }
+.price-btn {
+  width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.price-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.featured .price-btn { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Final CTA */
+.final-cta {
+  text-align: center; padding: 48px 0;
+}
+.final-cta h2 {
+  font-family: var(--font-display); font-size: 26px; font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.site-footer {
+  text-align: center; padding: 24px 0; color: var(--text-3);
+  font-size: 13px; border-top: 1px solid var(--border);
+}
+
+/* ═══ MOBILE BENTO ═══ */
+@media (max-width: 900px) {
+  .landing { padding: 0 16px; }
+  .hero { padding: 40px 0 32px; }
+  .hero h1 { font-size: 30px; }
+  .hero-sub { font-size: 15px; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-main { grid-column: span 1; grid-row: span 1; }
+  .bento-compare { grid-row: span 1; }
+  .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Board: hide eval bar on mobile, fix position */
+  #evalBar { display: none; }
+  .board-col {
+    position: sticky; top: 0; z-index: 40;
+    background: var(--bg); padding: 8px 8px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .board-wrap { justify-content: center; }
+  .board { width: min(60vw, 280px); height: min(60vw, 280px); }
+  .board-nav { margin-top: 4px; gap: 4px; }
+  .board-nav button { width: 32px; height: 28px; font-size: 12px; }
+  .eval-display { font-size: 11px; min-width: 52px; padding: 4px 6px; }
+  .best-toggle { font-size: 10px !important; padding: 0 7px !important; }
+  .coach-col { padding: 12px; }
+}
+@media (max-width: 500px) {
+  .board { width: min(55vw, 240px); height: min(55vw, 240px); }
+  .pricing-grid { grid-template-columns: 1fr 1fr; }
+  .hero h1 { font-size: 26px; }
+  .hdr-btn.subtle { display: none; }
+  .header-tag { display: none; }
+}
