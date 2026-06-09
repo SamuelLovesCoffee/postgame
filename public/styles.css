@@ -441,11 +441,66 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .analysis-grid { grid-template-columns: 1fr; }
-  .board-col { position: static; }
-  .board { width: min(100vw - 64px, 360px); height: min(100vw - 64px, 360px); }
+  .analysis-view { padding: 0; }
+  .analysis-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* Board sticks to top on mobile */
+  .board-col {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--bg);
+    padding: 10px 12px 6px;
+    border-bottom: 1px solid var(--border);
+    align-self: start;
+  }
+  .board-wrap { justify-content: center; }
+  .board {
+    width: min(58vw, 280px);
+    height: min(58vw, 280px);
+  }
+  .eval-bar { width: 18px; margin-right: 5px; }
+  .eval-label { font-size: 7px; }
+  .board-nav { margin-top: 6px; gap: 4px; }
+  .board-nav button { width: 32px; height: 28px; font-size: 12px; }
+  .eval-display { font-size: 11px; min-width: 56px; padding: 4px 6px; }
+  .best-toggle { font-size: 10px !important; padding: 0 8px !important; }
+
+  /* Arrow overlay scales with board */
+  .arrow-svg { pointer-events: none; }
+
+  /* Coaching scrolls naturally below the sticky board */
+  .coach-col {
+    padding: 12px;
+    min-width: 0;
+  }
+  .coach-summary { padding: 14px 16px; }
+  .coach-summary h2 { font-size: 17px; }
+  .coach-summary .summary-text { font-size: 13px; }
+  .segment-header { font-size: 10px; padding: 10px 0 4px; }
+  .segment-narrative { font-size: 12.5px; }
+  .move-chip { font-size: 11px; padding: 2px 5px; }
+  .critical-card { padding: 10px 12px; margin: 6px 0; }
+  .critical-card .cc-title { font-size: 13px; }
+  .critical-card .cc-explanation { font-size: 12px; }
+  .critical-card .cc-tip { font-size: 11px; }
+  .takeaways { padding: 14px 16px; }
+  .takeaways h3 { font-size: 15px; }
+
+  .analysis-footer { padding: 12px; margin-bottom: 20px; }
 }
+
 @media (max-width: 500px) {
-  .board { width: min(100vw - 56px, 300px); height: min(100vw - 56px, 300px); }
+  .board {
+    width: min(52vw, 240px);
+    height: min(52vw, 240px);
+  }
+  .board-col { padding: 8px 8px 4px; }
   .input-card h1 { font-size: 28px; }
+  .header-inner { padding: 10px 16px; }
+  .header-tag { display: none; }
 }
+
