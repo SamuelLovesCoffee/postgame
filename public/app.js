@@ -81,6 +81,15 @@ async function submitAuth() {
     authToken = data.access_token;
     localStorage.setItem('pg_token', authToken);
     currentUser = data.user;
+    if (!data.access_token) {
+      // Email confirmation required
+      document.getElementById('authError').textContent = '';
+      document.getElementById('authEmail').value = '';
+      document.getElementById('authPassword').value = '';
+      closeModal('authModal');
+      alert('Check your email for a confirmation link. Once confirmed, log in to start analysing.');
+      return;
+    }
     closeModal('authModal');
     await checkAuth();
     showInputView();
@@ -183,6 +192,10 @@ async function loadAnalysis(id) {
     playerColor = data.player_color;
     analysisResult = { analysis: { headers: data.headers || {}, openingName: data.opening_name, moves: replayMoves, playerColor: data.player_color, bookDepth: 0 }, coaching: data.coaching };
 
+    hasEngineData = false;
+    document.getElementById('evalBar').style.display = 'none';
+    document.getElementById('evalDisplay').style.display = 'none';
+    document.getElementById('bestToggle').style.display = 'none';
     renderCoaching(analysisResult.analysis, data.coaching);
     document.getElementById('landingView').style.display = 'none';
     document.getElementById('inputView').style.display = 'none';
@@ -264,6 +277,10 @@ async function startAnalysis() {
     moves = finalData.analysis.moves;
     coaching = finalData.coaching;
     analysisResult = finalData;
+    hasEngineData = true;
+    document.getElementById('evalBar').style.display = '';
+    document.getElementById('evalDisplay').style.display = '';
+    document.getElementById('bestToggle').style.display = '';
     renderCoaching(finalData.analysis, finalData.coaching);
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('analysisView').style.display = 'block';
@@ -369,6 +386,8 @@ function drawArrow(uci){
   svg.appendChild(line);
 }
 function toggleBest(){showBest=!showBest;document.getElementById('bestToggle').classList.toggle('active',showBest);goToMove(currentPly);}
+
+let hasEngineData = false;
 
 function goToMove(ply){
   ply=Math.max(0,Math.min(ply,moves.length));
@@ -496,5 +515,6 @@ if(window.location.search.includes('payment=success')){
   setTimeout(()=>{alert('Payment successful! Credits have been added.');checkAuth();},500);
   history.replaceState(null,'','/');
 }
+
 
 
