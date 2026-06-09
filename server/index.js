@@ -62,10 +62,9 @@ app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    const result = await signUp(email, password);
-    // Auto sign-in after signup
-    const session = await signIn(email, password);
-    res.json(session);
+    await signUp(email, password);
+    // Don't auto-sign-in; user must confirm email first
+    res.json({ needsConfirmation: true, message: 'Check your email for a confirmation link.' });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -257,4 +256,5 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
