@@ -6,7 +6,7 @@ let currentUser = null;
 let authMode = 'login';
 
 async function checkAuth() {
-  if (!authToken) { showLoggedOut(); return; }
+  if (!authToken) { showLoggedOut(); showLanding(); return; }
   try {
     const r = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + authToken } });
     if (!r.ok) throw new Error();
@@ -14,11 +14,27 @@ async function checkAuth() {
     currentUser = data.user;
     document.getElementById('creditBadge').textContent = data.credits;
     showLoggedIn();
+    // Show input view if not already in analysis
+    if (document.getElementById('analysisView').style.display === 'none'
+        && document.getElementById('loadingView').style.display === 'none') {
+      showInputView();
+    }
   } catch {
     authToken = null;
     localStorage.removeItem('pg_token');
     showLoggedOut();
+    showLanding();
   }
+}
+
+function showLanding() {
+  document.getElementById('landingView').style.display = 'block';
+  document.getElementById('inputView').style.display = 'none';
+}
+
+function showInputView() {
+  document.getElementById('landingView').style.display = 'none';
+  document.getElementById('inputView').style.display = 'flex';
 }
 
 function showLoggedIn() {
@@ -67,6 +83,7 @@ async function submitAuth() {
     currentUser = data.user;
     closeModal('authModal');
     await checkAuth();
+    showInputView();
   } catch (err) {
     errEl.textContent = err.message;
   }
@@ -141,18 +158,38 @@ async function showHistory() {
 
 async function loadAnalysis(id) {
   closeModal('historyModal');
-  // For now, just show coaching from stored data
   try {
-    const r = await fetch(`/api/history/${id}`, { headers: { Authorization: 'Bearer ' + authToken } });
+    const r = await fetch('/api/history/' + id, { headers: { Authorization: 'Bearer ' + authToken } });
     const data = await r.json();
-    if (data.coaching) {
-      coaching = data.coaching;
-      moves = []; // No engine moves stored (just coaching)
-      renderCoaching({ headers: data.headers || {}, openingName: data.opening_name, moves: [], playerColor: data.player_color, bookDepth: 0 }, data.coaching);
-      document.getElementById('inputView').style.display = 'none';
-      document.getElementById('analysisView').style.display = 'block';
-    }
-  } catch (err) { showError('Failed to load analysis'); }
+    if (!data.coaching) throw new Error('No coaching data');
+
+    // Rebuild moves from PGN for board replay
+    const replayMoves = parsePGNtoMoves(data.pgn, data.player_color);
+
+    coaching = data.coaching;
+    moves = replayMoves;
+    flipped = data.player_color === 'b';
+    playerColor = data.player_color;
+    analysisResult = { analysis: { headers: data.headers || {}, openingName: data.opening_name, moves: replayMoves, playerColor: data.player_color, bookDepth: 0 }, coaching: data.coaching };
+
+    renderCoaching(analysisResult.analysis, data.coaching);
+    document.getElementById('landingView').style.display = 'none';
+    document.getElementById('inputView').style.display = 'none';
+    document.getElementById('analysisView').style.display = 'block';
+    goToMove(0);
+  } catch (err) { console.error(err); showError('Failed to load analysis'); }
+}
+
+// Parse PGN into minimal move objects for board replay (no engine data)
+function parsePGNtoMoves(pgn, pc) {
+  if (!pgn) return [];
+  // Use a simple regex-based PGN parser since we don't have chess.js on client
+  // We need: fen, from, to, san, color, moveNumber, ply for each move
+  // Since we can't generate FEN without a full chess engine, we'll send the PGN
+  // to a lightweight server endpoint instead
+  // For now, return empty - the coaching cards still work without board replay
+  // TODO: add /api/parse-pgn endpoint
+  return [];
 }
 
 // ═══════════════════════════════════════
@@ -437,7 +474,11 @@ function exportReport(){
 // UI
 // ═══════════════════════════════════════
 function showError(m){const e=document.getElementById('errorMsg');e.textContent=m;e.style.display='inline';setTimeout(()=>{e.style.display='none';},6000);}
-function showInput(){document.getElementById('inputView').style.display='flex';document.getElementById('analysisView').style.display='none';showBest=false;document.getElementById('bestToggle').classList.remove('active');}
+function showInput(){
+  document.getElementById('analysisView').style.display='none';
+  showBest=false;document.getElementById('bestToggle').classList.remove('active');
+  if(authToken){showInputView();}else{showLanding();}
+}
 
 document.addEventListener('keydown',e=>{
   if(document.getElementById('analysisView').style.display==='none')return;
@@ -454,3 +495,4 @@ if(window.location.search.includes('payment=success')){
   setTimeout(()=>{alert('Payment successful! Credits have been added.');checkAuth();},500);
   history.replaceState(null,'','/');
 }
+
