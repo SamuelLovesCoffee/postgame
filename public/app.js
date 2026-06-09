@@ -325,7 +325,14 @@ function goToMove(ply) {
 
   document.querySelectorAll('.move-chip').forEach(el => el.classList.remove('active'));
   const ac = document.querySelector(`.move-chip[data-ply="${ply}"]`);
-  if (ac) { ac.classList.add('active'); ac.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  if (ac) {
+    ac.classList.add('active');
+    // On mobile, only scroll within the coaching column, not the whole page
+    const isMobile = window.innerWidth <= 900;
+    if (!isMobile) {
+      ac.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
 
   document.querySelectorAll('.critical-card').forEach(el => el.classList.remove('active'));
   const card = document.querySelector(`.critical-card[data-ply="${ply}"]`);
@@ -582,3 +589,4 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Home') { e.preventDefault(); goToMove(0); }
   if (e.key === 'End') { e.preventDefault(); goToMove(moves.length); }
 });
+
