@@ -32,8 +32,16 @@
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('authModal')">✕</button>
       <h2 id="authModalTitle">Log in</h2>
+      <div class="name-row" id="nameRow" style="display:none">
+        <input type="text" id="authFirstName" placeholder="First name" class="modal-input half" autocomplete="given-name">
+        <input type="text" id="authLastName" placeholder="Last name" class="modal-input half" autocomplete="family-name">
+      </div>
       <input type="email" id="authEmail" placeholder="Email" class="modal-input" autocomplete="email">
       <input type="password" id="authPassword" placeholder="Password" class="modal-input" autocomplete="current-password">
+      <div id="optionalFields" style="display:none">
+        <input type="number" id="authRating" placeholder="Chess rating (optional)" class="modal-input" min="100" max="3000">
+        <input type="text" id="authChessUsername" placeholder="Chess.com or Lichess username (optional)" class="modal-input">
+      </div>
       <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
       <div class="modal-error" id="authError"></div>
       <div class="modal-switch" id="authSwitch">Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a></div>
@@ -163,7 +171,7 @@
       <button class="cta-btn" onclick="showAuthModal('signup')">Get started</button>
     </section>
 
-    <footer class="site-footer"><p>postgame</p><nav class="footer-links"><a href="/faq.html">FAQ</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></nav></footer>
+    <footer class="site-footer"><p>postgame</p><nav class="footer-links"><a href="/faq.html">FAQ</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:info@post-game.net">Contact</a></nav></footer>
   </main>
 
   <!-- ═══ INPUT (logged in) ═══ -->
@@ -195,12 +203,7 @@
     <div class="analysis-grid">
       <div class="board-col">
         <div class="board-wrap">
-          <div class="eval-bar" id="evalBar">
-            <div class="eval-bar-white" id="evalBarWhite" style="height:50%"></div>
-            <div class="eval-bar-black" id="evalBarBlack" style="height:50%"></div>
-            <span class="eval-label eval-label-top" id="evalLabelTop"></span>
-            <span class="eval-label eval-label-bot" id="evalLabelBot">0.0</span>
-          </div>
+
           <div class="board-container">
             <div class="board" id="board"></div>
             <svg class="arrow-svg" id="arrowSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -211,7 +214,7 @@
         <div class="board-nav">
           <button onclick="goToMove(0)">⏮</button>
           <button onclick="goToMove(currentPly-1)">◀</button>
-          <span class="eval-display" id="evalDisplay">+0.00</span>
+          
           <button onclick="goToMove(currentPly+1)">▶</button>
           <button onclick="goToMove(moves.length)">⏭</button>
           <button class="best-toggle" id="bestToggle" onclick="toggleBest()">Best move</button>
@@ -225,4 +228,5 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
