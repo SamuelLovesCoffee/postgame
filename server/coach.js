@@ -67,12 +67,15 @@ RULES:
 - missedIdeas: max 3, positions where a decent move missed something much stronger
 - Keep explanations concise: 2-3 sentences each, not 5
 - Every move reference must use standard notation (e.g. "7...Nf6", "12. Bxc6")
+- When OPENING THEORY data is provided, you may reference the opening's typical plans and cite the notable master games listed (e.g. "this structure appeared in Carlsen vs Caruana, 2018"). NEVER invent or cite master games that are not in the provided list.
+- When a Tablebase verdict is provided for an endgame position, treat it as ground truth (it is perfect play). Translate it into human terms: "this endgame is a theoretical draw with best play" — never contradict it.
+- Use the pawn structure notes to ground positional advice (weak pawns, passed pawns, files to target).
 - Ply values must EXACTLY match the data provided. Only reference moves that appear in the ANNOTATED MOVES list.
 - NEVER invent, guess, or assume moves that aren't in the provided move list. If you reference a move, it must be one that was actually played and given to you. Do not extrapolate continuations as if they were played.
 - Return ONLY valid JSON`;
 
 async function generateCoaching(analysisResult, detailed = false) {
-  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, bookDepth } = analysisResult;
+  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, bookDepth, masterInfo } = analysisResult;
   const color = playerColor === 'w' ? 'White' : 'Black';
 
   let moveText = '';
@@ -105,9 +108,13 @@ async function generateCoaching(analysisResult, detailed = false) {
   if (criticalMoments.length > 0) {
     criticalText = '\n\nCRITICAL MOMENTS (biggest errors):\n';
     for (const m of criticalMoments) {
-      criticalText += `\nPly ${m.ply}: ${m.moveLabel} | WP: ${m.wpBefore}%→${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
+      criticalText += `\nPly ${m.ply}: ${m.moveLabel} [${m.phase || 'middlegame'}] | WP: ${m.wpBefore}%→${m.wpAfterMover}% (lost ${m.wpLoss}pp)\n`;
       criticalText += `Position before move (FEN): ${m.fenBefore}\n`;
       criticalText += `Position after move (FEN): ${m.fen}\n`;
+      if (m.pawnNotes && m.pawnNotes.length) criticalText += `Pawn structure: ${m.pawnNotes.join('; ')}\n`;
+      if (m.tbBefore) criticalText += `Tablebase (perfect play): position before was a theoretical ${m.tbBefore} for the side to move`;
+      if (m.tbAfter) criticalText += `; after the move it is a theoretical ${m.tbAfter} for the side to move`;
+      if (m.tbBefore || m.tbAfter) criticalText += `\n`;
       criticalText += `Engine best: ${m.bestMoveSan}`;
       if (m.pvLines.length > 0) criticalText += ` → ${m.pvLines[0].san.join(' ')} (${m.pvLines[0].eval})`;
       criticalText += '\n';
@@ -138,11 +145,28 @@ async function generateCoaching(analysisResult, detailed = false) {
     }
   }
 
+  // Opening theory + master game references
+  let theoryText = '';
+  if (masterInfo) {
+    theoryText = '\n\nOPENING THEORY (from master practice):\n';
+    if (masterInfo.opening) theoryText += `Opening: ${masterInfo.opening}\n`;
+    if (masterInfo.topMoves && masterInfo.topMoves.length) {
+      theoryText += `Main continuations in master games: ${masterInfo.topMoves.map(t => `${t.san} (${t.games} games)`).join(', ')}\n`;
+    }
+    if (masterInfo.games && masterInfo.games.length) {
+      theoryText += 'Notable master games from this opening:\n';
+      for (const g of masterInfo.games) {
+        const result = g.winner === 'white' ? '1-0' : g.winner === 'black' ? '0-1' : '½-½';
+        theoryText += `- ${g.white} vs ${g.black}, ${g.year} (${result})\n`;
+      }
+    }
+  }
+
   const userPrompt = `Analyse this game for the student who played ${color}.
 
 Game: ${headers.White || '?'} vs ${headers.Black || '?'}, ${headers.Result || '?'}
 Opening: ${openingName || headers.ECO || 'Unknown'}
-Book depth: ${bookDepth} plies
+Book depth: ${bookDepth} plies${theoryText}
 
 ANNOTATED MOVES:
 ${moveText}
@@ -153,7 +177,7 @@ ${goodText}
 Return ONLY valid JSON matching the schema.`;
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-fable-5',
     max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
@@ -242,6 +266,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
