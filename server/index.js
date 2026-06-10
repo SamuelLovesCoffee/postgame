@@ -70,8 +70,9 @@ app.post('/api/auth/signup', async (req, res) => {
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
     if (!firstName) return res.status(400).json({ error: 'First name is required' });
     await signUp(email, password, { firstName, lastName, rating, chessUsername });
-    // Don't auto-sign-in; user must confirm email first
-    res.json({ needsConfirmation: true, message: 'Check your email for a confirmation link.' });
+    // No confirmation gate — sign the user in immediately
+    const session = await signIn(email, password);
+    res.json(session);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -266,6 +267,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
