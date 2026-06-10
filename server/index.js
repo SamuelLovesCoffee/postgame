@@ -15,6 +15,12 @@ const {
   PACKAGES,
 } = require('./auth');
 
+// Analysis tiers
+const TIERS = {
+  quick: { depth: 12, credits: 1, label: 'Quick' },
+  deep:  { depth: 18, credits: 2, label: 'Deep' },
+};
+
 const app = express();
 
 // Stripe webhook needs raw body
@@ -107,20 +113,23 @@ app.post('/api/checkout', authMiddleware, async (req, res) => {
 // ═══ ANALYSIS (protected) ═══
 
 app.post('/api/analyse', authMiddleware, async (req, res) => {
-  const { pgn, playerColor } = req.body;
+  const { pgn, playerColor, tier = 'quick' } = req.body;
   if (!pgn) return res.status(400).json({ error: 'PGN is required' });
   if (!['w', 'b'].includes(playerColor)) return res.status(400).json({ error: 'playerColor must be "w" or "b"' });
 
+  const tierConfig = TIERS[tier] || TIERS.quick;
+  const cost = tierConfig.credits;
+
   // Check credits
   const credits = await getCredits(req.user.id);
-  if (credits <= 0) {
-    return res.status(403).json({ error: 'No credits remaining. Purchase more to continue.' });
+  if (credits < cost) {
+    return res.status(403).json({ error: `This analysis needs ${cost} credit${cost > 1 ? 's' : ''}. You have ${credits}.` });
   }
 
-  // Deduct credit
-  const deducted = await deductCredit(req.user.id);
-  if (!deducted) {
-    return res.status(403).json({ error: 'Could not deduct credit.' });
+  // Deduct the tier's credit cost
+  for (let i = 0; i < cost; i++) {
+    const ok = await deductCredit(req.user.id);
+    if (!ok) return res.status(403).json({ error: 'Could not deduct credits.' });
   }
 
   const jobId = crypto.randomUUID();
@@ -169,9 +178,9 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
     } catch (err) {
       console.error('Job error:', err);
       job.status = 'error'; job.error = err.message;
-      // Refund credit on failure
+      // Refund credits on failure
       const { addCredits } = require('./auth');
-      await addCredits(req.user.id, 1);
+      await addCredits(req.user.id, cost);
     }
   })();
 });
@@ -257,6 +266,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
