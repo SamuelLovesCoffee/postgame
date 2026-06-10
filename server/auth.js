@@ -42,37 +42,6 @@ async function signUp(email, password, metadata = {}) {
   return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
 }
 
-// Send a welcome email via Supabase's configured SMTP using a magic-link-free approach.
-// We use nodemailer-style sending through a simple SMTP call.
-async function sendWelcomeEmail(email, firstName) {
-  // Supabase doesn't expose a direct "send arbitrary email" API, so we use
-  // the configured SMTP credentials directly via nodemailer.
-  const nodemailer = require('nodemailer');
-  if (!process.env.SMTP_HOST) {
-    console.log('No SMTP configured, skipping welcome email');
-    return;
-  }
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-  const name = firstName || 'there';
-  await transporter.sendMail({
-    from: `postgame <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: 'Welcome to postgame',
-    html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1a1a1f">
-      <h1 style="font-size:22px">Welcome, ${name}.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#444">You're all set. You have <strong>3 free analysis credits</strong> to get started — paste any game from Chess.com or Lichess and get a full coaching review.</p>
-      <p style="font-size:15px;line-height:1.6"><a href="https://post-game.net" style="color:#e94560;font-weight:600">Analyse your first game →</a></p>
-      <p style="font-size:13px;color:#888;margin-top:24px">postgame — post-game.net</p>
-    </div>`,
-  });
-  console.log(`Welcome email sent to ${email}`);
-}
-
 async function signIn(email, password) {
   // Use Supabase's signInWithPassword via a temporary client
   const { createClient: createAnonClient } = require('@supabase/supabase-js');
@@ -245,7 +214,6 @@ async function handleStripeWebhook(body, signature) {
   }
 }
 
-
 // ── Account management ──
 
 async function getProfile(userId) {
@@ -310,11 +278,4 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
-
-
-
-
-
-
-
 
