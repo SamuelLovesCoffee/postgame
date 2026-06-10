@@ -264,6 +264,56 @@ app.get('/api/history/:id', authMiddleware, async (req, res) => {
 });
 
 
+// ═══ LICHESS IMPORT ═══
+
+// Fetch a user's recent games from Lichess (public, no auth needed)
+app.get('/api/lichess/:username', authMiddleware, async (req, res) => {
+  const username = req.params.username.trim();
+  if (!username || !/^[a-zA-Z0-9_-]{2,30}$/.test(username)) {
+    return res.status(400).json({ error: 'Invalid Lichess username' });
+  }
+  try {
+    const url = `https://lichess.org/api/games/user/${encodeURIComponent(username)}`
+      + '?max=15&pgnInJson=true&clocks=false&evals=false&opening=true&moves=true';
+    const r = await fetch(url, { headers: { Accept: 'application/x-ndjson' } });
+
+    if (r.status === 404) return res.status(404).json({ error: 'Lichess user not found' });
+    if (!r.ok) return res.status(502).json({ error: 'Could not reach Lichess' });
+
+    const text = await r.text();
+    const games = text.trim().split('\n').filter(Boolean).map((line) => {
+      try {
+        const g = JSON.parse(line);
+        const white = (g.players && g.players.white && g.players.white.user && g.players.white.user.name) || 'Anonymous';
+        const black = (g.players && g.players.black && g.players.black.user && g.players.black.user.name) || 'Anonymous';
+        const whiteRating = (g.players && g.players.white && g.players.white.rating) || null;
+        const blackRating = (g.players && g.players.black && g.players.black.rating) || null;
+        // Determine which colour the requested user played
+        const userIsWhite = white.toLowerCase() === username.toLowerCase();
+        const playerColor = userIsWhite ? 'w' : 'b';
+        let result = 'draw';
+        if (g.winner === 'white') result = userIsWhite ? 'win' : 'loss';
+        else if (g.winner === 'black') result = userIsWhite ? 'loss' : 'win';
+        return {
+          id: g.id,
+          pgn: g.pgn,
+          white, black, whiteRating, blackRating,
+          playerColor,
+          result,
+          opening: g.opening ? g.opening.name : null,
+          speed: g.speed,
+          createdAt: g.createdAt,
+        };
+      } catch { return null; }
+    }).filter(Boolean);
+
+    res.json({ games });
+  } catch (err) {
+    console.error('Lichess fetch error:', err.message);
+    res.status(502).json({ error: 'Could not fetch games from Lichess' });
+  }
+});
+
 // ═══ PGN PARSE (for history replay) ═══
 app.post('/api/parse-pgn', (req, res) => {
   try {
@@ -323,6 +373,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
