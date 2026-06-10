@@ -89,11 +89,13 @@
           <p class="bento-desc">Every critical moment gets a coaching card explaining the tactic, the strategy, and what to practise.</p>
         </div>
 
-        <!-- Animated board (moved up, swapped with comparison) -->
+        <!-- Animated board video -->
         <div class="bento-card bento-board-card">
           <div class="bento-label">See the moment it goes wrong</div>
-          <div class="mini-board" id="miniBoard"></div>
-          <p class="bento-desc" id="miniBoardCaption">Légal's Mate — a classic trap. Watch how a tempting capture loses instantly.</p>
+          <video class="mini-board-video" autoplay loop muted playsinline>
+            <source src="/chess.mp4" type="video/mp4">
+          </video>
+          <p class="bento-desc">Every game replays move by move on an interactive board, so you can study exactly where things turned.</p>
         </div>
 
         <!-- How it works -->
@@ -267,6 +269,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
