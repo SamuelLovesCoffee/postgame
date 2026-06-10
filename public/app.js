@@ -112,6 +112,11 @@ function logout() {
   authToken = null; currentUser = null;
   localStorage.removeItem('pg_token');
   showLoggedOut();
+  // Redirect to landing page
+  document.getElementById('analysisView').style.display = 'none';
+  document.getElementById('inputView').style.display = 'none';
+  document.getElementById('loadingView').style.display = 'none';
+  showLanding();
 }
 
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -519,3 +524,77 @@ if(window.location.search.includes('payment=success')){
 
 
 
+
+
+
+// ═══════════════════════════════════════
+// LANDING PAGE MINI BOARD ANIMATION
+// (Légal's Mate trap, looping)
+// ═══════════════════════════════════════
+(function initMiniBoard() {
+  const el = document.getElementById('miniBoard');
+  if (!el) return;
+
+  // FEN positions for Légal's Mate sequence
+  // 1.e4 e5 2.Nf3 Nc6 3.Bc4 d6 4.Nc3 Bg4 5.Nxe5! Bxd1?? 6.Bxf7+ Ke7 7.Nd5#
+  const positions = [
+    { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', cap: "Légal's Mate — a 250-year-old trap." },
+    { fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR', cap: '1. e4 e5' },
+    { fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R', cap: '2. Nf3 Nc6' },
+    { fen: 'r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R', cap: '3. Bc4 d6' },
+    { fen: 'r2qkbnr/ppp2ppp/2np4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R', cap: '4. Nc3 Bg4 — pinning the knight.' },
+    { fen: 'r2qkbnr/ppp2ppp/2np4/4N3/2B1P1b1/2N5/PPPP1PPP/R1BQK2R', cap: "5. Nxe5! Black thinks the queen is hanging..." },
+    { fen: 'r2qkbnr/ppp2ppp/2np4/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R', cap: '5...Bxd1?? Taking the queen — the fatal mistake.' },
+    { fen: 'r2qkbnr/ppp2Bpp/2np4/8/4P3/2N5/PPPP1PPP/R1BbK2R', cap: '6. Bxf7+ Ke7' },
+    { fen: 'r2q1bnr/ppp1kBpp/2np4/3N4/4P3/8/PPPP1PPP/R1Bb1K1R', cap: '7. Nd5# — checkmate. The queen sacrifice wins.' },
+  ];
+
+  const PIECE_MAP = { K:'wK',Q:'wQ',R:'wR',B:'wB',N:'wN',P:'wP',k:'bK',q:'bQ',r:'bR',b:'bB',n:'bN',p:'bP' };
+  let idx = 0;
+
+  function renderMini(fen) {
+    const rows = fen.split(' ')[0].split('/');
+    el.innerHTML = '';
+    for (let r = 0; r < 8; r++) {
+      let file = 0;
+      for (const ch of rows[r]) {
+        if (ch >= '1' && ch <= '9') {
+          for (let i = 0; i < +ch; i++) {
+            const sq = document.createElement('div');
+            sq.className = 'mini-sq ' + ((r + file) % 2 === 0 ? 'l' : 'd');
+            el.appendChild(sq); file++;
+          }
+        } else {
+          const sq = document.createElement('div');
+          sq.className = 'mini-sq ' + ((r + file) % 2 === 0 ? 'l' : 'd');
+          const code = PIECE_MAP[ch];
+          if (code && pieceCache[code]) {
+            const img = document.createElement('img');
+            img.src = pieceCache[code];
+            sq.appendChild(img);
+          }
+          el.appendChild(sq); file++;
+        }
+      }
+    }
+  }
+
+  function step() {
+    const pos = positions[idx];
+    renderMini(pos.fen);
+    const cap = document.getElementById('miniBoardCaption');
+    if (cap) cap.textContent = pos.cap;
+    idx = (idx + 1) % positions.length;
+  }
+
+  // Wait for pieces to load, then start
+  let tries = 0;
+  const waitForPieces = setInterval(() => {
+    tries++;
+    if (Object.keys(pieceCache).length >= 10 || tries > 40) {
+      clearInterval(waitForPieces);
+      step();
+      setInterval(step, 1800);
+    }
+  }, 100);
+})();
