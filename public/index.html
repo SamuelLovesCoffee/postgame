@@ -344,6 +344,10 @@
           <button onclick="goToMove(moves.length)">⏭</button>
           <button class="best-toggle" id="bestToggle" onclick="toggleBest()">Best move</button>
         </div>
+        <div class="variation-panel" id="variationPanel" style="display:none">
+          <div class="var-label">Engine line <button class="var-close" onclick="clearVariation()">reset</button></div>
+          <div class="var-moves" id="varMoves"></div>
+        </div>
       </div>
       <div class="coach-col" id="coachCol"></div>
     </div>
@@ -353,6 +357,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
