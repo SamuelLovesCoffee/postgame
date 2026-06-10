@@ -89,7 +89,7 @@ async function checkOpeningBook(fen) {
  * 2. Lichess cloud eval: instant, depth 30+
  * 3. Local Stockfish: only for positions not in cloud
  */
-async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
+async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth = 16) {
   const chess = new Chess();
   if (!chess.load_pgn(pgn)) throw new Error('Invalid PGN');
 
@@ -129,11 +129,11 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
   await engine.newGame();
 
   const evals = [];
-  let cloudHits = 0, localEvals = 0;
+  let cloudActive = true; // try cloud only until first miss (opening phase)
 
   for (let i = 0; i < positions.length; i++) {
     const pct = 5 + Math.round((i / positions.length) * 85);
-    onProgress(pct, `Position ${i + 1}/${positions.length} (cloud: ${cloudHits}, local: ${localEvals})`);
+    onProgress(pct, `Analysing move ${Math.ceil((i + 1) / 2)} of ${Math.ceil(positions.length / 2)}`);
 
     const fen = positions[i].fen;
     const c = new Chess(fen);
@@ -146,23 +146,21 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
       continue;
     }
 
-    // Book positions: still need eval for Win% but try cloud first (usually cached)
-    // Try Lichess cloud eval (free, instant, depth 30+)
-    const cloud = await lichessCloudEval(fen);
-    if (cloud) {
-      evals.push(cloud);
-      cloudHits++;
-      continue;
+    // Cloud eval ONLY during the opening (while still getting hits).
+    // Lichess has deep (depth 40+) evals for common opening positions.
+    // Once we get our first miss, we're out of book — stop trying cloud.
+    if (cloudActive && i < 20) {
+      const cloud = await lichessCloudEval(fen);
+      if (cloud) {
+        evals.push(cloud);
+        continue;
+      } else {
+        cloudActive = false; // first miss: stop wasting API calls
+      }
     }
 
-    // Local Stockfish fallback — use adaptive depth
-    // Critical positions (player's turn, non-book) get full depth
-    // Less critical positions get reduced depth for speed
-    const isPlayerTurn = (i % 2 === 0 && playerColor === 'w') || (i % 2 === 1 && playerColor === 'b');
-    const depth = isPlayerTurn ? engine.depth : Math.max(14, engine.depth - 4);
-
+    // Local Stockfish at the selected depth
     evals.push(await engine.evaluate(fen, depth));
-    localEvals++;
   }
 
   // Phase 3: Build annotated moves
@@ -268,3 +266,4 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}) {
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
