@@ -83,6 +83,111 @@ async function checkOpeningBook(fen) {
   } catch { return null; }
 }
 
+// ── Knowledge helpers ──
+
+// Count total pieces on the board (for tablebase eligibility)
+function pieceCount(fen) {
+  return (fen.split(' ')[0].match(/[a-zA-Z]/g) || []).length;
+}
+
+// Non-pawn material value (both sides), used for phase detection
+function nonPawnMaterial(fen) {
+  const board = fen.split(' ')[0];
+  const vals = { q: 9, r: 5, b: 3, n: 3 };
+  let total = 0;
+  for (const ch of board) {
+    const v = vals[ch.toLowerCase()];
+    if (v) total += v;
+  }
+  return total;
+}
+
+// Game phase: opening / middlegame / endgame
+function detectPhase(fen, ply, bookDepth) {
+  if (ply <= Math.max(bookDepth + 2, 14)) return 'opening';
+  if (nonPawnMaterial(fen) <= 13) return 'endgame';
+  return 'middlegame';
+}
+
+// Pawn structure notes from a FEN: isolated, doubled, passed pawns
+function pawnStructureNotes(fen) {
+  const rows = fen.split(' ')[0].split('/');
+  const wp = [], bp = []; // arrays of {file, rank}
+  for (let r = 0; r < 8; r++) {
+    let f = 0;
+    for (const ch of rows[r]) {
+      if (ch >= '1' && ch <= '8') { f += +ch; continue; }
+      if (ch === 'P') wp.push({ f, r: 8 - r });
+      if (ch === 'p') bp.push({ f, r: 8 - r });
+      f++;
+    }
+  }
+  const notes = [];
+  const files = (arr) => arr.map(p => p.f);
+  const wf = files(wp), bf = files(bp);
+
+  const fileLetter = (f) => String.fromCharCode(97 + f);
+
+  // Doubled
+  for (const [name, fl] of [['White', wf], ['Black', bf]]) {
+    const seen = {};
+    fl.forEach(f => { seen[f] = (seen[f] || 0) + 1; });
+    const doubled = Object.keys(seen).filter(f => seen[f] >= 2).map(f => fileLetter(+f));
+    if (doubled.length) notes.push(`${name} has doubled pawns on the ${doubled.join(', ')}-file${doubled.length > 1 ? 's' : ''}`);
+  }
+  // Isolated
+  for (const [name, fl] of [['White', wf], ['Black', bf]]) {
+    const set = new Set(fl);
+    const iso = [...new Set(fl.filter(f => !set.has(f - 1) && !set.has(f + 1)))].map(fileLetter);
+    if (iso.length) notes.push(`${name} has isolated pawn(s) on the ${iso.join(', ')}-file${iso.length > 1 ? 's' : ''}`);
+  }
+  // Passed pawns
+  for (const p of wp) {
+    const blockers = bp.filter(q => Math.abs(q.f - p.f) <= 1 && q.r > p.r);
+    if (!blockers.length) notes.push(`White has a passed pawn on ${fileLetter(p.f)}${p.r}`);
+  }
+  for (const p of bp) {
+    const blockers = wp.filter(q => Math.abs(q.f - p.f) <= 1 && q.r < p.r);
+    if (!blockers.length) notes.push(`Black has a passed pawn on ${fileLetter(p.f)}${p.r}`);
+  }
+  return notes.slice(0, 4);
+}
+
+// Lichess Syzygy tablebase (perfect play for <=7 pieces)
+const tbCache = new Map();
+async function tablebaseLookup(fen) {
+  if (pieceCount(fen) > 7) return null;
+  if (tbCache.has(fen)) return tbCache.get(fen);
+  try {
+    const r = await fetch('https://tablebase.lichess.ovh/standard?fen=' + encodeURIComponent(fen.replace(/ /g, '_')));
+    if (!r.ok) { tbCache.set(fen, null); return null; }
+    const d = await r.json();
+    const result = { category: d.category, dtz: d.dtz }; // category from side-to-move perspective
+    tbCache.set(fen, result);
+    return result;
+  } catch { tbCache.set(fen, null); return null; }
+}
+
+// Lichess Masters database: top continuations + notable master games
+async function masterGamesLookup(fen) {
+  try {
+    const r = await fetch('https://explorer.lichess.ovh/masters?fen=' + encodeURIComponent(fen) + '&topGames=3&moves=4');
+    if (!r.ok) return null;
+    const d = await r.json();
+    const topMoves = (d.moves || []).slice(0, 4).map(m => ({
+      san: m.san,
+      games: (m.white || 0) + (m.draws || 0) + (m.black || 0),
+    }));
+    const games = (d.topGames || []).slice(0, 3).map(g => ({
+      white: g.white && g.white.name, whiteRating: g.white && g.white.rating,
+      black: g.black && g.black.name, blackRating: g.black && g.black.rating,
+      year: g.year, winner: g.winner || 'draw',
+    }));
+    if (!topMoves.length && !games.length) return null;
+    return { opening: d.opening ? d.opening.name : null, topMoves, games };
+  } catch { return null; }
+}
+
 /**
  * Full analysis pipeline with speed optimisations:
  * 1. Book positions: no engine eval needed
@@ -194,6 +299,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 
     const moveNumber = Math.floor((i - 1) / 2) + 1;
     const moveLabel = move.color === 'w' ? `${moveNumber}. ${move.san}` : `${moveNumber}...${move.san}`;
+    const phase = detectPhase(fenBefore, i, bookDepth);
 
     // Detect missed opportunities: player played okay (wpLoss < 3) but there was something much better
     const isMissedOpportunity = !isBook && move.color === playerColor && !isEngineTop
@@ -230,6 +336,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
       isBook,
       isSacrifice: !!move.captured && move.piece !== 'p',
       isMissedOpportunity,
+      phase,
     });
   }
 
@@ -238,6 +345,25 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
     .filter((m) => m.color === playerColor && !m.isBook && m.wpLoss > 5)
     .sort((a, b) => b.wpLoss - a.wpLoss)
     .slice(0, 6);
+
+  // Enrich critical moments with pawn structure + endgame tablebase verdicts
+  onProgress(90, 'Adding position context...');
+  for (const m of criticalMoments) {
+    m.pawnNotes = pawnStructureNotes(m.fenBefore);
+    if (m.phase === 'endgame') {
+      const tbBefore = await tablebaseLookup(m.fenBefore);
+      const tbAfter = await tablebaseLookup(m.fen);
+      if (tbBefore) m.tbBefore = tbBefore.category; // win/draw/loss for side to move
+      if (tbAfter) m.tbAfter = tbAfter.category;
+    }
+  }
+
+  // Opening theory + master games for the position at the end of book
+  let masterInfo = null;
+  const theoryIdx = Math.min(Math.max(bookDepth, 6), 16, positions.length - 1);
+  if (theoryIdx > 2) {
+    masterInfo = await masterGamesLookup(positions[theoryIdx].fen);
+  }
 
   // Missed opportunities
   const missedOpportunities = annotatedMoves
@@ -258,6 +384,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
     playerColor,
     totalMoves: annotatedMoves.length,
     moves: annotatedMoves,
+    masterInfo,
     criticalMoments,
     missedOpportunities,
     goodMoments,
@@ -266,4 +393,5 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
