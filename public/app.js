@@ -231,6 +231,13 @@ let currentPly = 0;
 let flipped = false;
 let showBest = false;
 let playerColor = 'w';
+let selectedTier = 'quick';
+
+function selectTier(t) {
+  selectedTier = t;
+  document.getElementById('tierQuick').classList.toggle('selected', t === 'quick');
+  document.getElementById('tierDeep').classList.toggle('selected', t === 'deep');
+}
 let animating = false;
 
 const PIECE_CDN = 'https://lichess1.org/assets/piece/tatiana/';
@@ -264,10 +271,16 @@ async function startAnalysis() {
   document.getElementById('loadingMsg').textContent = 'Submitting game...';
 
   try {
+    // Estimate time: count moves in PGN, multiply by per-position seconds
+    const moveCount = (pgn.match(/\d+\./g) || []).length * 2;
+    const perPos = selectedTier === 'deep' ? 4 : 1.5;
+    const estMin = Math.max(1, Math.round((moveCount * perPos) / 60));
+    document.getElementById('loadingMsg').textContent = `Estimated time: about ${estMin} minute${estMin > 1 ? 's' : ''}`;
+
     const submitRes = await fetch('/api/analyse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
-      body: JSON.stringify({ pgn, playerColor }),
+      body: JSON.stringify({ pgn, playerColor, tier: selectedTier }),
     });
     if (!submitRes.ok) {
       const err = await submitRes.json().catch(() => ({}));
@@ -531,6 +544,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
