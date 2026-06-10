@@ -12,6 +12,7 @@ const {
   getCredits, deductCredit,
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
+  getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
 
@@ -194,6 +195,53 @@ app.get('/api/job/:id', optionalAuth, (req, res) => {
   res.json({ status: 'complete', progress: 100, ...job.result });
 });
 
+// ═══ ACCOUNT MANAGEMENT ═══
+
+app.get('/api/account', authMiddleware, async (req, res) => {
+  const profile = await getProfile(req.user.id);
+  if (!profile) return res.status(404).json({ error: 'Profile not found' });
+  res.json(profile);
+});
+
+app.patch('/api/account', authMiddleware, async (req, res) => {
+  try {
+    const { firstName, lastName, chessRating, chessUsername } = req.body;
+    const ok = await updateProfile(req.user.id, { firstName, lastName, chessRating, chessUsername });
+    if (!ok) return res.status(400).json({ error: 'Update failed' });
+    const profile = await getProfile(req.user.id);
+    res.json(profile);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/account/password', authMiddleware, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    await changePassword(req.user.id, newPassword);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/account/transactions', authMiddleware, async (req, res) => {
+  const txns = await getTransactions(req.user.id);
+  res.json(txns);
+});
+
+app.delete('/api/account', authMiddleware, async (req, res) => {
+  try {
+    await deleteAccount(req.user.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ═══ HISTORY ═══
 
 app.get('/api/history', authMiddleware, async (req, res) => {
@@ -267,6 +315,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
