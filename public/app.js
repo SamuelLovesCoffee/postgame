@@ -202,6 +202,7 @@ async function loadAnalysis(id) {
     } catch (e) { console.warn('PGN parse failed:', e); }
 
     coaching = data.coaching;
+    moveComments = {};
     moves = replayMoves;
     flipped = data.player_color === 'b';
     playerColor = data.player_color;
@@ -338,6 +339,9 @@ function selectTier(t) {
   document.getElementById('tierDeep').classList.toggle('selected', t === 'deep');
 }
 let animating = false;
+let moveComments = {};
+let variationMoves = null; // active clicked variation overlay
+let variationBaseFen = null;
 
 const PIECE_CDN = 'https://lichess1.org/assets/piece/tatiana/';
 const pieceCache = {};
@@ -403,6 +407,7 @@ async function startAnalysis() {
 
     moves = finalData.analysis.moves;
     coaching = finalData.coaching;
+    moveComments = finalData.moveComments || {};
     analysisResult = finalData;
     hasEngineData = true;
 
@@ -557,6 +562,15 @@ function renderCoaching(analysis,coach){
       if(m.isBook)chip.classList.add('book');
       chip.innerHTML=(m.color==='w'?`<span class="num">${m.moveNumber}.</span>`:'')+m.san;
       chip.onclick=()=>goToMove(m.ply);cg.appendChild(chip);
+      // Move-by-move comment (Deep tier)
+      if(moveComments[m.ply]){
+        segEl.appendChild(cg);cg=document.createElement('div');cg.className='move-group';
+        const mc=document.createElement('div');mc.className='move-comment';
+        mc.dataset.ply=m.ply;
+        mc.innerHTML=`<span class="mc-move">${m.moveLabel}</span> ${moveComments[m.ply]}`;
+        mc.onclick=()=>goToMove(m.ply);
+        segEl.appendChild(mc);
+      }
       if(critByPly[m.ply]||missedByPly[m.ply]){
         segEl.appendChild(cg);cg=document.createElement('div');cg.className='move-group';
         if(critByPly[m.ply])segEl.appendChild(mkCritCard(critByPly[m.ply]));
@@ -650,6 +664,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
