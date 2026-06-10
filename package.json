@@ -1,7 +1,7 @@
 {
   "name": "postgame",
   "version": "2.0.0",
-  "description": "AI chess coach — post-game analysis with narrative coaching",
+  "description": "AI chess coach \u2014 post-game analysis with narrative coaching",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
@@ -14,6 +14,7 @@
     "@anthropic-ai/sdk": "latest",
     "@supabase/supabase-js": "^2.49.0",
     "stripe": "^17.5.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "nodemailer": "^6.9.16"
   }
 }
