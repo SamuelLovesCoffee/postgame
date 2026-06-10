@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const StockfishEngine = require('./stockfish');
 const { analysePGN } = require('./analysis');
 const { Chess } = require('chess.js');
-const { generateCoaching } = require('./coach');
+const { generateCoaching, generateMoveByMove } = require('./coach');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
@@ -155,6 +155,13 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
 
       job.progress = 92; job.message = 'Generating coaching...';
       const coaching = await generateCoaching(analysis);
+
+      // Deep tier: also generate move-by-move commentary
+      let moveComments = {};
+      if (tier === 'deep') {
+        job.progress = 96; job.message = 'Writing move-by-move notes...';
+        moveComments = await generateMoveByMove(analysis);
+      }
       console.log(`  Complete in ${((Date.now()-t0)/1000).toFixed(1)}s`);
 
       // Save to database
@@ -176,6 +183,7 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
           bookDepth: analysis.bookDepth,
         },
         coaching,
+        moveComments,
       };
     } catch (err) {
       console.error('Job error:', err);
@@ -315,6 +323,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
