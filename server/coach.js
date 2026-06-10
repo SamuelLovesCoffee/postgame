@@ -56,6 +56,14 @@ Return valid JSON only (no markdown, no backticks, no preamble). The structure:
       "engineLine": "The engine's preferred continuation in words"
     }
   ],
+  "brilliantMoves": [
+    {
+      "ply": 24,
+      "moveLabel": "12.Nxf7",
+      "title": "Short title (e.g. 'The knight sacrifice')",
+      "explanation": "Why this move is brilliant — what was sacrificed and what it achieves. 2-3 sentences."
+    }
+  ],
   "strengths": ["Pattern 1", "Pattern 2"],
   "improvementAreas": ["Area 1", "Area 2"],
   "studyRecommendation": "One specific, actionable study recommendation"
@@ -70,12 +78,13 @@ RULES:
 - When OPENING THEORY data is provided, you may reference the opening's typical plans and cite the notable master games listed (e.g. "this structure appeared in Carlsen vs Caruana, 2018"). NEVER invent or cite master games that are not in the provided list.
 - When a Tablebase verdict is provided for an endgame position, treat it as ground truth (it is perfect play). Translate it into human terms: "this endgame is a theoretical draw with best play" — never contradict it.
 - Use the pawn structure notes to ground positional advice (weak pawns, passed pawns, files to target).
+- Only mark a move as brilliant if it is a genuine sacrifice (giving up real material) that leads to a winning or clearly better position, AND it is non-obvious. Be conservative — a brilliant move is rare. If the brilliant candidates aren't truly special, return an empty brilliantMoves array. Never call a simple good move or recapture brilliant.
 - Ply values must EXACTLY match the data provided. Only reference moves that appear in the ANNOTATED MOVES list.
 - NEVER invent, guess, or assume moves that aren't in the provided move list. If you reference a move, it must be one that was actually played and given to you. Do not extrapolate continuations as if they were played.
 - Return ONLY valid JSON`;
 
 async function generateCoaching(analysisResult, detailed = false) {
-  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, bookDepth, masterInfo } = analysisResult;
+  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, brilliantMoves, bookDepth, masterInfo } = analysisResult;
   const color = playerColor === 'w' ? 'White' : 'Black';
 
   let moveText = '';
@@ -162,11 +171,21 @@ async function generateCoaching(analysisResult, detailed = false) {
     }
   }
 
+  // Brilliant move candidates (verified sacrifices that are best + winning)
+  let brilliantText = '';
+  if (brilliantMoves && brilliantMoves.length) {
+    brilliantText = '\n\nBRILLIANT MOVE CANDIDATES (the engine confirms these are strong sacrifices — only praise them if they genuinely sacrifice material for a winning/equal position; if a candidate is not actually brilliant on inspection, omit it):\n';
+    for (const m of brilliantMoves) {
+      brilliantText += `Ply ${m.ply}: ${m.moveLabel} (sacrifice, stayed at ${m.wpAfterMover}% win chance)\n`;
+      brilliantText += `Position before (FEN): ${m.fenBefore}\n`;
+    }
+  }
+
   const userPrompt = `Analyse this game for the student who played ${color}.
 
 Game: ${headers.White || '?'} vs ${headers.Black || '?'}, ${headers.Result || '?'}
 Opening: ${openingName || headers.ECO || 'Unknown'}
-Book depth: ${bookDepth} plies${theoryText}
+Book depth: ${bookDepth} plies${theoryText}${brilliantText}
 
 ANNOTATED MOVES:
 ${moveText}
@@ -202,6 +221,9 @@ Return ONLY valid JSON matching the schema.`;
     if (Array.isArray(parsed.missedIdeas)) {
       parsed.missedIdeas = parsed.missedIdeas.filter(mi => validPlies.has(mi.ply));
     }
+    if (Array.isArray(parsed.brilliantMoves)) {
+      parsed.brilliantMoves = parsed.brilliantMoves.filter(bm => validPlies.has(bm.ply));
+    }
     return parsed;
   } catch (err) {
     console.error('Failed to parse coaching JSON:', err.message);
@@ -212,6 +234,7 @@ Return ONLY valid JSON matching the schema.`;
       segments: [],
       criticalMoments: [],
       missedIdeas: [],
+      brilliantMoves: [],
       strengths: [],
       improvementAreas: [],
       studyRecommendation: 'Review this game and note where the evaluation shifted.',
@@ -266,6 +289,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
