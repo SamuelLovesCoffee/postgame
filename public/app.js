@@ -533,6 +533,55 @@ function goToMove(ply){
   if(ac){ac.classList.add('active');if(window.innerWidth>900)ac.scrollIntoView({block:'nearest',behavior:'smooth'});}
   document.querySelectorAll('.critical-card').forEach(el=>el.classList.remove('active'));
   const card=document.querySelector(`.critical-card[data-ply="${ply}"]`);if(card)card.classList.add('active');
+
+  // Show engine variation for the move at this ply (if engine data present)
+  showVariationForPly(ply);
+}
+
+// ── Clickable engine variations ──
+function showVariationForPly(ply){
+  const panel=document.getElementById('variationPanel');
+  if(!panel||!hasEngineData||ply===0){ if(panel)panel.style.display='none'; return; }
+  const m=moves[ply-1];
+  if(!m||!m.pvLines||!m.pvLines.length||!m.fenBefore){ panel.style.display='none'; return; }
+  const best=m.pvLines[0];
+  if(!best||!best.san||!best.san.length){ panel.style.display='none'; return; }
+
+  variationBaseFen=m.fenBefore;
+  variationMoves=best.san;
+  const box=document.getElementById('varMoves');
+  box.innerHTML='';
+  // Render each move in the line as a clickable chip
+  best.san.forEach((san,i)=>{
+    const chip=document.createElement('span');
+    chip.className='var-move';
+    chip.textContent=san;
+    chip.onclick=()=>playVariation(i);
+    box.appendChild(chip);
+  });
+  panel.style.display='block';
+}
+
+function playVariation(uptoIndex){
+  if(typeof Chess==='undefined'||!variationBaseFen||!variationMoves) return;
+  const chess=new Chess(variationBaseFen);
+  let lastMove=null;
+  for(let i=0;i<=uptoIndex;i++){
+    const mv=chess.move(variationMoves[i]);
+    if(!mv)break;
+    lastMove=mv;
+  }
+  if(lastMove){
+    renderBoardStatic(chess.fen(),lastMove.from,lastMove.to);
+    drawArrow('');
+    // highlight which variation move is active
+    document.querySelectorAll('.var-move').forEach((el,idx)=>el.classList.toggle('active',idx<=uptoIndex));
+  }
+}
+
+function clearVariation(){
+  document.querySelectorAll('.var-move').forEach(el=>el.classList.remove('active'));
+  goToMove(currentPly);
 }
 
 // ═══════════════════════════════════════
@@ -664,6 +713,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
