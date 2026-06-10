@@ -834,3 +834,38 @@ body {
 #miniBoardCaption.fading { opacity: 0; }
 
 
+
+
+/* ── Hero trust line ── */
+.hero-trust {
+  font-size: 13px; color: var(--text-3); margin-top: 14px;
+}
+
+/* ── Social proof strip ── */
+.proof {
+  max-width: 1000px; margin: 0 auto; padding: 24px;
+}
+.proof-inner {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px 24px;
+}
+.proof-stat { text-align: center; }
+.proof-num {
+  font-family: var(--font-display); font-size: 22px; font-weight: 500;
+  color: var(--accent); margin-bottom: 6px;
+}
+.proof-label { font-size: 13px; line-height: 1.5; color: var(--text-2); }
+
+/* ── Audience section ── */
+.audience {
+  max-width: 680px; margin: 0 auto; padding: 40px 24px 8px; text-align: center;
+}
+.audience h2 {
+  font-family: var(--font-display); font-size: 26px; font-weight: 500; margin-bottom: 10px;
+}
+.audience-sub { font-size: 15px; line-height: 1.6; color: var(--text-2); }
+
+@media (max-width: 700px) {
+  .proof-inner { grid-template-columns: 1fr; gap: 20px; }
+}
