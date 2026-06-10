@@ -62,7 +62,7 @@ Return valid JSON only (no markdown, no backticks, no preamble). The structure:
 }
 
 RULES:
-- segments: 3-5 chunks covering the whole game, grouped by phase/theme
+- segments: 3-6 chunks that MUST cover the ENTIRE game from move 1 to the final move. The first segment's startPly must be 1, and the LAST segment's endPly MUST equal the ply of the very last move played. Never stop short — every move must fall within a segment's range. Group by phase/theme.
 - criticalMoments: only student's side, max 4, most instructive
 - missedIdeas: max 3, positions where a decent move missed something much stronger
 - Keep explanations concise: 2-3 sentences each, not 5
@@ -178,7 +178,7 @@ Return ONLY valid JSON matching the schema.`;
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 6000,
+    max_tokens: 8000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
 
@@ -266,6 +266,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
