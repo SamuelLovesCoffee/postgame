@@ -613,7 +613,7 @@ if(window.location.search.includes('payment=success')){
     const cap = document.getElementById('miniBoardCaption');
     if (!cap) return;
     cap.classList.add('fading');
-    setTimeout(() => { cap.textContent = text; cap.classList.remove('fading'); }, 350);
+    setTimeout(() => { cap.textContent = text; cap.classList.remove('fading'); }, 200);
   }
 
   // Animate a single move by sliding the piece
@@ -655,18 +655,28 @@ if(window.location.search.includes('payment=success')){
     }, 580);
   }
 
+  let resetting = false;
   function step() {
+    if (resetting) return;
     const move = SEQUENCE[idx];
     if (move.from && move.to) {
       setCaption(move.cap);
       animateMove(move.from, move.to, () => {});
+      idx = (idx + 1) % SEQUENCE.length;
     } else {
-      // Reset to start
-      board = fenToBoard(START);
-      renderStatic();
+      // Full reset: gently fade the whole board out, reset, fade back in
+      resetting = true;
+      el.style.transition = 'opacity 0.5s ease';
+      el.style.opacity = '0';
       setCaption(move.cap);
+      setTimeout(() => {
+        board = fenToBoard(START);
+        renderStatic();
+        el.style.opacity = '1';
+        resetting = false;
+        idx = (idx + 1) % SEQUENCE.length;
+      }, 600);
     }
-    idx = (idx + 1) % SEQUENCE.length;
   }
 
   // Wait for piece images, then start
@@ -682,4 +692,5 @@ if(window.location.search.includes('payment=success')){
     }
   }, 100);
 })();
+
 
