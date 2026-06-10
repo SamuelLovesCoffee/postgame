@@ -573,17 +573,24 @@ function renderCoaching(analysis,coach){
   tw.innerHTML=h;col.appendChild(tw);
   const eb=document.createElement('button');eb.className='export-btn';eb.textContent='📥 Export coaching report';eb.onclick=exportReport;col.appendChild(eb);
 }
+// Get the REAL move label from analysed data by ply (never trust AI's moveLabel text)
+function verifiedMoveLabel(ply, fallback) {
+  const m = moves.find(mv => mv.ply === ply);
+  if (m && m.moveLabel) return m.moveLabel;
+  return fallback || '';
+}
+
 function mkCritCard(cm){
   const c=document.createElement('div'),t=cm.type||'mistake';c.className=`critical-card type-${t}`;c.dataset.ply=cm.ply;c.onclick=()=>goToMove(cm.ply);
   const bc=['blunder','mistake','inaccuracy'].includes(t)?t:'mistake';
-  c.innerHTML=`<div class="cc-header"><span class="cc-badge ${bc}">${t}</span><span class="cc-move">${cm.moveLabel||''}</span></div>
+  c.innerHTML=`<div class="cc-header"><span class="cc-badge ${bc}">${t}</span><span class="cc-move">${verifiedMoveLabel(cm.ply, cm.moveLabel)}</span></div>
     <div class="cc-title">${cm.title||''}</div><div class="cc-explanation">${cm.explanation||''}</div>
     ${cm.concept?`<span class="cc-concept">${cm.concept}</span>`:''}${cm.studyTip?`<div class="cc-tip">💡 ${cm.studyTip}</div>`:''}`;
   return c;
 }
 function mkMissedCard(mi){
   const c=document.createElement('div');c.className='critical-card type-idea';c.dataset.ply=mi.ply;c.onclick=()=>goToMove(mi.ply);
-  c.innerHTML=`<div class="cc-header"><span class="cc-badge idea">💡 idea</span><span class="cc-move">${mi.moveLabel||''}</span></div>
+  c.innerHTML=`<div class="cc-header"><span class="cc-badge idea">💡 idea</span><span class="cc-move">${verifiedMoveLabel(mi.ply, mi.moveLabel)}</span></div>
     <div class="cc-title">${mi.title||''}</div><div class="cc-explanation">${mi.explanation||''}</div>
     ${mi.engineLine?`<div class="cc-tip">Engine line: ${mi.engineLine}</div>`:''}`;
   return c;
@@ -643,6 +650,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
