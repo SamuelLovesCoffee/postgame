@@ -81,14 +81,30 @@
           <div class="bento-coach-demo">
             <div class="bcd-badge">Blunder</div>
             <div class="bcd-move">13...O-O-O</div>
-            <p class="bcd-text"><strong>Castling into a pin.</strong> After 14. Bf5, your queen on d7 is pinned against the king. The bishop attacks it and there's no escape without losing material. The engine preferred 13...Bg4, developing with tempo.</p>
+            <p class="bcd-text"><strong>Castling into a pin.</strong> After 14. Bf5, your queen on d7 is pinned against the king. The bishop attacks it and there's no escape without losing material. A stronger move was 13...Bg4, developing with tempo.</p>
             <span class="bcd-concept">Concept: absolute pin</span>
-            <span class="bcd-tip">💡 Practise pin puzzles on Lichess</span>
+            <span class="bcd-tip">Practise pin puzzles on Lichess</span>
           </div>
           <p class="bento-desc">Every critical moment gets a coaching card explaining the tactic, the strategy, and what to practise.</p>
         </div>
 
-        <!-- Comparison card -->
+        <!-- Animated board (moved up, swapped with comparison) -->
+        <div class="bento-card bento-board-card">
+          <div class="bento-label">See the moment it goes wrong</div>
+          <div class="mini-board" id="miniBoard"></div>
+          <p class="bento-desc" id="miniBoardCaption">Légal's Mate — a classic trap. Watch how a tempting capture loses instantly.</p>
+        </div>
+
+        <!-- How it works -->
+        <div class="bento-card bento-steps">
+          <div class="bento-label">How it works</div>
+          <div class="bento-step"><span>1</span> Paste your PGN</div>
+          <div class="bento-step"><span>2</span> Stockfish + Claude AI analyse</div>
+          <div class="bento-step"><span>3</span> Read, learn, improve</div>
+          <p class="bento-desc">Three minutes from game to lesson. Works with any PGN from any chess site.</p>
+        </div>
+
+        <!-- Comparison card (moved down, swapped with board) -->
         <div class="bento-card bento-compare">
           <div class="bento-label">Chess.com / Lichess</div>
           <div class="bento-compare-list">
@@ -101,46 +117,30 @@
           <p class="bento-desc">A paragraph of explanation, the chess concept by name, and a concrete study recommendation.</p>
         </div>
 
-        <!-- How it works -->
-        <div class="bento-card bento-steps">
-          <div class="bento-label">How it works</div>
-          <div class="bento-step"><span>1</span> Paste your PGN</div>
-          <div class="bento-step"><span>2</span> Stockfish + Claude AI analyse</div>
-          <div class="bento-step"><span>3</span> Read, learn, improve</div>
-          <p class="bento-desc">Three minutes from game to lesson. Works with any PGN from any chess site.</p>
-        </div>
-
-        <!-- Animated board -->
-        <div class="bento-card bento-board-card">
-          <div class="bento-label">See the moment it goes wrong</div>
-          <div class="mini-board" id="miniBoard"></div>
-          <p class="bento-desc" id="miniBoardCaption">Légal's Mate — a classic trap. Watch how a tempting capture loses instantly.</p>
-        </div>
-
         <!-- Missed ideas -->
         <div class="bento-card">
-          <div class="bento-icon">💡</div>
+          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>
           <div class="bento-label">Missed ideas</div>
           <p class="bento-desc">Your move was fine, but there was something better. We flag positions where you missed a tactic or a stronger plan.</p>
         </div>
 
         <!-- Archive -->
         <div class="bento-card">
-          <div class="bento-icon">🗂️</div>
+          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></div>
           <div class="bento-label">Every game archived</div>
           <p class="bento-desc">All your analyses are saved to your account. Revisit any past game, replay it on the board, and re-read the coaching anytime.</p>
         </div>
 
         <!-- Study recs -->
         <div class="bento-card">
-          <div class="bento-icon">📚</div>
+          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
           <div class="bento-label">Study recommendations</div>
           <p class="bento-desc">Every review ends with concrete homework: what concept to study, what puzzles to solve, what patterns to recognise.</p>
         </div>
 
         <!-- Export -->
         <div class="bento-card">
-          <div class="bento-icon">📥</div>
+          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></div>
           <div class="bento-label">Export your review</div>
           <p class="bento-desc">Download the full coaching report as Markdown. Share it with your coach, your club, or just keep it for yourself.</p>
         </div>
@@ -242,6 +242,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
