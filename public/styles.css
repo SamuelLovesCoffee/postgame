@@ -799,3 +799,20 @@ body {
 /* ── Signup form ── */
 .name-row { display: flex; gap: 8px; }
 .modal-input.half { flex: 1; }
+
+
+/* ── Mini animated board (landing) ── */
+.bento-board-card { display: flex; flex-direction: column; }
+.mini-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 100%; aspect-ratio: 1; max-width: 240px;
+  margin: 0 auto 12px; border-radius: 6px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.mini-sq { display: flex; align-items: center; justify-content: center; }
+.mini-sq.l { background: var(--board-light); }
+.mini-sq.d { background: var(--board-dark); }
+.mini-sq img { width: 88%; height: 88%; object-fit: contain; }
+#miniBoardCaption { transition: opacity 0.3s; min-height: 36px; }
