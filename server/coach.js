@@ -67,7 +67,8 @@ RULES:
 - missedIdeas: max 3, positions where a decent move missed something much stronger
 - Keep explanations concise: 2-3 sentences each, not 5
 - Every move reference must use standard notation (e.g. "7...Nf6", "12. Bxc6")
-- Ply values must match the data provided
+- Ply values must EXACTLY match the data provided. Only reference moves that appear in the ANNOTATED MOVES list.
+- NEVER invent, guess, or assume moves that aren't in the provided move list. If you reference a move, it must be one that was actually played and given to you. Do not extrapolate continuations as if they were played.
 - Return ONLY valid JSON`;
 
 async function generateCoaching(analysisResult) {
@@ -167,7 +168,17 @@ Return ONLY valid JSON matching the schema.`;
   const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
   try {
-    return JSON.parse(cleaned);
+    const parsed = JSON.parse(cleaned);
+    // Validate: drop any critical moment / missed idea referencing a ply that
+    // doesn't exist in the actual game (prevents showing invented moves)
+    const validPlies = new Set(moves.map(m => m.ply));
+    if (Array.isArray(parsed.criticalMoments)) {
+      parsed.criticalMoments = parsed.criticalMoments.filter(cm => validPlies.has(cm.ply));
+    }
+    if (Array.isArray(parsed.missedIdeas)) {
+      parsed.missedIdeas = parsed.missedIdeas.filter(mi => validPlies.has(mi.ply));
+    }
+    return parsed;
   } catch (err) {
     console.error('Failed to parse coaching JSON:', err.message);
     console.error('Raw response:', text.slice(0, 500));
@@ -185,6 +196,7 @@ Return ONLY valid JSON matching the schema.`;
 }
 
 module.exports = { generateCoaching };
+
 
 
 
