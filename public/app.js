@@ -336,6 +336,9 @@ function renderBoardStatic(fen,from,to) {
     const name=String.fromCharCode(97+f)+(8-r);
     if(name===from||name===to) sq.classList.add('hl');
     if(board[r][f]){const p=mkPiece(board[r][f]);if(p)sq.appendChild(p);}
+    // Coordinates: rank number on leftmost visual column, file letter on bottom visual row
+    if(vf===0){const c=document.createElement('span');c.className='coord coord-rank';c.textContent=(8-r);sq.appendChild(c);}
+    if(vr===7){const c=document.createElement('span');c.className='coord coord-file';c.textContent=String.fromCharCode(97+f);sq.appendChild(c);}
     el.appendChild(sq);
   }
 }
@@ -528,6 +531,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
