@@ -890,3 +890,28 @@ body {
 }
 
 
+
+
+/* ── Tier selector ── */
+.tier-select {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0;
+}
+.tier-option {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; cursor: pointer; transition: all 0.15s;
+  background: var(--bg-input);
+}
+.tier-option:hover { border-color: var(--border-light); }
+.tier-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+.tier-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.tier-name { font-size: 15px; font-weight: 600; }
+.tier-cost {
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  background: var(--accent-soft); padding: 2px 8px; border-radius: 10px;
+}
+.tier-option.selected .tier-cost { background: rgba(233,69,96,0.2); }
+.tier-detail { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+
+@media (max-width: 500px) {
+  .tier-select { grid-template-columns: 1fr; }
+}
