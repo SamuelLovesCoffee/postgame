@@ -692,21 +692,12 @@ body {
 }
 
 /* Compare list inside bento */
-.bento-compare-list { margin-bottom: 12px; }
-.bcl-row {
-  font-family: var(--font-mono); font-size: 12.5px;
-  padding: 3px 0; display: flex; align-items: center; gap: 8px;
-}
-.bcl-row.muted { color: var(--text-3); padding-left: 20px; }
-.bcl-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.bcl-dot.red { background: var(--red); }
-.bento-vs {
-  text-align: center; font-size: 12px; font-weight: 700;
-  color: var(--text-3); padding: 8px 0; text-transform: uppercase;
-  letter-spacing: 1px;
-}
+
+
+
+
+
+
 
 /* Steps inside bento */
 .bento-step {
@@ -1015,3 +1006,27 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+
+
+/* ── Comparison card (redesigned) ── */
+.compare-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.compare-side {
+  border-radius: 10px; padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.compare-side.other { background: var(--bg-card); }
+.compare-side.ours { background: var(--accent-soft); border-color: rgba(233,69,96,0.25); }
+.compare-side-head {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 10px;
+}
+.compare-side-head.accent { color: var(--accent); }
+.compare-output { display: flex; flex-direction: column; gap: 6px; }
+.co-move {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.co-dot { width: 8px; height: 8px; border-radius: 50%; background: #dc2626; flex-shrink: 0; }
+.co-verdict { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-3); }
+.co-text { font-size: 13.5px; line-height: 1.6; color: var(--text-2); margin: 0; }
