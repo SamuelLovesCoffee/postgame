@@ -333,6 +333,61 @@ let showBest = false;
 let playerColor = 'w';
 let selectedTier = 'quick';
 
+function switchImport(mode) {
+  document.getElementById('importPaste').style.display = mode === 'paste' ? 'block' : 'none';
+  document.getElementById('importLichess').style.display = mode === 'lichess' ? 'block' : 'none';
+  document.getElementById('importTabPaste').classList.toggle('active', mode === 'paste');
+  document.getElementById('importTabLichess').classList.toggle('active', mode === 'lichess');
+}
+
+async function fetchLichessGames() {
+  const username = document.getElementById('lichessUsername').value.trim();
+  const container = document.getElementById('lichessGames');
+  if (!username) { container.innerHTML = '<p class="lichess-msg">Enter your Lichess username.</p>'; return; }
+  container.innerHTML = '<p class="lichess-msg">Fetching games...</p>';
+  try {
+    const r = await fetch('/api/lichess/' + encodeURIComponent(username), {
+      headers: { Authorization: 'Bearer ' + authToken },
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Failed');
+    if (!data.games || !data.games.length) {
+      container.innerHTML = '<p class="lichess-msg">No games found for that user.</p>';
+      return;
+    }
+    container.innerHTML = data.games.map((g, i) => {
+      const resultClass = g.result === 'win' ? 'win' : g.result === 'loss' ? 'loss' : 'draw';
+      const resultLabel = g.result === 'win' ? 'Won' : g.result === 'loss' ? 'Lost' : 'Draw';
+      const date = g.createdAt ? new Date(g.createdAt).toLocaleDateString() : '';
+      const opp = g.playerColor === 'w' ? g.black : g.white;
+      window._lichessGames = window._lichessGames || {};
+      window._lichessGames[g.id] = g;
+      return `<div class="lichess-game" onclick="selectLichessGame('${g.id}')">
+        <div class="lg-main">
+          <span class="lg-result ${resultClass}">${resultLabel}</span>
+          <span class="lg-opp">vs ${opp || 'Anonymous'}</span>
+        </div>
+        <div class="lg-meta">${g.opening || g.speed || ''} · ${date} · played ${g.playerColor === 'w' ? 'White' : 'Black'}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<p class="lichess-msg">' + e.message + '</p>';
+  }
+}
+
+function selectLichessGame(id) {
+  const g = window._lichessGames && window._lichessGames[id];
+  if (!g) return;
+  // Fill the PGN + colour, switch to paste view so the normal flow takes over
+  document.getElementById('pgnInput').value = g.pgn;
+  document.getElementById('playerColor').value = g.playerColor;
+  // Highlight selection
+  document.querySelectorAll('.lichess-game').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  // Scroll the analyse button into view
+  document.getElementById('analyseBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function selectTier(t) {
   selectedTier = t;
   document.getElementById('tierQuick').classList.toggle('selected', t === 'quick');
@@ -713,6 +768,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
