@@ -613,9 +613,9 @@ body {
 .bento { padding: 0 0 48px; }
 .bento-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: auto;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  align-items: stretch;
 }
 .bento-card {
   background: var(--bg-raised);
@@ -626,9 +626,13 @@ body {
 }
 .bento-card:hover { border-color: var(--border-light); }
 
-.bento-main { grid-column: span 2; grid-row: span 2; }
-.bento-compare { grid-row: span 2; }
+.bento-main { }
+.bento-board-card { }
 .bento-steps { }
+.bento-compare { }
+/* Feature cards (icon cards) sit in a balanced grid */
+.bento-card { display: flex; flex-direction: column; }
+.bento-card .bento-desc { margin-top: auto; }
 
 .bento-label {
   font-size: 12px; font-weight: 700; text-transform: uppercase;
@@ -761,8 +765,6 @@ body {
   .hero h1 { font-size: 30px; }
   .hero-sub { font-size: 15px; }
   .bento-grid { grid-template-columns: 1fr; }
-  .bento-main { grid-column: span 1; grid-row: span 1; }
-  .bento-compare { grid-row: span 1; }
   .pricing-grid { grid-template-columns: repeat(2, 1fr); }
 
   /* Board: hide eval bar on mobile, fix position */
@@ -830,4 +832,5 @@ body {
   transition: opacity 0.35s ease; min-height: 48px;
 }
 #miniBoardCaption.fading { opacity: 0; }
+
 
