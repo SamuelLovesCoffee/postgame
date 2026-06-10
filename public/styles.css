@@ -635,8 +635,12 @@ body {
   letter-spacing: 0.6px; color: var(--text-3); margin-bottom: 12px;
 }
 .bento-icon {
-  font-size: 28px; margin-bottom: 10px;
+  margin-bottom: 12px; color: var(--accent);
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft); border-radius: 10px;
 }
+.bento-svg { width: 22px; height: 22px; }
 .bento-desc {
   font-size: 13.5px; line-height: 1.55; color: var(--text-2); margin-top: 10px;
 }
@@ -814,5 +818,16 @@ body {
 .mini-sq { display: flex; align-items: center; justify-content: center; }
 .mini-sq.l { background: var(--board-light); }
 .mini-sq.d { background: var(--board-dark); }
+.mini-sq { position: relative; }
 .mini-sq img { width: 88%; height: 88%; object-fit: contain; }
-#miniBoardCaption { transition: opacity 0.3s; min-height: 36px; }
+/* Animated piece that slides between squares */
+.mini-anim-piece {
+  position: absolute; z-index: 10; pointer-events: none;
+  transition: left 0.55s cubic-bezier(0.4,0,0.2,1), top 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+.mini-anim-piece img { width: 100%; height: 100%; object-fit: contain; }
+#miniBoardCaption {
+  transition: opacity 0.35s ease; min-height: 48px;
+}
+#miniBoardCaption.fading { opacity: 0; }
+
