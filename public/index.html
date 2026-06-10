@@ -301,7 +301,23 @@
     <div class="input-card">
       <h1>Analyse a game</h1>
       <p class="subtitle">Paste your PGN and select your colour.</p>
-      <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here..."></textarea>
+      <div class="import-tabs">
+        <button class="import-tab active" id="importTabPaste" onclick="switchImport('paste')">Paste PGN</button>
+        <button class="import-tab" id="importTabLichess" onclick="switchImport('lichess')">Import from Lichess</button>
+      </div>
+
+      <div id="importPaste">
+        <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here..."></textarea>
+      </div>
+
+      <div id="importLichess" style="display:none">
+        <div class="lichess-row">
+          <input type="text" id="lichessUsername" class="modal-input" placeholder="Your Lichess username" style="margin-bottom:0">
+          <button class="lichess-fetch-btn" onclick="fetchLichessGames()">Fetch games</button>
+        </div>
+        <div id="lichessGames" class="lichess-games"></div>
+      </div>
+
       <div class="tier-select">
         <label class="tier-option selected" id="tierQuick" onclick="selectTier('quick')">
           <div class="tier-head"><span class="tier-name">Quick</span><span class="tier-cost">1 credit</span></div>
@@ -365,6 +381,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
