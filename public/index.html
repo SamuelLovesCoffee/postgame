@@ -41,6 +41,7 @@
           <span class="credit-badge" id="creditBadge">0</span>
           <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
           <button class="hdr-btn" onclick="showHistory()">My games</button>
+          <button class="hdr-btn" onclick="showAccount()">Account</button>
           <button class="hdr-btn subtle" onclick="logout()">Log out</button>
         </div>
       </div>
@@ -80,6 +81,59 @@
       <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
       <h2>My games</h2>
       <div id="historyList" class="history-list"></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT MODAL -->
+  <div class="modal-overlay" id="accountModal" style="display:none">
+    <div class="modal-card modal-wide">
+      <button class="modal-close" onclick="closeModal('accountModal')">✕</button>
+      <h2>Account</h2>
+      <div class="account-tabs">
+        <button class="acct-tab active" id="tabProfile" onclick="switchAcctTab('profile')">Profile</button>
+        <button class="acct-tab" id="tabSecurity" onclick="switchAcctTab('security')">Security</button>
+        <button class="acct-tab" id="tabBilling" onclick="switchAcctTab('billing')">Billing</button>
+      </div>
+
+      <!-- Profile tab -->
+      <div class="acct-panel" id="panelProfile">
+        <div class="acct-credits" id="acctCredits"></div>
+        <div class="name-row">
+          <div style="flex:1"><label class="acct-label">First name</label><input type="text" id="acctFirstName" class="modal-input"></div>
+          <div style="flex:1"><label class="acct-label">Last name</label><input type="text" id="acctLastName" class="modal-input"></div>
+        </div>
+        <label class="acct-label">Email</label>
+        <input type="email" id="acctEmail" class="modal-input" disabled>
+        <div class="name-row">
+          <div style="flex:1"><label class="acct-label">Chess rating</label><input type="number" id="acctRating" class="modal-input"></div>
+          <div style="flex:1"><label class="acct-label">Chess username</label><input type="text" id="acctChessUsername" class="modal-input"></div>
+        </div>
+        <button class="modal-btn" onclick="saveProfile()">Save changes</button>
+        <div class="modal-error" id="acctProfileMsg"></div>
+      </div>
+
+      <!-- Security tab -->
+      <div class="acct-panel" id="panelSecurity" style="display:none">
+        <label class="acct-label">New password</label>
+        <input type="password" id="acctNewPassword" class="modal-input" placeholder="At least 6 characters">
+        <label class="acct-label">Confirm new password</label>
+        <input type="password" id="acctConfirmPassword" class="modal-input">
+        <button class="modal-btn" onclick="changePassword()">Change password</button>
+        <div class="modal-error" id="acctPasswordMsg"></div>
+      </div>
+
+      <!-- Billing tab -->
+      <div class="acct-panel" id="panelBilling" style="display:none">
+        <div class="acct-credits" id="acctCreditsBilling"></div>
+        <button class="modal-btn" onclick="closeModal('accountModal');showCreditsModal()" style="margin-bottom:20px">Buy more credits</button>
+        <label class="acct-label">Purchase history</label>
+        <div id="txnList" class="txn-list"></div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="danger-zone">
+        <button class="danger-btn" onclick="confirmDeleteAccount()">Delete my account</button>
+      </div>
     </div>
   </div>
 
@@ -299,6 +353,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
