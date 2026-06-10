@@ -71,7 +71,7 @@ RULES:
 - NEVER invent, guess, or assume moves that aren't in the provided move list. If you reference a move, it must be one that was actually played and given to you. Do not extrapolate continuations as if they were played.
 - Return ONLY valid JSON`;
 
-async function generateCoaching(analysisResult) {
+async function generateCoaching(analysisResult, detailed = false) {
   const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, bookDepth } = analysisResult;
   const color = playerColor === 'w' ? 'White' : 'Black';
 
@@ -195,7 +195,54 @@ Return ONLY valid JSON matching the schema.`;
   }
 }
 
-module.exports = { generateCoaching };
+
+// Generate brief move-by-move commentary for the player's moves (Deep tier).
+// Returns an object mapping ply -> short comment string.
+async function generateMoveByMove(analysisResult) {
+  const { headers, playerColor, moves } = analysisResult;
+  const color = playerColor === 'w' ? 'White' : 'Black';
+
+  // Only comment on the player's own moves to keep cost/length reasonable
+  const playerMoves = moves.filter(m => m.color === playerColor && !m.isBook);
+
+  // Build compact context
+  let moveText = '';
+  for (const m of moves) {
+    const prefix = m.color === 'w' ? `${m.moveNumber}. ` : '';
+    const tag = m.color === playerColor && !m.isBook
+      ? (m.wpLoss > 8 ? ' [mistake]' : m.wpLoss > 4 ? ' [inaccuracy]' : m.isEngineTop ? ' [best]' : '')
+      : '';
+    moveText += `${prefix}${m.san} (ply ${m.ply})${tag}\n`;
+  }
+
+  const sys = `You are a chess coach giving brief move-by-move notes. For each of the student's moves, write ONE short sentence (max 15 words) of insight: what the move does, or what was better. Be human, no engine numbers. Return ONLY valid JSON: an array of {ply: number, comment: string}. Only include plies for ${color}'s moves. Keep comments concise and varied.`;
+
+  const user = `Game: ${headers.White || '?'} vs ${headers.Black || '?'}. Student played ${color}.\n\nMoves:\n${moveText}\n\nReturn a JSON array of brief comments for each of ${color}'s moves. Format: [{"ply": 1, "comment": "..."}]. Only valid JSON.`;
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      system: sys,
+      messages: [{ role: 'user', content: user }],
+    });
+    const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    const arr = JSON.parse(cleaned);
+    const validPlies = new Set(moves.map(m => m.ply));
+    const out = {};
+    for (const item of arr) {
+      if (validPlies.has(item.ply) && item.comment) out[item.ply] = item.comment;
+    }
+    return out;
+  } catch (err) {
+    console.error('Move-by-move generation failed:', err.message);
+    return {};
+  }
+}
+
+module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
