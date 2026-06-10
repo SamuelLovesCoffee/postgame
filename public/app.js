@@ -529,72 +529,157 @@ if(window.location.search.includes('payment=success')){
 
 // ═══════════════════════════════════════
 // LANDING PAGE MINI BOARD ANIMATION
-// (Légal's Mate trap, looping)
+// (Légal's Mate, fluid piece-by-piece)
 // ═══════════════════════════════════════
 (function initMiniBoard() {
   const el = document.getElementById('miniBoard');
   if (!el) return;
 
-  // FEN positions for Légal's Mate sequence
-  // 1.e4 e5 2.Nf3 Nc6 3.Bc4 d6 4.Nc3 Bg4 5.Nxe5! Bxd1?? 6.Bxf7+ Ke7 7.Nd5#
-  const positions = [
-    { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', cap: "Légal's Mate — a 250-year-old trap." },
-    { fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR', cap: '1. e4 e5' },
-    { fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R', cap: '2. Nf3 Nc6' },
-    { fen: 'r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R', cap: '3. Bc4 d6' },
-    { fen: 'r2qkbnr/ppp2ppp/2np4/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R', cap: '4. Nc3 Bg4 — pinning the knight.' },
-    { fen: 'r2qkbnr/ppp2ppp/2np4/4N3/2B1P1b1/2N5/PPPP1PPP/R1BQK2R', cap: "5. Nxe5! Black thinks the queen is hanging..." },
-    { fen: 'r2qkbnr/ppp2ppp/2np4/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R', cap: '5...Bxd1?? Taking the queen — the fatal mistake.' },
-    { fen: 'r2qkbnr/ppp2Bpp/2np4/8/4P3/2N5/PPPP1PPP/R1BbK2R', cap: '6. Bxf7+ Ke7' },
-    { fen: 'r2q1bnr/ppp1kBpp/2np4/3N4/4P3/8/PPPP1PPP/R1Bb1K1R', cap: '7. Nd5# — checkmate. The queen sacrifice wins.' },
+  // Each step: the move played (from→to in algebraic) and the caption.
+  // Starting position is standard. We apply moves sequentially.
+  const SEQUENCE = [
+    { from: null, to: null, cap: "Légal's Mate — a 250-year-old trap." },
+    { from: 'e2', to: 'e4', cap: '1. e4' },
+    { from: 'e7', to: 'e5', cap: '1...e5' },
+    { from: 'g1', to: 'f3', cap: '2. Nf3' },
+    { from: 'b8', to: 'c6', cap: '2...Nc6' },
+    { from: 'f1', to: 'c4', cap: '3. Bc4' },
+    { from: 'd7', to: 'd6', cap: '3...d6' },
+    { from: 'b1', to: 'c3', cap: '4. Nc3' },
+    { from: 'c8', to: 'g4', cap: '4...Bg4 — pinning the knight to the queen.' },
+    { from: 'f3', to: 'e5', cap: "5. Nxe5! Black thinks White just blundered the queen..." },
+    { from: 'g4', to: 'd1', cap: '5...Bxd1?? Grabbing the queen — the fatal mistake.' },
+    { from: 'c4', to: 'f7', cap: '6. Bxf7+ Ke7 forced.' },
+    { from: 'e8', to: 'e7', cap: '6...Ke7' },
+    { from: 'c3', to: 'd5', cap: '7. Nd5# — checkmate. The sacrifice wins.' },
   ];
 
   const PIECE_MAP = { K:'wK',Q:'wQ',R:'wR',B:'wB',N:'wN',P:'wP',k:'bK',q:'bQ',r:'bR',b:'bB',n:'bN',p:'bP' };
-  let idx = 0;
+  const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 
-  function renderMini(fen) {
-    const rows = fen.split(' ')[0].split('/');
+  // Board state as 8x8 array [rank0=rank8][file0=a]
+  function fenToBoard(fen) {
+    const b = [];
+    for (const row of fen.split('/')) {
+      const r = [];
+      for (const ch of row) {
+        if (ch >= '1' && ch <= '8') for (let i=0;i<+ch;i++) r.push(null);
+        else r.push(ch);
+      }
+      b.push(r);
+    }
+    return b;
+  }
+
+  let board = fenToBoard(START);
+  let idx = 0;
+  const squares = [];
+
+  // Build 64 square cells once
+  function buildGrid() {
     el.innerHTML = '';
+    squares.length = 0;
     for (let r = 0; r < 8; r++) {
-      let file = 0;
-      for (const ch of rows[r]) {
-        if (ch >= '1' && ch <= '9') {
-          for (let i = 0; i < +ch; i++) {
-            const sq = document.createElement('div');
-            sq.className = 'mini-sq ' + ((r + file) % 2 === 0 ? 'l' : 'd');
-            el.appendChild(sq); file++;
-          }
-        } else {
-          const sq = document.createElement('div');
-          sq.className = 'mini-sq ' + ((r + file) % 2 === 0 ? 'l' : 'd');
-          const code = PIECE_MAP[ch];
-          if (code && pieceCache[code]) {
-            const img = document.createElement('img');
-            img.src = pieceCache[code];
-            sq.appendChild(img);
-          }
-          el.appendChild(sq); file++;
+      for (let f = 0; f < 8; f++) {
+        const sq = document.createElement('div');
+        sq.className = 'mini-sq ' + ((r + f) % 2 === 0 ? 'l' : 'd');
+        el.appendChild(sq);
+        squares.push(sq);
+      }
+    }
+  }
+
+  function coords(alg) {
+    return { f: alg.charCodeAt(0) - 97, r: 8 - parseInt(alg[1]) };
+  }
+
+  // Render all pieces statically
+  function renderStatic() {
+    for (let r = 0; r < 8; r++) {
+      for (let f = 0; f < 8; f++) {
+        const sq = squares[r * 8 + f];
+        sq.innerHTML = '';
+        const ch = board[r][f];
+        if (ch && pieceCache[PIECE_MAP[ch]]) {
+          const img = document.createElement('img');
+          img.src = pieceCache[PIECE_MAP[ch]];
+          sq.appendChild(img);
         }
       }
     }
   }
 
-  function step() {
-    const pos = positions[idx];
-    renderMini(pos.fen);
+  function setCaption(text) {
     const cap = document.getElementById('miniBoardCaption');
-    if (cap) cap.textContent = pos.cap;
-    idx = (idx + 1) % positions.length;
+    if (!cap) return;
+    cap.classList.add('fading');
+    setTimeout(() => { cap.textContent = text; cap.classList.remove('fading'); }, 350);
   }
 
-  // Wait for pieces to load, then start
+  // Animate a single move by sliding the piece
+  function animateMove(from, to, done) {
+    const src = coords(from), dst = coords(to);
+    const movingCh = board[src.r][src.f];
+    if (!movingCh || !pieceCache[PIECE_MAP[movingCh]]) { done(); return; }
+
+    const boardRect = el.getBoundingClientRect();
+    const sz = boardRect.width / 8;
+
+    // Remove piece from source cell visually
+    squares[src.r * 8 + src.f].innerHTML = '';
+
+    // Create sliding piece
+    const anim = document.createElement('div');
+    anim.className = 'mini-anim-piece';
+    anim.style.width = sz + 'px';
+    anim.style.height = sz + 'px';
+    anim.style.left = (src.f * sz) + 'px';
+    anim.style.top = (src.r * sz) + 'px';
+    const img = document.createElement('img');
+    img.src = pieceCache[PIECE_MAP[movingCh]];
+    anim.appendChild(img);
+    el.appendChild(anim);
+
+    requestAnimationFrame(() => {
+      anim.style.left = (dst.f * sz) + 'px';
+      anim.style.top = (dst.r * sz) + 'px';
+    });
+
+    setTimeout(() => {
+      anim.remove();
+      // Apply move to board state
+      board[dst.r][dst.f] = movingCh;
+      board[src.r][src.f] = null;
+      renderStatic();
+      done();
+    }, 580);
+  }
+
+  function step() {
+    const move = SEQUENCE[idx];
+    if (move.from && move.to) {
+      setCaption(move.cap);
+      animateMove(move.from, move.to, () => {});
+    } else {
+      // Reset to start
+      board = fenToBoard(START);
+      renderStatic();
+      setCaption(move.cap);
+    }
+    idx = (idx + 1) % SEQUENCE.length;
+  }
+
+  // Wait for piece images, then start
   let tries = 0;
-  const waitForPieces = setInterval(() => {
+  const wait = setInterval(() => {
     tries++;
-    if (Object.keys(pieceCache).length >= 10 || tries > 40) {
-      clearInterval(waitForPieces);
-      step();
-      setInterval(step, 1800);
+    if (Object.keys(pieceCache).length >= 10 || tries > 50) {
+      clearInterval(wait);
+      buildGrid();
+      renderStatic();
+      setTimeout(step, 800);
+      setInterval(step, 2000);
     }
   }, 100);
 })();
+
