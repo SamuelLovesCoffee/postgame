@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>postgame — AI Chess Coach</title>
-<meta name="description" content="Not move ratings. Real coaching. An AI coach explains your chess games: what went wrong, why, and what to study next.">
+<meta name="description" content="AI-powered chess coaching. An AI coach explains your chess games: what went wrong, why, and what to study next.">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
@@ -66,7 +66,7 @@
   <!-- ═══ LANDING (logged out) ═══ -->
   <main class="landing" id="landingView">
     <section class="hero">
-      <p class="hero-eyebrow">AI-powered post-game coaching</p>
+      <p class="hero-eyebrow">AI-powered chess coaching</p>
       <h1>Stop guessing<br>why you lost.</h1>
       <p class="hero-sub">Other tools tell you the move was bad. We explain <em>why</em>, name the concept you missed, and tell you exactly what to study.</p>
       <button class="cta-btn" onclick="showAuthModal('signup')">Analyse your first game free</button>
@@ -110,11 +110,25 @@
           <p class="bento-desc">Three minutes from game to lesson. Works with any PGN from any chess site.</p>
         </div>
 
+        <!-- Animated board -->
+        <div class="bento-card bento-board-card">
+          <div class="bento-label">See the moment it goes wrong</div>
+          <div class="mini-board" id="miniBoard"></div>
+          <p class="bento-desc" id="miniBoardCaption">Légal's Mate — a classic trap. Watch how a tempting capture loses instantly.</p>
+        </div>
+
         <!-- Missed ideas -->
         <div class="bento-card">
           <div class="bento-icon">💡</div>
           <div class="bento-label">Missed ideas</div>
           <p class="bento-desc">Your move was fine, but there was something better. We flag positions where you missed a tactic or a stronger plan.</p>
+        </div>
+
+        <!-- Archive -->
+        <div class="bento-card">
+          <div class="bento-icon">🗂️</div>
+          <div class="bento-label">Every game archived</div>
+          <p class="bento-desc">All your analyses are saved to your account. Revisit any past game, replay it on the board, and re-read the coaching anytime.</p>
         </div>
 
         <!-- Study recs -->
@@ -228,5 +242,6 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
