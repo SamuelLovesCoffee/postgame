@@ -245,13 +245,72 @@ async function handleStripeWebhook(body, signature) {
   }
 }
 
+
+// ── Account management ──
+
+async function getProfile(userId) {
+  const { data: userData, error } = await supabase.auth.admin.getUserById(userId);
+  if (error || !userData.user) return null;
+  const meta = userData.user.user_metadata || {};
+  const balance = await getCredits(userId);
+  return {
+    id: userId,
+    email: userData.user.email,
+    firstName: meta.first_name || '',
+    lastName: meta.last_name || '',
+    chessRating: meta.chess_rating || null,
+    chessUsername: meta.chess_username || null,
+    credits: balance,
+    createdAt: userData.user.created_at,
+  };
+}
+
+async function updateProfile(userId, updates) {
+  const { data: userData } = await supabase.auth.admin.getUserById(userId);
+  const existing = (userData && userData.user && userData.user.user_metadata) || {};
+  const merged = {
+    first_name: updates.firstName !== undefined ? updates.firstName : existing.first_name,
+    last_name: updates.lastName !== undefined ? updates.lastName : existing.last_name,
+    chess_rating: updates.chessRating !== undefined ? updates.chessRating : existing.chess_rating,
+    chess_username: updates.chessUsername !== undefined ? updates.chessUsername : existing.chess_username,
+  };
+  const { error } = await supabase.auth.admin.updateUserById(userId, { user_metadata: merged });
+  return !error;
+}
+
+async function changePassword(userId, newPassword) {
+  const { error } = await supabase.auth.admin.updateUserById(userId, { password: newPassword });
+  if (error) throw new Error(error.message);
+  return true;
+}
+
+async function getTransactions(userId) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('credits_added, amount_cents, currency, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) return [];
+  return data;
+}
+
+async function deleteAccount(userId) {
+  // Cascading deletes handle credits/analyses/transactions via FK on delete cascade
+  const { error } = await supabase.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+  return true;
+}
+
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
+  getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
