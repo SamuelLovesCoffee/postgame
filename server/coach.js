@@ -177,7 +177,7 @@ ${goodText}
 Return ONLY valid JSON matching the schema.`;
 
   const response = await client.messages.create({
-    model: 'claude-fable-5',
+    model: 'claude-sonnet-4-6',
     max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
@@ -266,6 +266,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
