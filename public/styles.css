@@ -869,3 +869,12 @@ body {
 @media (max-width: 700px) {
   .proof-inner { grid-template-columns: 1fr; gap: 20px; }
 }
+
+
+/* ── Landing board video ── */
+.mini-board-video {
+  width: 100%; max-width: 280px; aspect-ratio: 1;
+  margin: 0 auto 12px; border-radius: 8px;
+  border: 1px solid var(--border); display: block;
+  object-fit: cover;
+}
