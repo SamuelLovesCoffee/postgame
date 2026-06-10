@@ -653,7 +653,17 @@ function renderCoaching(analysis,coach){
   const critByPly={},missedByPly={};
   (coach.criticalMoments||[]).forEach(cm=>{critByPly[cm.ply]=cm;});
   (coach.missedIdeas||[]).forEach(mi=>{missedByPly[mi.ply]=mi;});
-  const segments=coach.segments||[{startPly:1,endPly:(analysis.moves||[]).length,title:'Game',narrative:''}];
+  let segments=coach.segments||[{startPly:1,endPly:(analysis.moves||[]).length,title:'Game',narrative:''}];
+  const allMoves=(analysis.moves||[]);
+  // Safety net: ensure the segments cover every move. If the last segment stops
+  // short of the final move, extend it (or add a final segment) so no moves vanish.
+  if(segments.length&&allMoves.length){
+    let maxEnd=Math.max(...segments.map(s=>s.endPly||0));
+    if(maxEnd<allMoves.length){
+      segments=segments.slice();
+      segments.push({startPly:maxEnd+1,endPly:allMoves.length,title:'Final phase',narrative:''});
+    }
+  }
   for(const seg of segments){
     const segEl=document.createElement('div');segEl.className='segment';
     const header=document.createElement('div');header.className='segment-header';header.textContent=seg.title||'Continuation';segEl.appendChild(header);
@@ -768,6 +778,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
