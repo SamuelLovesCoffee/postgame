@@ -307,6 +307,31 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
       && pvLines.length > 0
       && wpBefore < 70; // not already winning easily
 
+    // Brilliant move detection (Chess.com-style "!!"):
+    // A real sacrifice (gives up material) that is ALSO the best move and keeps
+    // the position good. We approximate "sacrifice" as: the move is a capture of
+    // a lower-value piece by a higher-value one, OR it allows immediate recapture
+    // of the moved piece, while remaining the engine's top choice and not losing.
+    const PIECE_VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+    let isBrilliant = false;
+    if (move.color === playerColor && !isBook && isEngineTop && wpLoss < 2 && wpAfterMover > 45) {
+      const movedVal = PIECE_VAL[move.piece] || 0;
+      const capturedVal = move.captured ? (PIECE_VAL[move.captured] || 0) : 0;
+      // Sacrifice signals: moving a valuable piece to a square where it can be
+      // captured by a less valuable enemy piece, or capturing less than you give.
+      // We check if after the move, the moved piece sits on a square attacked by
+      // a cheaper enemy pawn/piece (approximated via the next position's best reply
+      // being a capture on the destination square).
+      const nextBest = evAfter.bestMove || '';
+      const recapturesDest = nextBest.slice(2, 4) === move.to;
+      const givesMaterial = (movedVal >= 3 && recapturesDest && capturedVal < movedVal);
+      // Also flag a queen/rook sac that stays winning
+      const heavySac = (movedVal >= 5 && recapturesDest);
+      if ((givesMaterial || heavySac) && move.san.length > 1) {
+        isBrilliant = true;
+      }
+    }
+
     annotatedMoves.push({
       ply: i,
       moveNumber,
@@ -336,6 +361,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
       isBook,
       isSacrifice: !!move.captured && move.piece !== 'p',
       isMissedOpportunity,
+      isBrilliant,
       phase,
     });
   }
@@ -365,6 +391,9 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
     masterInfo = await masterGamesLookup(positions[theoryIdx].fen);
   }
 
+  // Brilliant moves (rare, only the clearest sacrifices)
+  const brilliantMoves = annotatedMoves.filter((m) => m.isBrilliant).slice(0, 3);
+
   // Missed opportunities
   const missedOpportunities = annotatedMoves
     .filter((m) => m.isMissedOpportunity)
@@ -384,6 +413,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
     playerColor,
     totalMoves: annotatedMoves.length,
     moves: annotatedMoves,
+    brilliantMoves,
     masterInfo,
     criticalMoments,
     missedOpportunities,
@@ -393,5 +423,6 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
 
