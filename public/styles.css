@@ -252,15 +252,18 @@ body {
 .board-nav button {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius-sm); color: var(--text);
-  width: 36px; height: 32px;
+  width: 44px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 13px; transition: background 0.15s;
+  cursor: pointer; font-size: 15px; transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
+.board-nav button:active { background: var(--accent-soft); }
 .board-nav button:hover { background: var(--surface); }
 
 .best-toggle {
-  width: auto !important; padding: 0 10px !important;
-  font-size: 11px !important; font-family: var(--font-body) !important;
+  width: auto !important; min-height: 40px; padding: 0 14px !important;
+  font-size: 13px !important; font-family: var(--font-body) !important;
   color: var(--text-3) !important; white-space: nowrap;
 }
 .best-toggle.active {
@@ -450,10 +453,10 @@ body {
   }
   
   
-  .board-nav { margin-top: 6px; gap: 4px; }
-  .board-nav button { width: 32px; height: 28px; font-size: 12px; }
+  .board-nav { margin-top: 8px; gap: 6px; }
+  .board-nav button { width: 48px; height: 44px; font-size: 16px; }
   
-  .best-toggle { font-size: 10px !important; padding: 0 8px !important; }
+  .best-toggle { font-size: 13px !important; padding: 0 12px !important; min-height: 44px; }
 
   /* Arrow overlay scales with board */
   .arrow-svg { pointer-events: none; }
@@ -786,8 +789,8 @@ body {
   }
   .board-wrap { justify-content: center; }
   .board { width: min(60vw, 280px); height: min(60vw, 280px); }
-  .board-nav { margin-top: 4px; gap: 4px; }
-  .board-nav button { width: 32px; height: 28px; font-size: 12px; }
+  .board-nav { margin-top: 6px; gap: 5px; }
+  .board-nav button { width: 46px; height: 44px; font-size: 16px; }
   
   .best-toggle { font-size: 10px !important; padding: 0 7px !important; }
   .coach-col { padding: 12px; }
@@ -1003,3 +1006,12 @@ body {
 }
 .var-move:hover { background: var(--accent-soft); color: var(--accent); }
 .var-move.active { background: var(--accent); color: #fff; }
+
+
+
+/* ── Touch ergonomics: prevent double-tap zoom + tap highlight ── */
+button, .move-chip, .var-move, .move-comment, .critical-card,
+.tier-option, .price-btn, .hdr-btn, .cta-btn, .package-card, .history-item {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
