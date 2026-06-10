@@ -853,7 +853,7 @@ body {
 .proof-stat { text-align: center; }
 .proof-num {
   font-family: var(--font-display); font-size: 22px; font-weight: 500;
-  color: var(--accent); margin-bottom: 6px;
+  color: #ffffff; margin-bottom: 6px;
 }
 .proof-label { font-size: 13px; line-height: 1.5; color: var(--text-2); }
 
@@ -878,3 +878,4 @@ body {
   border: 1px solid var(--border); display: block;
   object-fit: cover;
 }
+
