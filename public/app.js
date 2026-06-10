@@ -233,7 +233,7 @@ let showBest = false;
 let playerColor = 'w';
 let animating = false;
 
-const PIECE_CDN = 'https://lichess1.org/assets/piece/cburnett/';
+const PIECE_CDN = 'https://lichess1.org/assets/piece/tatiana/';
 const pieceCache = {};
 let usePieceImg = true;
 (async () => {
@@ -528,6 +528,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
