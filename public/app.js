@@ -222,6 +222,105 @@ async function loadAnalysis(id) {
 
 
 // ═══════════════════════════════════════
+// ACCOUNT MANAGEMENT
+// ═══════════════════════════════════════
+async function showAccount() {
+  document.getElementById('accountModal').style.display = 'flex';
+  switchAcctTab('profile');
+  try {
+    const r = await fetch('/api/account', { headers: { Authorization: 'Bearer ' + authToken } });
+    const p = await r.json();
+    document.getElementById('acctFirstName').value = p.firstName || '';
+    document.getElementById('acctLastName').value = p.lastName || '';
+    document.getElementById('acctEmail').value = p.email || '';
+    document.getElementById('acctRating').value = p.chessRating || '';
+    document.getElementById('acctChessUsername').value = p.chessUsername || '';
+    const creditsHtml = `<span class="credit-pill">${p.credits} credit${p.credits === 1 ? '' : 's'}</span>`;
+    document.getElementById('acctCredits').innerHTML = creditsHtml;
+    document.getElementById('acctCreditsBilling').innerHTML = creditsHtml;
+  } catch (e) { console.error(e); }
+}
+
+function switchAcctTab(tab) {
+  ['profile','security','billing'].forEach(t => {
+    document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+  });
+  if (tab === 'billing') loadTransactions();
+}
+
+async function saveProfile() {
+  const msg = document.getElementById('acctProfileMsg');
+  msg.textContent = ''; msg.style.color = '';
+  try {
+    const r = await fetch('/api/account', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+      body: JSON.stringify({
+        firstName: document.getElementById('acctFirstName').value.trim(),
+        lastName: document.getElementById('acctLastName').value.trim(),
+        chessRating: document.getElementById('acctRating').value || null,
+        chessUsername: document.getElementById('acctChessUsername').value.trim() || null,
+      }),
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Failed'); }
+    msg.style.color = 'var(--green)';
+    msg.textContent = 'Saved.';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function changePassword() {
+  const msg = document.getElementById('acctPasswordMsg');
+  msg.textContent = ''; msg.style.color = '';
+  const pw = document.getElementById('acctNewPassword').value;
+  const confirm = document.getElementById('acctConfirmPassword').value;
+  if (pw.length < 6) { msg.textContent = 'Password must be at least 6 characters'; return; }
+  if (pw !== confirm) { msg.textContent = 'Passwords do not match'; return; }
+  try {
+    const r = await fetch('/api/account/password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+      body: JSON.stringify({ newPassword: pw }),
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Failed'); }
+    msg.style.color = 'var(--green)';
+    msg.textContent = 'Password changed.';
+    document.getElementById('acctNewPassword').value = '';
+    document.getElementById('acctConfirmPassword').value = '';
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function loadTransactions() {
+  const list = document.getElementById('txnList');
+  list.innerHTML = '<p style="color:var(--text-3);font-size:13px">Loading...</p>';
+  try {
+    const r = await fetch('/api/account/transactions', { headers: { Authorization: 'Bearer ' + authToken } });
+    const txns = await r.json();
+    if (!txns.length) { list.innerHTML = '<p style="color:var(--text-3);font-size:13px">No purchases yet.</p>'; return; }
+    list.innerHTML = txns.map(t => {
+      const date = new Date(t.created_at).toLocaleDateString();
+      const amount = (t.amount_cents / 100).toFixed(2);
+      return `<div class="txn-item"><span>+${t.credits_added} credits</span><span class="txn-meta">$${amount} · ${date}</span></div>`;
+    }).join('');
+  } catch (e) { list.innerHTML = '<p style="color:var(--text-3)">Failed to load.</p>'; }
+}
+
+async function confirmDeleteAccount() {
+  if (!confirm('Delete your account permanently? This removes all your analyses and remaining credits. This cannot be undone.')) return;
+  if (!confirm('Are you absolutely sure? This is your last chance to keep your account.')) return;
+  try {
+    const r = await fetch('/api/account', {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + authToken },
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Failed'); }
+    alert('Your account has been deleted.');
+    logout();
+    closeModal('accountModal');
+  } catch (e) { alert('Failed to delete account: ' + e.message); }
+}
+
+// ═══════════════════════════════════════
 // GAME STATE
 // ═══════════════════════════════════════
 let moves = [];
@@ -544,6 +643,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
