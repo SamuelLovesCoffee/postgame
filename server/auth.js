@@ -14,9 +14,9 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 // Credit packages
 const PACKAGES = [
-  { id: 'starter', credits: 10, price_cents: 499, label: '10 analyses — $4.99' },
-  { id: 'club', credits: 40, price_cents: 1499, label: '40 analyses — $14.99' },
-  { id: 'serious', credits: 100, price_cents: 2999, label: '100 analyses — $29.99' },
+  { id: 'starter', credits: 10, price_cents: 499, label: '10 credits — $4.99' },
+  { id: 'club', credits: 30, price_cents: 1199, label: '30 credits — $11.99' },
+  { id: 'serious', credits: 75, price_cents: 2499, label: '75 credits — $24.99' },
 ];
 
 // ── Auth helpers ──
@@ -310,6 +310,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
