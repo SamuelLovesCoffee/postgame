@@ -22,28 +22,55 @@ const PACKAGES = [
 // ── Auth helpers ──
 
 async function signUp(email, password, metadata = {}) {
-  // Use anon client signUp (not admin.createUser) so Supabase triggers
-  // the normal confirmation email flow via configured SMTP
-  const { createClient: mkClient } = require('@supabase/supabase-js');
-  const anonClient = mkClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
-  const { data, error } = await anonClient.auth.signUp({
+  // Create user with email pre-confirmed so they can sign in immediately
+  // (no email validation step). A welcome email is sent separately.
+  const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: {
-        first_name: metadata.firstName || '',
-        last_name: metadata.lastName || '',
-        chess_rating: metadata.rating || null,
-        chess_username: metadata.chessUsername || null,
-      },
+    email_confirm: true,
+    user_metadata: {
+      first_name: metadata.firstName || '',
+      last_name: metadata.lastName || '',
+      chess_rating: metadata.rating || null,
+      chess_username: metadata.chessUsername || null,
     },
   });
   if (error) throw new Error(error.message);
   if (!data.user) throw new Error('Signup failed');
+  // Fire a welcome email (non-blocking; failure shouldn't break signup)
+  sendWelcomeEmail(email, metadata.firstName || '').catch(e => console.error('Welcome email failed:', e.message));
   return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
+}
+
+// Send a welcome email via Supabase's configured SMTP using a magic-link-free approach.
+// We use nodemailer-style sending through a simple SMTP call.
+async function sendWelcomeEmail(email, firstName) {
+  // Supabase doesn't expose a direct "send arbitrary email" API, so we use
+  // the configured SMTP credentials directly via nodemailer.
+  const nodemailer = require('nodemailer');
+  if (!process.env.SMTP_HOST) {
+    console.log('No SMTP configured, skipping welcome email');
+    return;
+  }
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+  const name = firstName || 'there';
+  await transporter.sendMail({
+    from: `postgame <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Welcome to postgame',
+    html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1a1a1f">
+      <h1 style="font-size:22px">Welcome, ${name}.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#444">You're all set. You have <strong>1 free analysis credit</strong> to get started — paste any game from Chess.com or Lichess and get a full coaching review.</p>
+      <p style="font-size:15px;line-height:1.6"><a href="https://post-game.net" style="color:#e94560;font-weight:600">Analyse your first game →</a></p>
+      <p style="font-size:13px;color:#888;margin-top:24px">postgame — post-game.net</p>
+    </div>`,
+  });
+  console.log(`Welcome email sent to ${email}`);
 }
 
 async function signIn(email, password) {
@@ -225,6 +252,7 @@ module.exports = {
   createCheckoutSession, handleStripeWebhook,
   PACKAGES,
 };
+
 
 
 
