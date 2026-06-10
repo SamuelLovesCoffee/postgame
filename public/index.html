@@ -183,15 +183,22 @@
 
         <!-- Comparison card (moved down, swapped with board) -->
         <div class="bento-card bento-compare">
-          <div class="bento-label">Chess.com / Lichess</div>
-          <div class="bento-compare-list">
-            <div class="bcl-row"><span class="bcl-dot red"></span> 13...O-O-O — Blunder</div>
-            <div class="bcl-row muted">Best: 13...Bg4</div>
-            <div class="bcl-row muted">Accuracy: 42%</div>
+          <div class="bento-label">The same blunder, two ways</div>
+          <div class="compare-stack">
+            <div class="compare-side other">
+              <div class="compare-side-head">Other tools</div>
+              <div class="compare-output">
+                <span class="co-move"><span class="co-dot"></span>5&hellip;Bxd1</span>
+                <span class="co-verdict">Blunder · best was Nxe5</span>
+              </div>
+            </div>
+            <div class="compare-side ours">
+              <div class="compare-side-head accent">postgame</div>
+              <div class="compare-output">
+                <p class="co-text">You grabbed the queen, but it walks into mate: 6.Bxf7+ Ke7 7.Nd5#. Material means nothing when your king is exposed &mdash; always check forcing replies before capturing.</p>
+              </div>
+            </div>
           </div>
-          <div class="bento-vs">vs</div>
-          <div class="bento-label" style="color:var(--green)">postgame</div>
-          <p class="bento-desc">A paragraph of explanation, the chess concept by name, and a concrete study recommendation.</p>
         </div>
 
         <!-- Missed ideas -->
@@ -358,6 +365,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
