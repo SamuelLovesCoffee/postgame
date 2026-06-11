@@ -551,18 +551,37 @@ function cpToWinPct(cp){return 50+50*(2/(1+Math.exp(-0.00368208*cp))-1);}
 function updateEval(m){}
 function drawArrow(uci){
   const svg=document.getElementById('arrowSvg');
-  while(svg.childNodes.length>1)svg.removeChild(svg.lastChild);
-  if(!uci||uci.length<4)return;
-  const s=100/8,ff=uci.charCodeAt(0)-97,fr=8-parseInt(uci[1]),tf=uci.charCodeAt(2)-97,tr=8-parseInt(uci[3]);
+  svg.innerHTML='';
+  if(!uci||uci.length<4||!showBest)return;
+  const s=100/8;
+  const ff=uci.charCodeAt(0)-97,fr=8-parseInt(uci[1]),tf=uci.charCodeAt(2)-97,tr=8-parseInt(uci[3]);
   const fv=flipped?{f:7-ff,r:7-fr}:{f:ff,r:fr},tv=flipped?{f:7-tf,r:7-tr}:{f:tf,r:tr};
   const x1=fv.f*s+s/2,y1=fv.r*s+s/2,x2=tv.f*s+s/2,y2=tv.r*s+s/2;
-  const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
-  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-  line.setAttribute('x1',x1+(dx/len)*2);line.setAttribute('y1',y1+(dy/len)*2);
-  line.setAttribute('x2',x2-(dx/len)*3);line.setAttribute('y2',y2-(dy/len)*3);
-  line.setAttribute('stroke','rgba(22,163,74,.7)');line.setAttribute('stroke-width','2.8');
-  line.setAttribute('stroke-linecap','round');line.setAttribute('marker-end','url(#ah)');
-  svg.appendChild(line);
+  let dx=x2-x1,dy=y2-y1;const len=Math.sqrt(dx*dx+dy*dy);if(len<0.01)return;
+  const ux=dx/len,uy=dy/len;            // unit vector
+  const px=-uy,py=ux;                    // perpendicular
+  const shaftW=2.4;                      // half-width of the shaft
+  const headLen=5.5, headW=4.6;          // arrowhead dimensions
+  // Pull the tip slightly inside the destination square
+  const tipX=x2-ux*1.5, tipY=y2-uy*1.5;
+  // Base of the arrowhead
+  const baseX=tipX-ux*headLen, baseY=tipY-uy*headLen;
+  // Start of shaft pulled out of the origin square center a touch
+  const startX=x1+ux*1.0, startY=y1+uy*1.0;
+  // Build a single polygon: shaft rectangle + triangular head
+  const pts=[
+    [startX+px*shaftW, startY+py*shaftW],
+    [baseX+px*shaftW,  baseY+py*shaftW],
+    [baseX+px*headW,   baseY+py*headW],
+    [tipX, tipY],
+    [baseX-px*headW,   baseY-py*headW],
+    [baseX-px*shaftW,  baseY-py*shaftW],
+    [startX-px*shaftW, startY-py*shaftW],
+  ].map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points',pts);
+  poly.setAttribute('fill','rgba(21,128,61,0.78)');
+  svg.appendChild(poly);
 }
 function toggleBest(){showBest=!showBest;document.getElementById('bestToggle').classList.toggle('active',showBest);goToMove(currentPly);}
 
@@ -634,19 +653,31 @@ function showVariationForPly(ply){
   panel.style.display='block';
 }
 
+function getChessCtor(){
+  // chess.js CDN may expose Chess globally or as a property
+  if(typeof Chess!=='undefined') return Chess;
+  if(typeof window!=='undefined'){
+    if(window.Chess) return window.Chess;
+    if(window.Chess && window.Chess.Chess) return window.Chess.Chess;
+  }
+  return null;
+}
+
 function playVariation(uptoIndex){
-  if(typeof Chess==='undefined'||!variationBaseFen||!variationMoves) return;
-  const chess=new Chess(variationBaseFen);
+  const Ctor=getChessCtor();
+  if(!Ctor||!variationBaseFen||!variationMoves){ console.warn('Variation playback unavailable'); return; }
+  let chess;
+  try{ chess=new Ctor(variationBaseFen); }catch(e){ console.warn('Chess init failed',e); return; }
   let lastMove=null;
   for(let i=0;i<=uptoIndex;i++){
-    const mv=chess.move(variationMoves[i]);
+    let mv=null;
+    try{ mv=chess.move(variationMoves[i],{sloppy:true}); }catch(e){ mv=null; }
+    if(!mv){ try{ mv=chess.move(variationMoves[i]); }catch(e){ mv=null; } }
     if(!mv)break;
     lastMove=mv;
   }
   if(lastMove){
     renderBoardStatic(chess.fen(),lastMove.from,lastMove.to);
-    drawArrow('');
-    // highlight which variation move is active
     document.querySelectorAll('.var-move').forEach((el,idx)=>el.classList.toggle('active',idx<=uptoIndex));
   }
 }
@@ -812,6 +843,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
