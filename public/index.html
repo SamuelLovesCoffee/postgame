@@ -361,9 +361,7 @@
 
           <div class="board-container">
             <div class="board" id="board"></div>
-            <svg class="arrow-svg" id="arrowSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs><marker id="ah" markerWidth="3" markerHeight="2.5" refX="2.5" refY="1.25" orient="auto"><polygon points="0 0,3 1.25,0 2.5" fill="rgba(22,163,74,0.8)"/></marker></defs>
-            </svg>
+            <svg class="arrow-svg" id="arrowSvg" viewBox="0 0 100 100"></svg>
           </div>
         </div>
         <div class="board-nav">
@@ -375,7 +373,7 @@
           <button class="best-toggle" id="bestToggle" onclick="toggleBest()">Best move</button>
         </div>
         <div class="variation-panel" id="variationPanel" style="display:none">
-          <div class="var-label">Best line — tap a move to play it out <button class="var-close" onclick="clearVariation()">reset</button></div>
+          <div class="var-label">Best line<button class="var-close" onclick="clearVariation()">reset</button></div>
           <div class="var-moves" id="varMoves"></div>
         </div>
       </div>
@@ -388,6 +386,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
