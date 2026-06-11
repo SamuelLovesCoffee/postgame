@@ -656,6 +656,15 @@ function clearVariation(){
   goToMove(currentPly);
 }
 
+// Lucide SVG icons (monochrome, inherit currentColor) — match the landing page
+const ICON = {
+  lightbulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>',
+  sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>',
+};
+
 // ═══════════════════════════════════════
 // COACHING RENDERER
 // ═══════════════════════════════════════
@@ -670,6 +679,7 @@ function renderCoaching(analysis,coach){
   const critByPly={},missedByPly={};
   (coach.criticalMoments||[]).forEach(cm=>{critByPly[cm.ply]=cm;});
   (coach.missedIdeas||[]).forEach(mi=>{missedByPly[mi.ply]=mi;});
+  const brilliantByPly={};(coach.brilliantMoves||[]).forEach(bm=>{brilliantByPly[bm.ply]=bm;});
   let segments=coach.segments||[{startPly:1,endPly:(analysis.moves||[]).length,title:'Game',narrative:''}];
   const allMoves=(analysis.moves||[]);
   // Safety net: ensure the segments cover every move. If the last segment stops
@@ -702,10 +712,11 @@ function renderCoaching(analysis,coach){
         mc.onclick=()=>goToMove(m.ply);
         segEl.appendChild(mc);
       }
-      if(critByPly[m.ply]||missedByPly[m.ply]){
+      if(critByPly[m.ply]||missedByPly[m.ply]||brilliantByPly[m.ply]){
         segEl.appendChild(cg);cg=document.createElement('div');cg.className='move-group';
         if(critByPly[m.ply])segEl.appendChild(mkCritCard(critByPly[m.ply]));
         if(missedByPly[m.ply])segEl.appendChild(mkMissedCard(missedByPly[m.ply]));
+        if(brilliantByPly[m.ply])segEl.appendChild(mkBrilliantCard(brilliantByPly[m.ply]));
       }
     }
     if(cg.children.length>0)segEl.appendChild(cg);
@@ -716,7 +727,7 @@ function renderCoaching(analysis,coach){
   if(coach.improvementAreas?.length)h+=`<div class="takeaway-section"><h4>Areas to improve</h4><ul class="takeaway-list areas">${coach.improvementAreas.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
   if(coach.studyRecommendation)h+=`<div class="takeaway-section"><h4>What to study</h4><div class="study-rec">${coach.studyRecommendation}</div></div>`;
   tw.innerHTML=h;col.appendChild(tw);
-  const eb=document.createElement('button');eb.className='export-btn';eb.textContent='📥 Export coaching report';eb.onclick=exportReport;col.appendChild(eb);
+  const eb=document.createElement('button');eb.className='export-btn';eb.innerHTML=`<span class="export-icon">${ICON.download}</span> Export coaching report`;eb.onclick=exportReport;col.appendChild(eb);
 }
 // Get the REAL move label from analysed data by ply (never trust AI's moveLabel text)
 function verifiedMoveLabel(ply, fallback) {
@@ -730,14 +741,20 @@ function mkCritCard(cm){
   const bc=['blunder','mistake','inaccuracy'].includes(t)?t:'mistake';
   c.innerHTML=`<div class="cc-header"><span class="cc-badge ${bc}">${t}</span><span class="cc-move">${verifiedMoveLabel(cm.ply, cm.moveLabel)}</span></div>
     <div class="cc-title">${cm.title||''}</div><div class="cc-explanation">${cm.explanation||''}</div>
-    ${cm.concept?`<span class="cc-concept">${cm.concept}</span>`:''}${cm.studyTip?`<div class="cc-tip">💡 ${cm.studyTip}</div>`:''}`;
+    ${cm.concept?`<span class="cc-concept">${cm.concept}</span>`:''}${cm.studyTip?`<div class="cc-tip"><span class="cc-tip-icon">${ICON.target}</span><span>${cm.studyTip}</span></div>`:''}`;
   return c;
 }
 function mkMissedCard(mi){
   const c=document.createElement('div');c.className='critical-card type-idea';c.dataset.ply=mi.ply;c.onclick=()=>goToMove(mi.ply);
-  c.innerHTML=`<div class="cc-header"><span class="cc-badge idea">💡 idea</span><span class="cc-move">${verifiedMoveLabel(mi.ply, mi.moveLabel)}</span></div>
+  c.innerHTML=`<div class="cc-header"><span class="cc-badge idea"><span class="cc-badge-icon">${ICON.lightbulb}</span>idea</span><span class="cc-move">${verifiedMoveLabel(mi.ply, mi.moveLabel)}</span></div>
     <div class="cc-title">${mi.title||''}</div><div class="cc-explanation">${mi.explanation||''}</div>
-    ${mi.engineLine?`<div class="cc-tip">Engine line: ${mi.engineLine}</div>`:''}`;
+    ${mi.engineLine?`<div class="cc-tip"><span class="cc-tip-icon">${ICON.book}</span><span>Engine line: ${mi.engineLine}</span></div>`:''}`;
+  return c;
+}
+function mkBrilliantCard(bm){
+  const c=document.createElement('div');c.className='critical-card type-brilliant';c.dataset.ply=bm.ply;c.onclick=()=>goToMove(bm.ply);
+  c.innerHTML=`<div class="cc-header"><span class="cc-badge brilliant"><span class="cc-badge-icon">${ICON.sparkles}</span>brilliant</span><span class="cc-move">${verifiedMoveLabel(bm.ply, bm.moveLabel)}</span></div>
+    <div class="cc-title">${bm.title||''}</div><div class="cc-explanation">${bm.explanation||''}</div>`;
   return c;
 }
 
@@ -795,6 +812,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
