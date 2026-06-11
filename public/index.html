@@ -153,12 +153,12 @@
         <!-- Large card: coaching example -->
         <div class="bento-card bento-main">
           <div class="bento-label">Real coaching, not labels</div>
-          <div class="bento-coach-demo">
-            <div class="bcd-badge">Blunder</div>
-            <div class="bcd-move">5...Bxd1</div>
-            <p class="bcd-text"><strong>You took the queen — and walked into mate.</strong> Winning the queen looks irresistible, but after 6. Bxf7+ Ke7 7. Nd5#, White delivers checkmate with three minor pieces. The bishop on g4 wasn't really threatening anything; capturing it gave White the tempo to launch the mating net.</p>
-            <span class="bcd-concept">Concept: material vs king safety</span>
-            <span class="bcd-tip">When you win material, always check for forcing replies first</span>
+          <div class="critical-card type-blunder demo-card">
+            <div class="cc-header"><span class="cc-badge blunder">blunder</span><span class="cc-move">5...Bxd1</span></div>
+            <div class="cc-title">Falling for L&eacute;gal&rsquo;s Mate</div>
+            <div class="cc-explanation">Taking the queen with 5...Bxd1 looks tempting, but White&rsquo;s knight on e5 was never really hanging — it was bait. The pin on the f3 knight was an illusion because White was willing to give up the queen. The right move was 5...Nxe5, simply recapturing the piece and coming out a pawn up with a fine position.</div>
+            <span class="cc-concept">Recognising false pins and avoiding material traps</span>
+            <div class="cc-tip"><span class="cc-tip-icon" id="demoTipIcon"></span><span>Before capturing a piece, always ask: what happens if I don&rsquo;t take it?</span></div>
           </div>
           <p class="bento-desc">Every critical moment gets a coaching card explaining the tactic, the strategy, and what to practise.</p>
         </div>
@@ -195,7 +195,7 @@
             <div class="compare-side ours">
               <div class="compare-side-head accent">What postgame tells you</div>
               <div class="compare-output">
-                <p class="co-text">Grabbing the queen loses on the spot: 6.Bxf7+ Ke7 7.Nd5# is mate. The lesson isn&rsquo;t &ldquo;don&rsquo;t take the queen&rdquo; &mdash; it&rsquo;s that material means nothing when your king is exposed. Check every forcing reply before you capture.</p>
+                <p class="co-text">Study L&eacute;gal&rsquo;s Mate and similar opening traps — not just to avoid falling into them, but to understand the underlying idea that a pin on the queen is not always permanent. A great exercise is to set up the position after 4...Bg4 and practise finding why 5.Nxe5 works, so you can spot this pattern from both sides.</p>
               </div>
             </div>
           </div>
@@ -386,6 +386,7 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
 
 
 
