@@ -1126,3 +1126,10 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .sr-link:hover .sr-ext { color: var(--accent); }
 
 
+
+
+
+/* ── Landing-page demo coaching card (reuses .critical-card UI) ── */
+.demo-card { cursor: default; margin: 4px 0 14px; }
+.demo-card:hover { background: var(--bg-card); border-color: var(--border); }
+.demo-card .cc-explanation { font-size: 14px; line-height: 1.6; }
