@@ -216,6 +216,7 @@ async function loadAnalysis(id) {
     document.getElementById('landingView').style.display = 'none';
     document.getElementById('inputView').style.display = 'none';
     document.getElementById('analysisView').style.display = 'block';
+    document.getElementById('bestToggle').classList.toggle('active', showBest);
     goToMove(0);
   } catch (err) { console.error(err); showError('Failed to load analysis'); }
 }
@@ -471,6 +472,7 @@ async function startAnalysis() {
     renderCoaching(finalData.analysis, finalData.coaching);
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('analysisView').style.display = 'block';
+    document.getElementById('bestToggle').classList.toggle('active', showBest);
     goToMove(0);
     await checkAuth(); // refresh credit count
   } catch (err) {
@@ -881,7 +883,7 @@ function exportReport(){
 function showError(m){const e=document.getElementById('errorMsg');e.textContent=m;e.style.display='inline';setTimeout(()=>{e.style.display='none';},6000);}
 function showInput(){
   document.getElementById('analysisView').style.display='none';
-  showBest=false;document.getElementById('bestToggle').classList.remove('active');
+  showBest=true;document.getElementById('bestToggle').classList.add('active');
   if(authToken){showInputView();}else{showLanding();}
 }
 
@@ -909,6 +911,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
