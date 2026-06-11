@@ -392,7 +392,9 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
   }
 
   // Brilliant moves (rare, only the clearest sacrifices)
-  const brilliantMoves = annotatedMoves.filter((m) => m.isBrilliant).slice(0, 3);
+  const brilliantMoves = annotatedMoves.filter((m) => m.isBrilliant)
+    .map((m) => ({ ...m, brilliantReason: 'engine-best move involving a sound sacrifice' }))
+    .slice(0, 3);
 
   // Missed opportunities
   const missedOpportunities = annotatedMoves
@@ -404,22 +406,6 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
   const goodMoments = annotatedMoves
     .filter((m) => m.color === playerColor && m.isEngineTop && !m.isBook && m.wpBefore > 30 && m.wpBefore < 80)
     .slice(0, 5);
-
-  // Brilliant move candidates: engine-best move that is ALSO a real sacrifice
-  // (gives up material) while keeping or gaining advantage, or a sole good move.
-  // We flag candidates; the AI makes the final call conservatively.
-  const brilliantMoves = annotatedMoves
-    .filter((m) => {
-      if (m.color !== playerColor || m.isBook) return false;
-      if (!m.isEngineTop) return false;            // must be the best move
-      if (m.wpAfterMover < 45) return false;        // must keep a reasonable position
-      // Sacrifice heuristic: a capture-back is available or material was given.
-      // We approximate: move is a sacrifice if it's a piece move into a defended square
-      // We rely on the engine flag isSacrifice plus a real eval where opponent could capture.
-      return m.isSacrifice === true;
-    })
-    .map((m) => ({ ...m, brilliantReason: 'engine-best sacrifice keeping the advantage' }))
-    .slice(0, 3);
 
   onProgress(92, 'Analysis complete');
 
@@ -439,6 +425,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
 
 
