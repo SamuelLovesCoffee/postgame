@@ -1133,3 +1133,28 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .demo-card { cursor: default; margin: 4px 0 14px; }
 .demo-card:hover { background: var(--bg-card); border-color: var(--border); }
 .demo-card .cc-explanation { font-size: 14px; line-height: 1.6; }
+
+
+/* ── Forgot password ── */
+.modal-forgot { text-align: center; margin-top: 10px; }
+.modal-forgot a { color: var(--text-3); font-size: 13px; text-decoration: none; }
+.modal-forgot a:hover { color: var(--accent); }
+.reset-success { color: var(--green); font-size: 14px; line-height: 1.6; margin-bottom: 16px; text-align: center; }
+
+/* ── Reset password page ── */
+.reset-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: var(--bg);
+}
+.reset-card {
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 36px 32px; width: 100%; max-width: 400px;
+}
+.reset-logo {
+  display: block; font-family: var(--font-mono); font-size: 18px; font-weight: bold;
+  color: var(--text); text-decoration: none; margin-bottom: 20px;
+}
+.reset-logo span { color: var(--accent); }
+.reset-card h1 {
+  font-family: var(--font-display); font-size: 22px; font-weight: 500; margin-bottom: 18px;
+}
