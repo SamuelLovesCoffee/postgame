@@ -201,7 +201,7 @@ body {
 .new-game-btn:hover { border-color: var(--accent); color: var(--text); }
 
 /* ── Board ── */
-.board-col { position: sticky; top: 80px; align-self: start; }
+.board-col { position: sticky; top: 80px; align-self: start; width: 400px; }
 .board-wrap { display: flex; gap: 0; }
 
 
@@ -970,6 +970,7 @@ body {
   margin-top: 10px; padding: 12px 14px;
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  width: 100%; box-sizing: border-box;
 }
 .var-label {
   font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -1122,3 +1123,4 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .sr-link > span:first-of-type { flex: 1; }
 .sr-link .sr-ext { color: var(--text-3); }
 .sr-link:hover .sr-ext { color: var(--accent); }
+
