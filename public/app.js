@@ -329,7 +329,7 @@ let coaching = {};
 let analysisResult = null;
 let currentPly = 0;
 let flipped = false;
-let showBest = false;
+let showBest = true;
 let playerColor = 'w';
 let selectedTier = 'quick';
 
@@ -552,7 +552,7 @@ function updateEval(m){}
 function drawArrow(uci){
   const svg=document.getElementById('arrowSvg');
   while(svg.childNodes.length>1)svg.removeChild(svg.lastChild);
-  if(!uci||uci.length<4||!showBest)return;
+  if(!uci||uci.length<4)return;
   const s=100/8,ff=uci.charCodeAt(0)-97,fr=8-parseInt(uci[1]),tf=uci.charCodeAt(2)-97,tr=8-parseInt(uci[3]);
   const fv=flipped?{f:7-ff,r:7-fr}:{f:ff,r:fr},tv=flipped?{f:7-tf,r:7-tr}:{f:tf,r:tr};
   const x1=fv.f*s+s/2,y1=fv.r*s+s/2,x2=tv.f*s+s/2,y2=tv.r*s+s/2;
@@ -604,15 +604,32 @@ function showVariationForPly(ply){
 
   variationBaseFen=m.fenBefore;
   variationMoves=best.san;
+  // Determine the move number + side to move at the start of the line
+  const startNum=m.moveNumber;           // the move number of the played move
+  const whiteToMove=(m.color==='w');     // the line starts with the same side that was to move
   const box=document.getElementById('varMoves');
   box.innerHTML='';
-  // Render each move in the line as a clickable chip
+  let num=startNum, white=whiteToMove;
   best.san.forEach((san,i)=>{
+    // Add a move-number label before White's moves (and before the very first move)
+    if(white){
+      const lbl=document.createElement('span');
+      lbl.className='var-num';
+      lbl.textContent=num+'.';
+      box.appendChild(lbl);
+    } else if(i===0){
+      const lbl=document.createElement('span');
+      lbl.className='var-num';
+      lbl.textContent=num+'...';
+      box.appendChild(lbl);
+    }
     const chip=document.createElement('span');
     chip.className='var-move';
     chip.textContent=san;
     chip.onclick=()=>playVariation(i);
     box.appendChild(chip);
+    if(!white)num++;
+    white=!white;
   });
   panel.style.display='block';
 }
@@ -778,6 +795,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
