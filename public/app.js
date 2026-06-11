@@ -899,7 +899,26 @@ document.addEventListener('keydown',e=>{
 checkAuth();
 // Check for payment return
 if(window.location.search.includes('payment=success')){
-  setTimeout(()=>{alert('Payment successful! Credits have been added.');checkAuth();},500);
+  history.replaceState(null,'','/');
+  // The webhook adds credits server-side and may lag a second or two behind the
+  // redirect, so poll the balance a few times until it updates.
+  (async function pollForCredits(){
+    let before=null;
+    try{ const r=await fetch('/api/account',{headers:{Authorization:'Bearer '+authToken}}); before=(await r.json()).credits; }catch(e){}
+    let attempts=0;
+    const iv=setInterval(async()=>{
+      attempts++;
+      await checkAuth();
+      let now=null;
+      try{ const r=await fetch('/api/account',{headers:{Authorization:'Bearer '+authToken}}); now=(await r.json()).credits; }catch(e){}
+      if((before!==null&&now!==null&&now>before)||attempts>=6){
+        clearInterval(iv);
+        alert('Payment successful! Your credits have been added.');
+      }
+    },1500);
+  })();
+}
+if(window.location.search.includes('payment=cancelled')){
   history.replaceState(null,'','/');
 }
 
@@ -911,6 +930,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
