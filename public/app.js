@@ -693,8 +693,62 @@ const ICON = {
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>',
   sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>',
+  external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
   download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>',
 };
+
+// ═══════════════════════════════════════
+// STUDY RESOURCES (links; affiliate-ready)
+// ═══════════════════════════════════════
+// Each entry maps detection keywords to a resource. The `url` is what we link to.
+// To monetise later, swap these URLs for affiliate/sponsored links in one place.
+const STUDY_RESOURCES = [
+  // Openings — Lichess opening pages (free, high quality)
+  { keys:['slav defense','slav defence','slav'], label:'Slav Defense', url:'https://lichess.org/opening/Slav_Defense' },
+  { keys:['queen\'s gambit declined','qgd'], label:"Queen's Gambit Declined", url:'https://lichess.org/opening/Queens_Gambit_Declined' },
+  { keys:['queen\'s gambit'], label:"Queen's Gambit", url:'https://lichess.org/opening/Queens_Gambit' },
+  { keys:['sicilian'], label:'Sicilian Defense', url:'https://lichess.org/opening/Sicilian_Defense' },
+  { keys:['french defense','french defence'], label:'French Defense', url:'https://lichess.org/opening/French_Defense' },
+  { keys:['caro-kann','caro kann'], label:'Caro-Kann Defense', url:'https://lichess.org/opening/Caro-Kann_Defense' },
+  { keys:['ruy lopez','spanish'], label:'Ruy Lopez', url:'https://lichess.org/opening/Ruy_Lopez' },
+  { keys:['italian game','italian'], label:'Italian Game', url:'https://lichess.org/opening/Italian_Game' },
+  { keys:['london system','london'], label:'London System', url:'https://lichess.org/opening/London_System' },
+  { keys:['king\'s indian'], label:"King's Indian Defense", url:'https://lichess.org/opening/Kings_Indian_Defense' },
+  { keys:['nimzo-indian','nimzo indian'], label:'Nimzo-Indian Defense', url:'https://lichess.org/opening/Nimzo-Indian_Defense' },
+  { keys:['english opening'], label:'English Opening', url:'https://lichess.org/opening/English_Opening' },
+  { keys:['scandinavian'], label:'Scandinavian Defense', url:'https://lichess.org/opening/Scandinavian_Defense' },
+  { keys:['vienna'], label:'Vienna Game', url:'https://lichess.org/opening/Vienna_Game' },
+  // Tactics & themes — Lichess practice/puzzle themes
+  { keys:['pin','pinning'], label:'Pin tactics', url:'https://lichess.org/training/pin' },
+  { keys:['fork','forking'], label:'Fork tactics', url:'https://lichess.org/training/fork' },
+  { keys:['skewer'], label:'Skewer tactics', url:'https://lichess.org/training/skewer' },
+  { keys:['discovered attack','discovery'], label:'Discovered attacks', url:'https://lichess.org/training/discoveredAttack' },
+  { keys:['double check'], label:'Double check', url:'https://lichess.org/training/doubleCheck' },
+  { keys:['back rank','back-rank'], label:'Back-rank mates', url:'https://lichess.org/training/backRankMate' },
+  { keys:['hanging piece','hanging'], label:'Hanging pieces', url:'https://lichess.org/training/hangingPiece' },
+  { keys:['deflection'], label:'Deflection', url:'https://lichess.org/training/deflection' },
+  { keys:['pawn endgame','pawn ending','king and pawn'], label:'Pawn endgames', url:'https://lichess.org/practice/pawn-endgames/key-positions-pawn-endgames/' },
+  { keys:['rook endgame','rook ending'], label:'Rook endgames', url:'https://lichess.org/practice/rook-endgames/the-philidor-position/' },
+  { keys:['endgame','endings'], label:'Endgame practice', url:'https://lichess.org/practice' },
+  { keys:['opening principles','development','develop your pieces'], label:'Opening principles', url:'https://lichess.org/practice/fundamentals/the-opening/' },
+  { keys:['tactics','tactical','combination'], label:'Tactics trainer', url:'https://lichess.org/training' },
+];
+
+// Find resources whose keywords appear in the text. Returns up to `max` matches.
+function findStudyResources(text, max){
+  if(!text) return [];
+  const lower=text.toLowerCase();
+  const hits=[];
+  const seen=new Set();
+  for(const r of STUDY_RESOURCES){
+    if(seen.has(r.url)) continue;
+    if(r.keys.some(k=>lower.includes(k))){
+      hits.push(r); seen.add(r.url);
+      if(hits.length>=(max||3)) break;
+    }
+  }
+  return hits;
+}
 
 // ═══════════════════════════════════════
 // COACHING RENDERER
@@ -756,7 +810,19 @@ function renderCoaching(analysis,coach){
   const tw=document.createElement('div');tw.className='takeaways';let h='<h3>Takeaways</h3>';
   if(coach.strengths?.length)h+=`<div class="takeaway-section"><h4>Strengths</h4><ul class="takeaway-list strengths">${coach.strengths.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
   if(coach.improvementAreas?.length)h+=`<div class="takeaway-section"><h4>Areas to improve</h4><ul class="takeaway-list areas">${coach.improvementAreas.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
-  if(coach.studyRecommendation)h+=`<div class="takeaway-section"><h4>What to study</h4><div class="study-rec">${coach.studyRecommendation}</div></div>`;
+  if(coach.studyRecommendation){
+    // Search the study rec + improvement areas + opening name for linkable topics
+    const searchText=[coach.studyRecommendation,(coach.improvementAreas||[]).join(' '),(analysis.openingName||'')].join(' ');
+    const resources=findStudyResources(searchText,3);
+    let recHtml=`<div class="takeaway-section"><h4>What to study</h4><div class="study-rec">${coach.studyRecommendation}</div>`;
+    if(resources.length){
+      recHtml+=`<div class="study-resources"><div class="sr-label">Recommended resources</div>`;
+      recHtml+=resources.map(r=>`<a class="sr-link" href="${r.url}" target="_blank" rel="noopener">${ICON.book}<span>${r.label}</span><span class="sr-ext">${ICON.external}</span></a>`).join('');
+      recHtml+=`</div>`;
+    }
+    recHtml+=`</div>`;
+    h+=recHtml;
+  }
   tw.innerHTML=h;col.appendChild(tw);
   const eb=document.createElement('button');eb.className='export-btn';eb.innerHTML=`<span class="export-icon">${ICON.download}</span> Export coaching report`;eb.onclick=exportReport;col.appendChild(eb);
 }
@@ -843,6 +909,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
