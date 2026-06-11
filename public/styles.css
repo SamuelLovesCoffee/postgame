@@ -437,6 +437,7 @@ body {
     padding: 10px 12px 6px;
     border-bottom: 1px solid var(--border);
     align-self: start;
+    width: auto;
   }
   .board-wrap { justify-content: center; }
   .board {
@@ -1123,4 +1124,5 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .sr-link > span:first-of-type { flex: 1; }
 .sr-link .sr-ext { color: var(--text-3); }
 .sr-link:hover .sr-ext { color: var(--accent); }
+
 
