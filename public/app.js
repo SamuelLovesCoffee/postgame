@@ -56,11 +56,42 @@ function showAuthModal(mode) {
   document.getElementById('authError').textContent = '';
   document.getElementById('nameRow').style.display = mode === 'signup' ? 'flex' : 'none';
   document.getElementById('optionalFields').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('forgotLink').style.display = mode === 'login' ? 'block' : 'none';
   document.getElementById('authModal').style.display = 'flex';
 }
 
 function toggleAuthMode() {
   showAuthModal(authMode === 'login' ? 'signup' : 'login');
+}
+
+function showForgotPassword() {
+  closeModal('authModal');
+  document.getElementById('forgotForm').style.display = 'block';
+  document.getElementById('forgotDone').style.display = 'none';
+  document.getElementById('forgotError').textContent = '';
+  document.getElementById('forgotEmail').value = document.getElementById('authEmail').value.trim();
+  document.getElementById('forgotModal').style.display = 'flex';
+}
+
+async function submitForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const err = document.getElementById('forgotError');
+  err.textContent = '';
+  if (!email) { err.textContent = 'Please enter your email'; return; }
+  try {
+    await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    // Always show success (we don't reveal whether the email exists)
+    document.getElementById('forgotForm').style.display = 'none';
+    document.getElementById('forgotDone').style.display = 'block';
+  } catch (e) {
+    // Even on network error, show the neutral message
+    document.getElementById('forgotForm').style.display = 'none';
+    document.getElementById('forgotDone').style.display = 'block';
+  }
 }
 
 async function submitAuth() {
@@ -930,6 +961,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
