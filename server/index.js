@@ -12,6 +12,7 @@ const {
   getCredits, deductCredit,
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
+  requestPasswordReset, applyPasswordReset,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
@@ -203,6 +204,31 @@ app.get('/api/job/:id', optionalAuth, (req, res) => {
   res.json({ status: 'complete', progress: 100, ...job.result });
 });
 
+// ═══ PASSWORD RESET ═══
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  await requestPasswordReset(email, `${baseUrl}/reset-password.html`);
+  // Always return success — don't reveal whether the email exists
+  res.json({ success: true });
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { accessToken, newPassword } = req.body;
+    if (!accessToken) return res.status(400).json({ error: 'Missing reset token' });
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    await applyPasswordReset(accessToken, newPassword);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ═══ ACCOUNT MANAGEMENT ═══
 
 app.get('/api/account', authMiddleware, async (req, res) => {
@@ -373,6 +399,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
