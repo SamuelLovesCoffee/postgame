@@ -64,12 +64,21 @@ Return valid JSON only (no markdown, no backticks, no preamble). The structure:
       "explanation": "Why this move is brilliant — what was sacrificed and what it achieves. 2-3 sentences."
     }
   ],
+  "brilliantMoves": [
+    {
+      "ply": 12,
+      "moveLabel": "12. Nxf7",
+      "title": "Short title (e.g. 'A clearing sacrifice')",
+      "explanation": "Why this move is brilliant — what it sacrifices and what it achieves. 2-3 sentences."
+    }
+  ],
   "strengths": ["Pattern 1", "Pattern 2"],
   "improvementAreas": ["Area 1", "Area 2"],
   "studyRecommendation": "One specific, actionable study recommendation"
 }
 
 RULES:
+- brilliantMoves: ONLY include if a candidate brilliant move was provided AND it genuinely merits it (a sound sacrifice or a difficult only-move). Most games have zero. Never invent brilliancies. Max 2.
 - segments: 3-6 chunks that MUST cover the ENTIRE game from move 1 to the final move. The first segment's startPly must be 1, and the LAST segment's endPly MUST equal the ply of the very last move played. Never stop short — every move must fall within a segment's range. Group by phase/theme.
 - criticalMoments: only student's side, max 4, most instructive
 - missedIdeas: max 3, positions where a decent move missed something much stronger
@@ -145,6 +154,16 @@ async function generateCoaching(analysisResult, detailed = false) {
     }
   }
 
+  // Brilliant moves (sacrifices / only-moves that keep advantage)
+  let brilliantText = '';
+  if (brilliantMoves && brilliantMoves.length > 0) {
+    brilliantText = '\n\nCANDIDATE BRILLIANT MOVES (engine-best AND involve a sacrifice or are the only winning move):\n';
+    for (const m of brilliantMoves) {
+      brilliantText += `- Ply ${m.ply}: ${m.moveLabel} (${m.brilliantReason})\n`;
+    }
+    brilliantText += 'Only call a move brilliant if it is genuinely impressive: a real sacrifice that works, or a hard-to-find only-move. Be conservative — most games have none.\n';
+  }
+
   // Good moves
   let goodText = '';
   if (goodMoments.length > 0) {
@@ -185,13 +204,14 @@ async function generateCoaching(analysisResult, detailed = false) {
 
 Game: ${headers.White || '?'} vs ${headers.Black || '?'}, ${headers.Result || '?'}
 Opening: ${openingName || headers.ECO || 'Unknown'}
-Book depth: ${bookDepth} plies${theoryText}${brilliantText}
+Book depth: ${bookDepth} plies
+TOTAL MOVES IN THIS GAME: ${moves.length} plies (the final move is ply ${moves.length}). Your segments MUST cover all ${moves.length} plies — do not stop before the end of the game.${theoryText}${brilliantText}
 
 ANNOTATED MOVES:
 ${moveText}
 ${criticalText}
 ${missedText}
-${goodText}
+${goodText}${brilliantText}
 
 Return ONLY valid JSON matching the schema.`;
 
@@ -220,6 +240,9 @@ Return ONLY valid JSON matching the schema.`;
     }
     if (Array.isArray(parsed.missedIdeas)) {
       parsed.missedIdeas = parsed.missedIdeas.filter(mi => validPlies.has(mi.ply));
+    }
+    if (Array.isArray(parsed.brilliantMoves)) {
+      parsed.brilliantMoves = parsed.brilliantMoves.filter(bm => validPlies.has(bm.ply));
     }
     if (Array.isArray(parsed.brilliantMoves)) {
       parsed.brilliantMoves = parsed.brilliantMoves.filter(bm => validPlies.has(bm.ply));
@@ -269,7 +292,7 @@ async function generateMoveByMove(analysisResult) {
   try {
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 8000,
       system: sys,
       messages: [{ role: 'user', content: user }],
     });
@@ -289,6 +312,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
