@@ -1102,3 +1102,23 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 /* Export button icon */
 .export-icon { display: inline-flex; vertical-align: middle; }
 .export-icon svg { width: 15px; height: 15px; }
+
+
+/* ── Study resources ── */
+.study-resources { margin-top: 12px; }
+.sr-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-3); margin-bottom: 8px;
+}
+.sr-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px; margin-bottom: 6px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 8px; text-decoration: none; color: var(--text);
+  font-size: 13.5px; font-weight: 500; transition: all 0.15s;
+}
+.sr-link:hover { border-color: var(--accent); background: var(--surface); }
+.sr-link svg { width: 15px; height: 15px; flex-shrink: 0; }
+.sr-link > span:first-of-type { flex: 1; }
+.sr-link .sr-ext { color: var(--text-3); }
+.sr-link:hover .sr-ext { color: var(--accent); }
