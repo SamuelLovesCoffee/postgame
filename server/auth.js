@@ -281,13 +281,41 @@ async function deleteAccount(userId) {
   return true;
 }
 
+// ── Password reset ──
+
+// Request a reset email. Supabase sends it via its own SMTP (bypasses Railway's block).
+async function requestPasswordReset(email, redirectUrl) {
+  const { createClient: mk } = require('@supabase/supabase-js');
+  const anon = mk(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const { error } = await anon.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+  // We intentionally do not surface "user not found" — avoid leaking which emails exist.
+  if (error && !/not found|no user/i.test(error.message)) {
+    console.error('Password reset request error:', error.message);
+  }
+  return true;
+}
+
+// Apply a new password using the recovery token from the email link.
+async function applyPasswordReset(accessToken, newPassword) {
+  const { createClient: mk } = require('@supabase/supabase-js');
+  // A client scoped to the recovery session token from the email link
+  const scoped = mk(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+  const { error } = await scoped.auth.updateUser({ password: newPassword });
+  if (error) throw new Error(error.message);
+  return true;
+}
+
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
+  requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
