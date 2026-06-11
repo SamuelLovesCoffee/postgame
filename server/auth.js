@@ -23,7 +23,7 @@ const PACKAGES = [
 
 async function signUp(email, password, metadata = {}) {
   // Create user with email pre-confirmed so they can sign in immediately
-  // (no email validation step). A welcome email is sent separately.
+  // (no email validation step).
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
@@ -37,8 +37,6 @@ async function signUp(email, password, metadata = {}) {
   });
   if (error) throw new Error(error.message);
   if (!data.user) throw new Error('Signup failed');
-  // Fire a welcome email (non-blocking; failure shouldn't break signup)
-  sendWelcomeEmail(email, metadata.firstName || '').catch(e => console.error('Welcome email failed:', e.message));
   return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
 }
 
@@ -316,6 +314,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
