@@ -217,8 +217,9 @@ app.get('/api/job/:id', optionalAuth, (req, res) => {
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  await requestPasswordReset(email, `${baseUrl}/reset-password.html`);
+  // Use canonical domain to avoid www/non-www redirect mismatches
+  const siteUrl = process.env.SITE_URL || 'https://post-game.net';
+  await requestPasswordReset(email, `${siteUrl}/reset-password.html`);
   // Always return success — don't reveal whether the email exists
   res.json({ success: true });
 });
@@ -407,6 +408,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
