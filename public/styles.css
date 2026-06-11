@@ -1140,6 +1140,7 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .modal-forgot a { color: var(--text-3); font-size: 13px; text-decoration: none; }
 .modal-forgot a:hover { color: var(--accent); }
 .reset-success { color: var(--green); font-size: 14px; line-height: 1.6; margin-bottom: 16px; text-align: center; }
+.reset-info { color: var(--text-2); font-size: 14px; line-height: 1.6; margin-bottom: 16px; text-align: center; }
 
 /* ── Reset password page ── */
 .reset-page {
@@ -1158,3 +1159,4 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .reset-card h1 {
   font-family: var(--font-display); font-size: 22px; font-weight: 500; margin-bottom: 18px;
 }
+
