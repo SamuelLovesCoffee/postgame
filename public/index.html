@@ -65,7 +65,24 @@
       </div>
       <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
       <div class="modal-error" id="authError"></div>
+      <div class="modal-forgot" id="forgotLink"><a href="#" onclick="showForgotPassword();return false">Forgot password?</a></div>
       <div class="modal-switch" id="authSwitch">Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="forgotModal" style="display:none">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal('forgotModal')">✕</button>
+      <h2>Reset your password</h2>
+      <p class="modal-sub">Enter your email and we'll send you a link to set a new password.</p>
+      <div id="forgotForm">
+        <input type="email" id="forgotEmail" placeholder="Email" class="modal-input" autocomplete="email">
+        <button class="modal-btn" onclick="submitForgot()">Send reset link</button>
+        <div class="modal-error" id="forgotError"></div>
+      </div>
+      <div id="forgotDone" style="display:none">
+        <p class="reset-success">If an account exists for that email, a reset link is on its way. Check your inbox (and spam folder).</p>
+      </div>
+      <div class="modal-switch"><a href="#" onclick="closeModal('forgotModal');showAuthModal('login');return false">Back to log in</a></div>
     </div>
   </div>
   <div class="modal-overlay" id="creditsModal" style="display:none">
@@ -393,6 +410,7 @@
   </script>
 </body>
 </html>
+
 
 
 
