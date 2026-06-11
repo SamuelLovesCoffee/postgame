@@ -617,11 +617,16 @@ function goToMove(ply){
 // ── Clickable engine variations ──
 function showVariationForPly(ply){
   const panel=document.getElementById('variationPanel');
-  if(!panel||!hasEngineData||ply===0){ if(panel)panel.style.display='none'; return; }
+  if(!panel){ console.log('[VAR] no panel element'); return; }
+  if(!hasEngineData){ console.log('[VAR] hasEngineData is false'); panel.style.display='none'; return; }
+  if(ply===0){ console.log('[VAR] ply is 0, hiding'); panel.style.display='none'; return; }
   const m=moves[ply-1];
-  if(!m||!m.pvLines||!m.pvLines.length||!m.fenBefore){ panel.style.display='none'; return; }
+  if(!m){ console.log('[VAR] no move at ply', ply); panel.style.display='none'; return; }
+  console.log('[VAR] move at ply', ply, '| has pvLines:', !!m.pvLines, '| pvLines len:', m.pvLines?m.pvLines.length:0, '| fenBefore:', !!m.fenBefore, '| sample:', m.pvLines&&m.pvLines[0]?JSON.stringify(m.pvLines[0]).slice(0,120):'none');
+  if(!m.pvLines||!m.pvLines.length||!m.fenBefore){ console.log('[VAR] missing pvLines or fenBefore'); panel.style.display='none'; return; }
   const best=m.pvLines[0];
-  if(!best||!best.san||!best.san.length){ panel.style.display='none'; return; }
+  if(!best||!best.san||!best.san.length){ console.log('[VAR] best line has no san array. best=', JSON.stringify(best)); panel.style.display='none'; return; }
+  console.log('[VAR] showing panel with', best.san.length, 'moves');
 
   variationBaseFen=m.fenBefore;
   variationMoves=best.san;
@@ -911,6 +916,7 @@ if(window.location.search.includes('payment=success')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
