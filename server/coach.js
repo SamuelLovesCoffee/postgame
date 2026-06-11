@@ -154,16 +154,6 @@ async function generateCoaching(analysisResult, detailed = false) {
     }
   }
 
-  // Brilliant moves (sacrifices / only-moves that keep advantage)
-  let brilliantText = '';
-  if (brilliantMoves && brilliantMoves.length > 0) {
-    brilliantText = '\n\nCANDIDATE BRILLIANT MOVES (engine-best AND involve a sacrifice or are the only winning move):\n';
-    for (const m of brilliantMoves) {
-      brilliantText += `- Ply ${m.ply}: ${m.moveLabel} (${m.brilliantReason})\n`;
-    }
-    brilliantText += 'Only call a move brilliant if it is genuinely impressive: a real sacrifice that works, or a hard-to-find only-move. Be conservative — most games have none.\n';
-  }
-
   // Good moves
   let goodText = '';
   if (goodMoments.length > 0) {
@@ -205,7 +195,7 @@ async function generateCoaching(analysisResult, detailed = false) {
 Game: ${headers.White || '?'} vs ${headers.Black || '?'}, ${headers.Result || '?'}
 Opening: ${openingName || headers.ECO || 'Unknown'}
 Book depth: ${bookDepth} plies
-TOTAL MOVES IN THIS GAME: ${moves.length} plies (the final move is ply ${moves.length}). Your segments MUST cover all ${moves.length} plies — do not stop before the end of the game.${theoryText}${brilliantText}
+TOTAL MOVES IN THIS GAME: ${moves.length} plies (the final move is ply ${moves.length}). Your segments MUST cover all ${moves.length} plies — do not stop before the end of the game.${theoryText}
 
 ANNOTATED MOVES:
 ${moveText}
@@ -312,6 +302,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
