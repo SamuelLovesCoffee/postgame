@@ -202,6 +202,17 @@ async function handleStripeWebhook(body, signature) {
     const pkg = PACKAGES.find(p => p.id === packageId);
 
     if (userId && credits > 0) {
+      // Idempotency: if we've already recorded this session, skip (Stripe may
+      // deliver the same event more than once).
+      const { data: existing } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('stripe_session_id', session.id)
+        .maybeSingle();
+      if (existing) {
+        console.log(`  Duplicate webhook for session ${session.id}, skipping`);
+        return;
+      }
       await addCredits(userId, credits);
       await supabase.from('transactions').insert({
         user_id: userId,
@@ -278,4 +289,5 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
