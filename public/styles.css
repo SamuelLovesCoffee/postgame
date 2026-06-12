@@ -1187,3 +1187,26 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 @media (max-width: 700px) {
   .admin-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+
+/* ── Player stats dashboard ── */
+.stats-page { max-width: 720px; margin: 0 auto; padding: 32px 24px 60px; }
+.stats-title { font-family: var(--font-display); font-size: 28px; font-weight: 500; margin: 8px 0 24px; }
+.acc-chart { width: 100%; overflow: hidden; }
+.acc-svg { width: 100%; height: auto; display: block; }
+.chart-note { font-size: 13px; color: var(--text-3); margin-top: 10px; line-height: 1.5; }
+.error-bars { display: flex; flex-direction: column; gap: 12px; }
+.ebar-row { display: flex; align-items: center; gap: 12px; }
+.ebar-label { font-size: 13px; color: var(--text-2); width: 90px; flex-shrink: 0; }
+.ebar-track { flex: 1; height: 10px; background: var(--surface); border-radius: 5px; overflow: hidden; }
+.ebar-fill { height: 100%; border-radius: 5px; transition: width 0.4s; }
+.ebar-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; width: 32px; text-align: right; }
+.weakness-item {
+  padding: 10px 14px; margin-bottom: 6px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+  color: var(--text-2); line-height: 1.5;
+}
+.weakness-count {
+  font-family: var(--font-mono); font-weight: 700; color: var(--accent);
+  margin-right: 8px;
+}
