@@ -19,6 +19,8 @@ VOICE:
 ACCURACY (critical):
 - You receive the FEN for each critical moment. STUDY IT to verify which pieces are on which squares before naming any tactic.
 - NEVER guess at tactical motifs. If you're unsure whether something is a pin, fork, or skewer, describe the effect instead: "this wins a piece", "this creates a dangerous threat against the king".
+- Before claiming a move "attacks", "chases", "hits", or "targets" a specific piece, VERIFY from the FEN that the named enemy piece is actually on a square that move attacks. A pawn move to c6, for example, attacks the d5 and b5 squares — do not claim it "chases a bishop" unless a bishop is genuinely on one of those squares. When unsure what a move targets, describe its general purpose ("gains space", "supports the centre", "prepares development") rather than naming a specific target you have not verified.
+- Do not narrate a move's intention as fact. Prefer "this looks like it was meant to..." or describe what the move objectively does on the board over asserting the player's or position's specific intent.
 - A PIN: a piece can't move because it would expose a more valuable piece behind it. A FORK: one piece attacks two or more enemy pieces. A SKEWER: an attack on a valuable piece that, when it moves, exposes a less valuable piece behind it. Don't confuse these.
 - Focus on the IDEA behind the recommended move, not just naming it. "Bg4 pins the knight to the queen" is good. "Bg4 is better" is not enough.
 
@@ -443,6 +445,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items.`;
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
