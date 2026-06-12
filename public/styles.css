@@ -1292,11 +1292,19 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 
 .lp-hero, .lp-block, .lp-cta-band { max-width: 1100px; margin: 0 auto; padding-left: 28px; padding-right: 28px; }
 
-/* hero */
-.lp-hero { padding-top: 88px; padding-bottom: 72px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.lp-hero-text { min-width: 0; }
-.lp-hero-visual { position: relative; }
-.lp-hero-img { width: 100%; height: auto; display: block; border-radius: 16px; }
+/* hero — image as right-anchored background layer (Variant A) */
+.lp-hero { position: relative; overflow: hidden; padding-top: 96px; padding-bottom: 88px; }
+.lp-hero-bg {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 62%;
+  background-image: url('/hero.webp');
+  background-size: cover; background-position: center right;
+  z-index: 0;
+}
+.lp-hero-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, var(--bg) 0%, rgba(9,8,13,0.85) 22%, rgba(9,8,13,0.25) 55%, rgba(9,8,13,0) 100%);
+}
+.lp-hero-text { position: relative; z-index: 2; max-width: 640px; }
 .lp-hero .lp-eyebrow { margin-bottom: 24px; display: block; }
 .lp-display { font-weight: 600; font-size: clamp(46px,7.4vw,82px); line-height: 1.03; letter-spacing: -0.038em; margin-bottom: 28px; max-width: 15ch; color: var(--text); }
 .lp-win { color: var(--accent); }
@@ -1397,8 +1405,10 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .lp-foot-logo span { color: var(--accent); }
 
 @media (max-width: 860px) {
-  .lp-hero { grid-template-columns: 1fr; gap: 28px; padding-top: 56px; }
-  .lp-hero-visual { order: -1; }
+  .lp-hero { padding-top: 56px; }
+  .lp-hero-bg { width: 100%; opacity: 0.4; }
+  .lp-hero-bg::after { background: linear-gradient(180deg, rgba(9,8,13,0.35) 0%, var(--bg) 86%); }
+  .lp-hero-text { max-width: none; }
   .lp-loop, .lp-feat-grid { grid-template-columns: 1fr; }
   .lp-demo-wrap, .lp-portal-grid { grid-template-columns: 1fr; gap: 32px; }
   .lp-price-grid { grid-template-columns: repeat(2,1fr); }
@@ -1448,3 +1458,4 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   color: var(--accent); text-decoration: none;
 }
 .todo-resource:hover { text-decoration: underline; }
+
