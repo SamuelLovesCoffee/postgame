@@ -314,6 +314,18 @@ function isAdmin(email) {
   return email && ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
+async function logAnalysisFailure(userId, tier, errorMessage) {
+  try {
+    await supabase.from('analysis_failures').insert({
+      user_id: userId || null,
+      tier: tier || null,
+      error_message: (errorMessage || '').slice(0, 500),
+    });
+  } catch (e) {
+    console.error('Could not log analysis failure:', e.message);
+  }
+}
+
 async function getAdminStats() {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -336,6 +348,16 @@ async function getAdminStats() {
     .from('analyses').select('id', { count: 'exact', head: true })
     .gte('created_at', weekAgo);
 
+  // Failed analyses
+  const { count: failuresTotal } = await supabase
+    .from('analysis_failures').select('id', { count: 'exact', head: true });
+  const { count: failuresToday } = await supabase
+    .from('analysis_failures').select('id', { count: 'exact', head: true })
+    .gte('created_at', startOfDay);
+  const { count: failuresWeek } = await supabase
+    .from('analysis_failures').select('id', { count: 'exact', head: true })
+    .gte('created_at', weekAgo);
+
   // Credits outstanding (sum of balances)
   const { data: creditRows } = await supabase.from('credits').select('balance');
   const creditsOutstanding = (creditRows || []).reduce((s, r) => s + (r.balance || 0), 0);
@@ -353,6 +375,7 @@ async function getAdminStats() {
   return {
     users: { total: totalUsers, today: newUsersToday, week: newUsersWeek },
     analyses: { total: totalAnalyses || 0, today: analysesToday || 0, week: analysesWeek || 0 },
+    failures: { total: failuresTotal || 0, today: failuresToday || 0, week: failuresWeek || 0 },
     credits: { outstanding: creditsOutstanding, sold: creditsSold },
     revenue: { totalCents: revenueCents, weekCents: revenueWeekCents, transactions: allTxns.length },
   };
@@ -360,7 +383,7 @@ async function getAdminStats() {
 
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
-  isAdmin, getAdminStats,
+  isAdmin, getAdminStats, logAnalysisFailure,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -368,6 +391,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
