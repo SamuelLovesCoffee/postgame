@@ -2,73 +2,89 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FAQ — postgame</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-<style>.page{max-width:680px;margin:0 auto;padding:40px 24px 80px}.page h1{font-family:'Fraunces',serif;font-size:28px;font-weight:500;margin-bottom:32px}.faq-item{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}.faq-item:last-child{border-bottom:none}.faq-q{font-size:16px;font-weight:600;margin-bottom:8px}.faq-a{font-size:14px;line-height:1.7;color:var(--text-2)}.faq-a a{color:var(--accent)}</style>
+<link rel="stylesheet" href="/styles.css">
+<style>
+.page{max-width:680px;margin:0 auto;padding:48px 24px 80px}
+.page h1{font-family:'Geist',sans-serif;font-size:34px;font-weight:600;letter-spacing:-0.03em;margin-bottom:36px}
+.faq-item{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-0.01em}
+.faq-a{font-size:14.5px;line-height:1.7;color:var(--text-2)}
+.faq-a a{color:var(--accent)}
+.faq-a strong{color:var(--text);font-weight:600}
+</style>
 </head>
 <body>
-<header class="header"><div class="header-inner"><a href="/" class="logo"><span class="logo-text">post<em>game</em></span></a></div></header>
+<header class="header"><div class="header-inner"><a href="/" class="logo"><span class="logo-text">post<span style="color:var(--accent)">game</span></span></a></div></header>
 <div class="page">
 <h1>Frequently Asked Questions</h1>
 
 <div class="faq-item">
 <div class="faq-q">How is this different from Chess.com or Lichess analysis?</div>
-<div class="faq-a">Chess.com and Lichess tell you a move was a "blunder" and show the engine's preferred move. postgame explains <em>why</em> your move was wrong, names the chess concept you missed (pin, fork, pawn break, etc.), and tells you specifically what to practise. It's the difference between a score and a lesson.</div>
+<div class="faq-a">Chess.com and Lichess tell you a move was a "blunder" and show the engine's preferred move. postgame explains <strong>why</strong> your move was wrong, names the chess concept you missed (pin, fork, pawn break, and so on), and tells you specifically what to practise. It's the difference between a score and a lesson.</div>
 </div>
 
 <div class="faq-item">
-<div class="faq-q">Where do I find my PGN?</div>
-<div class="faq-a">On Chess.com: go to your game, click the share/export icon, and copy the PGN. On Lichess: open the game, click the menu (three dots), and select "Export PGN". You can also copy PGN from any chess app or database.</div>
+<div class="faq-q">How do I get my games in?</div>
+<div class="faq-a">The easiest way is to import directly: enter your <strong>Chess.com</strong> or <strong>Lichess</strong> username and pick a game from your recent history. You can also paste a PGN from any chess app or database if you prefer.</div>
+</div>
+
+<div class="faq-item">
+<div class="faq-q">What is the coaching feedback page?</div>
+<div class="faq-a">As you analyse more games, postgame builds a picture of you as a player. On the <strong>My coaching</strong> page, you can generate a synthesised review across your analysed games — your recurring patterns, your strengths, what to work on next, and a training plan with linked resources. It's the part that works like a coach who remembers you, rather than reviewing each game in isolation.</div>
+</div>
+
+<div class="faq-item">
+<div class="faq-q">What's the difference between Quick and Deep analysis?</div>
+<div class="faq-a">A <strong>Quick</strong> analysis (1 credit) gives you the full coaching narrative, critical moments, and study advice at a faster engine depth. A <strong>Deep</strong> analysis (2 credits) runs the engine deeper and adds move-by-move commentary for a more thorough review. Quick is great for most games; Deep is worth it for games you really want to understand.</div>
 </div>
 
 <div class="faq-item">
 <div class="faq-q">How long does analysis take?</div>
-<div class="faq-a">Typically 2-5 minutes depending on game length. The engine evaluates every position, then the AI writes the coaching narrative. You can close the tab and come back — the analysis runs in the background.</div>
+<div class="faq-a">Typically a few minutes depending on game length and the tier you choose. The engine evaluates every position, then the AI writes the coaching. You can close the tab and come back — the analysis runs in the background.</div>
 </div>
 
 <div class="faq-item">
 <div class="faq-q">How accurate is the coaching?</div>
-<div class="faq-a">The engine analysis uses Stockfish, the world's strongest chess engine. The coaching narrative is generated by AI (Claude) based on the engine data and the actual board position. While the engine evaluation is highly accurate, the AI's tactical explanations can occasionally be imprecise. We're continuously improving this.</div>
+<div class="faq-a">The engine analysis uses Stockfish, one of the world's strongest chess engines, so the evaluation of which moves were errors is highly reliable. The coaching narrative is written by AI (Claude) based on that engine data and the actual board position. The AI's explanations are usually excellent but can occasionally be imprecise on a specific tactical detail — we're continuously improving this.</div>
 </div>
 
 <div class="faq-item">
 <div class="faq-q">What chess rating range does this work for?</div>
-<div class="faq-a">postgame works for all levels, but it's most useful for players rated roughly 600-2000. The coaching focuses on practical concepts and common patterns that drive improvement at these levels.</div>
+<div class="faq-a">postgame works for all levels, but it's most useful for players rated roughly 600-2000. The coaching adapts to your level and focuses on the practical concepts and patterns that drive improvement.</div>
 </div>
 
 <div class="faq-item">
-<div class="faq-q">Do credits expire?</div>
-<div class="faq-a">No. Purchased credits remain on your account until you use them.</div>
+<div class="faq-q">How do credits work?</div>
+<div class="faq-a">You get <strong>three free credits</strong> when you sign up. After that, one credit covers a Quick analysis and two cover a Deep analysis. Credits never expire, and you only pay for what you analyse — no subscription.</div>
 </div>
 
 <div class="faq-item">
 <div class="faq-q">What happens if an analysis fails?</div>
-<div class="faq-a">If an analysis fails due to a technical error, your credit is automatically refunded.</div>
+<div class="faq-a">If an analysis fails due to a technical error, your credits are automatically refunded.</div>
 </div>
 
 <div class="faq-item">
 <div class="faq-q">Can I export my coaching report?</div>
-<div class="faq-a">Yes. After analysis, click the "Export coaching report" button to download a Markdown file with the full narrative, critical moments, missed ideas, and study recommendations.</div>
+<div class="faq-a">Yes. After an analysis, you can download a Markdown file with the full narrative, critical moments, missed ideas, and study recommendations.</div>
 </div>
 
 <div class="faq-item">
-<div class="faq-q">Can I review past analyses?</div>
-<div class="faq-a">Yes. Click "My games" in the header to see all your past analyses. You can replay the game on the board and re-read the coaching commentary.</div>
+<div class="faq-q">Can I review or delete past analyses?</div>
+<div class="faq-a">Yes. Click "My games" in the header to see all your past analyses, replay them on the board, and re-read the coaching. You can also delete any game you no longer want to keep.</div>
 </div>
 
 <div class="faq-item">
 <div class="faq-q">How do I get a refund?</div>
-<div class="faq-a">Credits are non-refundable once purchased. Failed analyses are automatically refunded as credits. If you have a billing issue, contact us at <a href="mailto:info@post-game.net">info@post-game.net</a>.</div>
+<div class="faq-a">Credits are non-refundable once purchased, but failed analyses are automatically refunded as credits. If you have a billing issue, contact us at <a href="mailto:info@post-game.net">info@post-game.net</a>.</div>
 </div>
+
 </div>
 </body>
 </html>
-
-
-
