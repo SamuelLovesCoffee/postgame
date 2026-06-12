@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · postgame</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="admin-page">
+    <div class="admin-head">
+      <a href="/" class="reset-logo">post<span>game</span> <span style="color:var(--text-3);font-size:13px;">admin</span></a>
+      <button class="new-game-btn" onclick="loadStats()">Refresh</button>
+    </div>
+
+    <div id="adminLoading"><p class="reset-info">Loading…</p></div>
+    <div id="adminDenied" style="display:none"><p class="reset-info">You need to be logged in as an admin to view this page. <a href="/" style="color:var(--accent)">Go to postgame</a></p></div>
+
+    <div id="adminContent" style="display:none">
+      <div class="admin-grid">
+        <div class="admin-card"><div class="admin-num" id="usersTotal">–</div><div class="admin-label">Total users</div><div class="admin-sub" id="usersNew">–</div></div>
+        <div class="admin-card"><div class="admin-num" id="analysesTotal">–</div><div class="admin-label">Total analyses</div><div class="admin-sub" id="analysesNew">–</div></div>
+        <div class="admin-card"><div class="admin-num" id="revenueTotal">–</div><div class="admin-label">Revenue</div><div class="admin-sub" id="revenueWeek">–</div></div>
+        <div class="admin-card"><div class="admin-num" id="creditsOutstanding">–</div><div class="admin-label">Credits outstanding</div><div class="admin-sub" id="creditsSold">–</div></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>Today</h3>
+        <div class="admin-row"><span>New signups</span><span id="todaySignups">–</span></div>
+        <div class="admin-row"><span>Analyses run</span><span id="todayAnalyses">–</span></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>This week</h3>
+        <div class="admin-row"><span>New signups</span><span id="weekSignups">–</span></div>
+        <div class="admin-row"><span>Analyses run</span><span id="weekAnalyses">–</span></div>
+        <div class="admin-row"><span>Revenue</span><span id="weekRevenue">–</span></div>
+      </div>
+
+      <div class="admin-note">
+        <p><strong>Cost estimate:</strong> <span id="costEstimate">–</span></p>
+        <p class="admin-warn">Remember: monitor your Anthropic API balance and Railway usage in their own dashboards. This page reflects app usage only.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+    function money(cents){ return '$' + (cents/100).toFixed(2); }
+
+    async function loadStats(){
+      document.getElementById('adminLoading').style.display = 'block';
+      document.getElementById('adminContent').style.display = 'none';
+      document.getElementById('adminDenied').style.display = 'none';
+      if (!authToken){ showDenied(); return; }
+      try {
+        const r = await fetch('/api/admin/stats', { headers: { Authorization: 'Bearer ' + authToken } });
+        if (r.status === 403 || r.status === 401){ showDenied(); return; }
+        const s = await r.json();
+        if (!r.ok) throw new Error(s.error || 'Failed');
+        render(s);
+      } catch(e){ showDenied(); }
+    }
+
+    function showDenied(){
+      document.getElementById('adminLoading').style.display = 'none';
+      document.getElementById('adminDenied').style.display = 'block';
+    }
+
+    function render(s){
+      document.getElementById('usersTotal').textContent = s.users.total;
+      document.getElementById('usersNew').textContent = '+' + s.users.week + ' this week';
+      document.getElementById('analysesTotal').textContent = s.analyses.total;
+      document.getElementById('analysesNew').textContent = '+' + s.analyses.week + ' this week';
+      document.getElementById('revenueTotal').textContent = money(s.revenue.totalCents);
+      document.getElementById('revenueWeek').textContent = money(s.revenue.weekCents) + ' this week';
+      document.getElementById('creditsOutstanding').textContent = s.credits.outstanding;
+      document.getElementById('creditsSold').textContent = s.credits.sold + ' sold all-time';
+
+      document.getElementById('todaySignups').textContent = s.users.today;
+      document.getElementById('todayAnalyses').textContent = s.analyses.today;
+      document.getElementById('weekSignups').textContent = s.users.week;
+      document.getElementById('weekAnalyses').textContent = s.analyses.week;
+      document.getElementById('weekRevenue').textContent = money(s.revenue.weekCents);
+
+      // Rough cost estimate: assume avg $0.05 per analysis (mix of quick/deep)
+      const est = (s.analyses.total * 0.05).toFixed(2);
+      document.getElementById('costEstimate').textContent =
+        '~$' + est + ' in AI/compute spent on ' + s.analyses.total + ' analyses (approx, at ~$0.05 each).';
+
+      document.getElementById('adminLoading').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'block';
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>
