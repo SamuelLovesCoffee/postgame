@@ -349,6 +349,91 @@ app.get('/api/lichess/:username', authMiddleware, async (req, res) => {
   }
 });
 
+// ═══ CHESS.COM IMPORT ═══
+
+// Helper: extract a PGN header tag value
+function pgnTag(pgn, tag) {
+  const m = pgn.match(new RegExp('\\[' + tag + ' "([^"]*)"\\]'));
+  return m ? m[1] : null;
+}
+
+// Fetch a user's recent games from Chess.com (public Published-Data API, no auth).
+// Chess.com organises games into monthly archives, so we pull the latest month(s).
+app.get('/api/chesscom/:username', authMiddleware, async (req, res) => {
+  const username = req.params.username.trim().toLowerCase();
+  if (!username || !/^[a-zA-Z0-9_-]{2,30}$/.test(username)) {
+    return res.status(400).json({ error: 'Invalid Chess.com username' });
+  }
+  try {
+    // Get the list of monthly archive URLs for this player
+    const archRes = await fetch(`https://api.chess.com/pub/player/${encodeURIComponent(username)}/games/archives`, {
+      headers: { 'User-Agent': 'postgame/1.0 (post-game.net)' },
+    });
+    if (archRes.status === 404) return res.status(404).json({ error: 'Chess.com user not found' });
+    if (!archRes.ok) return res.status(502).json({ error: 'Could not reach Chess.com' });
+
+    const archData = await archRes.json();
+    const archives = archData.archives || [];
+    if (!archives.length) return res.json({ games: [] });
+
+    // Pull the most recent archive, and the previous one if we need more games
+    const collected = [];
+    for (let i = archives.length - 1; i >= 0 && collected.length < 15 && i >= archives.length - 2; i--) {
+      const mRes = await fetch(archives[i], { headers: { 'User-Agent': 'postgame/1.0 (post-game.net)' } });
+      if (!mRes.ok) continue;
+      const mData = await mRes.json();
+      const monthGames = (mData.games || []).filter(g => g.pgn && g.rules === 'chess');
+      // newest first within the month
+      monthGames.reverse();
+      for (const g of monthGames) {
+        if (collected.length >= 15) break;
+        collected.push(g);
+      }
+    }
+
+    const games = collected.map((g) => {
+      const pgn = g.pgn;
+      const whiteUser = (g.white && g.white.username) || 'Unknown';
+      const blackUser = (g.black && g.black.username) || 'Unknown';
+      const userIsWhite = whiteUser.toLowerCase() === username;
+      const playerColor = userIsWhite ? 'w' : 'b';
+
+      // Result from the player's perspective
+      const whiteResult = g.white && g.white.result;
+      let result = 'draw';
+      const winMap = { win: true };
+      if (whiteResult === 'win') result = userIsWhite ? 'win' : 'loss';
+      else if (g.black && g.black.result === 'win') result = userIsWhite ? 'loss' : 'win';
+
+      // Opening name from ECOUrl or PGN tag if present
+      let opening = pgnTag(pgn, 'ECO');
+      if (g.eco) opening = g.eco;
+      const ecoUrl = g.eco || (pgnTag(pgn, 'ECOUrl') || '');
+
+      const endTime = g.end_time ? g.end_time * 1000 : null;
+
+      return {
+        id: g.url ? g.url.split('/').pop() : String(Math.random()).slice(2),
+        pgn,
+        white: whiteUser,
+        black: blackUser,
+        whiteRating: (g.white && g.white.rating) || null,
+        blackRating: (g.black && g.black.rating) || null,
+        playerColor,
+        result,
+        opening: opening || null,
+        speed: g.time_class || null,
+        createdAt: endTime,
+      };
+    });
+
+    res.json({ games });
+  } catch (err) {
+    console.error('Chess.com fetch error:', err.message);
+    res.status(502).json({ error: 'Could not fetch games from Chess.com' });
+  }
+});
+
 // ═══ PGN PARSE (for history replay) ═══
 app.post('/api/parse-pgn', (req, res) => {
   try {
@@ -408,6 +493,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
