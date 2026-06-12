@@ -1398,3 +1398,26 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   .lp-demo-wrap, .lp-portal-grid { grid-template-columns: 1fr; gap: 32px; }
   .lp-price-grid { grid-template-columns: repeat(2,1fr); }
 }
+
+/* number boxes in the loop (styled like the blunder label) */
+.lp-num-box {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+  background: var(--accent-soft); color: var(--accent);
+  border-radius: 7px; padding: 5px 10px; letter-spacing: 0.05em;
+}
+.lp-loop-num { margin-bottom: 16px; }
+
+/* board visual reference band */
+.lp-board-band { }
+.lp-board-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.lp-board-media {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 20px; display: flex; align-items: center; justify-content: center;
+}
+.lp-board-video { width: 100%; max-width: 360px; border-radius: 10px; display: block; }
+
+@media (max-width: 860px) {
+  .lp-board-wrap { grid-template-columns: 1fr; gap: 28px; }
+  .lp-board-media { order: -1; }
+}
