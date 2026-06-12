@@ -404,12 +404,13 @@ CRITICAL RULES:
 - Any mention of accuracy MUST come only from the importedAccuracy values provided (these are from the player's actual platform). NEVER cite or invent an accuracy percentage that is not in the data. If no importedAccuracy is present, do not mention accuracy numbers at all — speak qualitatively instead.
 - Write in warm, direct, experienced-coach prose. Address the student as "you".
 - Prioritise actionability: what should they actually work on next?
+- NEVER refer to games by number (e.g. "game 3", "games 3, 4, 5"). The student has no way to identify a numbered game. Refer to games qualitatively instead — by how often ("in several recent games"), by opening ("in your Scandinavian games"), by colour, or by result ("in a couple of your losses as Black").
 
 Respond ONLY with valid JSON, no preamble or markdown:
 {
   "headline": "One sentence capturing where this player is right now, in a coach's voice",
   "recurringThemes": [
-    { "theme": "Short name of the pattern", "detail": "1-2 sentences explaining it in plain language", "games": "how often / which games it showed up, qualitatively" }
+    { "theme": "Short name of the pattern", "detail": "1-2 sentences explaining it in plain language", "games": "how often it showed up, described QUALITATIVELY (e.g. 'in several of your recent games' or 'in your Sicilian games as Black') — NEVER use game numbers like 'game 3' or 'games 3, 4, 5', because the student cannot identify those." }
   ],
   "strengths": [
     { "strength": "Short name", "detail": "1-2 sentences on what they do well" }
@@ -445,6 +446,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items.`;
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
