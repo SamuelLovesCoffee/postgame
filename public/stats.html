@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your stats · postgame</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="stats-page">
+    <div class="admin-head">
+      <a href="/" class="reset-logo">post<span>game</span></a>
+      <a href="/" class="new-game-btn" style="text-decoration:none">Analyse a game</a>
+    </div>
+    <h1 class="stats-title">Your performance</h1>
+
+    <div id="statsLoading"><p class="reset-info">Loading your stats…</p></div>
+    <div id="statsEmpty" style="display:none">
+      <p class="reset-info">You haven't analysed any games yet. Once you do, this page will track your accuracy, your recurring mistakes, and how you're improving over time.</p>
+      <a href="/" class="modal-btn" style="display:block;text-align:center;text-decoration:none;max-width:240px;margin:16px auto 0">Analyse your first game</a>
+    </div>
+
+    <div id="statsContent" style="display:none">
+      <div class="admin-grid">
+        <div class="admin-card"><div class="admin-num" id="gameCount">–</div><div class="admin-label">Games analysed</div></div>
+        <div class="admin-card"><div class="admin-num" id="avgAccuracy">–</div><div class="admin-label">Average accuracy</div></div>
+        <div class="admin-card"><div class="admin-num" id="totalBlunders">–</div><div class="admin-label">Total blunders</div></div>
+        <div class="admin-card"><div class="admin-num" id="timeTrouble">–</div><div class="admin-label">Time-trouble errors</div></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>Accuracy over time</h3>
+        <div id="accuracyChart" class="acc-chart"></div>
+        <p class="chart-note" id="trendNote"></p>
+      </div>
+
+      <div class="admin-section">
+        <h3>Error breakdown</h3>
+        <div class="error-bars" id="errorBars"></div>
+      </div>
+
+      <div class="admin-section" id="weaknessSection">
+        <h3>Recurring weaknesses</h3>
+        <p class="chart-note">Patterns your coach has flagged across multiple games — the things to focus your training on.</p>
+        <div id="weaknessList"></div>
+      </div>
+
+      <div class="admin-section" id="openingSection">
+        <h3>Openings</h3>
+        <div id="openingList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const authToken = localStorage.getItem('pg_token');
+
+    async function load(){
+      if (!authToken){ showEmpty('Please log in to see your stats.'); return; }
+      try {
+        const r = await fetch('/api/my-stats', { headers: { Authorization: 'Bearer ' + authToken } });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Failed');
+        if (!d.hasData){ showEmpty(); return; }
+        render(d);
+      } catch(e){ showEmpty(); }
+    }
+
+    function showEmpty(msg){
+      document.getElementById('statsLoading').style.display = 'none';
+      const el = document.getElementById('statsEmpty');
+      if (msg) el.querySelector('.reset-info').textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function render(d){
+      document.getElementById('gameCount').textContent = d.gameCount;
+      document.getElementById('avgAccuracy').textContent = (d.avgAccuracy != null ? d.avgAccuracy + '%' : '–');
+      document.getElementById('totalBlunders').textContent = d.errorTotals.blunders;
+      document.getElementById('timeTrouble').textContent = (d.timeTrouble != null ? d.timeTrouble + '%' : 'n/a');
+
+      // Accuracy trend sparkline (simple SVG)
+      drawAccuracyChart(d.accuracyTrend || []);
+
+      // Error breakdown bars
+      const e = d.errorTotals;
+      const maxE = Math.max(e.blunders, e.mistakes, e.inaccuracies, 1);
+      document.getElementById('errorBars').innerHTML = [
+        ['Blunders', e.blunders, '#dc2626'],
+        ['Mistakes', e.mistakes, '#e97a25'],
+        ['Inaccuracies', e.inaccuracies, '#d4a72c'],
+      ].map(([label, val, col]) =>
+        `<div class="ebar-row"><span class="ebar-label">${label}</span>
+         <div class="ebar-track"><div class="ebar-fill" style="width:${(val/maxE*100)}%;background:${col}"></div></div>
+         <span class="ebar-val">${val}</span></div>`
+      ).join('');
+
+      // Recurring weaknesses
+      const ws = d.recurringWeaknesses || [];
+      if (ws.length){
+        document.getElementById('weaknessList').innerHTML = ws.map(w =>
+          `<div class="weakness-item"><span class="weakness-count">${w.count}×</span> ${w.theme}</div>`
+        ).join('');
+      } else {
+        document.getElementById('weaknessSection').style.display = 'none';
+      }
+
+      // Openings
+      const ops = d.openings || [];
+      if (ops.length){
+        document.getElementById('openingList').innerHTML = ops.map(o =>
+          `<div class="admin-row"><span>${o.name} <span style="color:var(--text-3)">(${o.games})</span></span><span>${o.accuracy}%</span></div>`
+        ).join('');
+      } else {
+        document.getElementById('openingSection').style.display = 'none';
+      }
+
+      document.getElementById('statsLoading').style.display = 'none';
+      document.getElementById('statsContent').style.display = 'block';
+    }
+
+    function drawAccuracyChart(series){
+      const box = document.getElementById('accuracyChart');
+      if (!series.length){ box.innerHTML = '<p class="chart-note">Not enough games yet.</p>'; return; }
+      const w = 600, h = 140, pad = 20;
+      const accs = series.map(s => s.accuracy);
+      const min = Math.max(0, Math.min(...accs) - 5), max = Math.min(100, Math.max(...accs) + 5);
+      const xStep = (w - pad*2) / Math.max(1, series.length - 1);
+      const pts = series.map((s, i) => {
+        const x = pad + i * xStep;
+        const y = h - pad - ((s.accuracy - min) / (max - min || 1)) * (h - pad*2);
+        return [x, y];
+      });
+      const path = pts.map((p, i) => (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const dots = pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#e94560"/>`).join('');
+      box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="acc-svg" preserveAspectRatio="xMidYMid meet">
+        <path d="${path}" fill="none" stroke="#e94560" stroke-width="2"/>
+        ${dots}
+      </svg>`;
+
+      // Trend note
+      if (series.length >= 3){
+        const first = series.slice(0, Math.ceil(series.length/2)).reduce((s,a)=>s+a.accuracy,0) / Math.ceil(series.length/2);
+        const last = series.slice(Math.ceil(series.length/2)).reduce((s,a)=>s+a.accuracy,0) / Math.floor(series.length/2);
+        const diff = (last - first).toFixed(1);
+        const note = document.getElementById('trendNote');
+        if (last > first + 1) note.textContent = `Your accuracy is trending up (+${diff}% recently). Keep it going.`;
+        else if (last < first - 1) note.textContent = `Your accuracy has dipped recently (${diff}%). Worth reviewing your recent games.`;
+        else note.textContent = `Your accuracy is holding steady.`;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
