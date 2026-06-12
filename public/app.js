@@ -828,8 +828,8 @@ const STUDY_RESOURCES = [
   { keys:['back rank','back-rank'], label:'Back-rank mates', url:'https://lichess.org/training/backRankMate' },
   { keys:['hanging piece','hanging'], label:'Hanging pieces', url:'https://lichess.org/training/hangingPiece' },
   { keys:['deflection'], label:'Deflection', url:'https://lichess.org/training/deflection' },
-  { keys:['pawn endgame','pawn ending','king and pawn'], label:'Pawn endgames', url:'https://lichess.org/practice/pawn-endgames/key-positions-pawn-endgames/' },
-  { keys:['rook endgame','rook ending'], label:'Rook endgames', url:'https://lichess.org/practice/rook-endgames/the-philidor-position/' },
+  { keys:['pawn endgame','pawn ending','king and pawn'], label:'Pawn endgames', url:'https://lichess.org/practice/pawn-endgames/opposition/A4ujYOer' },
+  { keys:['rook endgame','rook ending'], label:'Rook endgames', url:'https://lichess.org/practice/rook-endgames/basic-rook-endgames/pqUSUw8Y' },
   { keys:['endgame','endings'], label:'Endgame practice', url:'https://lichess.org/practice' },
   { keys:['opening principles','development','develop your pieces'], label:'Opening principles', url:'https://lichess.org/practice/fundamentals/the-opening/' },
   { keys:['tactics','tactical','combination'], label:'Tactics trainer', url:'https://lichess.org/training' },
@@ -1029,6 +1029,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
