@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    // If a password-recovery token lands on the home page (due to a domain/path
+    // redirect dropping the path), forward it to the reset page with the hash intact.
+    (function(){
+      var h = window.location.hash || '';
+      var s = window.location.search || '';
+      var isRecovery = h.indexOf('type=recovery') !== -1 || s.indexOf('type=recovery') !== -1;
+      var path = window.location.pathname || '/';
+      if (isRecovery && path.indexOf('reset-password') === -1) {
+        window.location.replace('/reset-password.html' + s + h);
+      }
+    })();
+  </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>postgame — AI Chess Coach</title>
@@ -410,6 +423,7 @@
   </script>
 </body>
 </html>
+
 
 
 
