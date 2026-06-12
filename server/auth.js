@@ -136,6 +136,16 @@ async function saveAnalysis(userId, pgn, playerColor, headers, openingName, coac
 
 // Build a coaching profile from a user's past analysed games.
 // Returns { rating, summary, dashboard } or null if too little history.
+async function deleteAnalysis(userId, analysisId) {
+  const { error } = await supabase
+    .from('analyses')
+    .delete()
+    .eq('id', analysisId)
+    .eq('user_id', userId); // ensure users can only delete their own
+  if (error) throw new Error(error.message);
+  return true;
+}
+
 async function buildPlayerProfile(userId) {
   const { data, error } = await supabase
     .from('analyses')
@@ -480,7 +490,7 @@ async function getAdminStats() {
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
-  buildPlayerProfile,
+  buildPlayerProfile, deleteAnalysis,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -488,6 +498,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
