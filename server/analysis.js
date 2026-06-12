@@ -194,9 +194,57 @@ async function masterGamesLookup(fen) {
  * 2. Lichess cloud eval: instant, depth 30+
  * 3. Local Stockfish: only for positions not in cloud
  */
+// ── Accuracy & quality metrics ──
+
+// Convert a single move's win% loss into a move accuracy (0-100), Lichess-style curve.
+function moveAccuracy(wpLoss) {
+  // Lichess formula: accuracy = 103.1668 * exp(-0.04354 * wpLoss) - 3.1669, clamped
+  const acc = 103.1668 * Math.exp(-0.04354 * wpLoss) - 3.1669;
+  return Math.max(0, Math.min(100, acc));
+}
+
+// Classify a move's severity from win% loss
+function classifyError(wpLoss) {
+  if (wpLoss >= 20) return 'blunder';
+  if (wpLoss >= 10) return 'mistake';
+  if (wpLoss >= 5) return 'inaccuracy';
+  return null;
+}
+
+// Parse per-move clock times from PGN clock comments ([%clk 0:03:00]).
+// Returns an array of seconds-remaining indexed by ply (null where absent).
+function parseClocks(pgn) {
+  const clocks = [];
+  const re = /\[%clk\s+(\d+):(\d+):(\d+(?:\.\d+)?)\]/g;
+  let m;
+  while ((m = re.exec(pgn)) !== null) {
+    const secs = parseInt(m[1]) * 3600 + parseInt(m[2]) * 60 + parseFloat(m[3]);
+    clocks.push(secs);
+  }
+  return clocks;
+}
+
+// Parse the time control from PGN headers (e.g. "600+5" -> base 600s).
+function parseTimeControl(headers) {
+  const tc = headers.TimeControl || '';
+  const m = tc.match(/^(\d+)(?:\+(\d+))?/);
+  if (!m) return { base: null, increment: null, category: null };
+  const base = parseInt(m[1]);
+  const increment = m[2] ? parseInt(m[2]) : 0;
+  // Lichess-style categorisation by estimated game duration
+  const est = base + 40 * increment;
+  let category = 'classical';
+  if (est < 29) category = 'bullet';
+  else if (est < 179) category = 'blitz';
+  else if (est < 1500) category = 'rapid';
+  return { base, increment, category };
+}
+
 async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth = 16) {
   const chess = new Chess();
   if (!chess.load_pgn(pgn)) throw new Error('Invalid PGN');
+  const clocks = parseClocks(pgn);
+  const timeControl = parseTimeControl(chess.header());
 
   const moves = chess.history({ verbose: true });
   if (!moves.length) throw new Error('No moves found in PGN');
@@ -363,6 +411,9 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
       isMissedOpportunity,
       isBrilliant,
       phase,
+      accuracy: Math.round(moveAccuracy(wpLoss) * 10) / 10,
+      errorClass: classifyError(wpLoss),
+      clockSeconds: clocks[i - 1] != null ? clocks[i - 1] : null,
     });
   }
 
@@ -409,6 +460,48 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 
   onProgress(92, 'Analysis complete');
 
+  // ── Game quality & error summary (per side) ──
+  function sideStats(color) {
+    const mv = annotatedMoves.filter(m => m.color === color && !m.isBook);
+    if (!mv.length) return { accuracy: null, blunders: 0, mistakes: 0, inaccuracies: 0, moves: 0 };
+    const avgAcc = mv.reduce((s, m) => s + (m.accuracy || 0), 0) / mv.length;
+    return {
+      accuracy: Math.round(avgAcc * 10) / 10,
+      blunders: mv.filter(m => m.errorClass === 'blunder').length,
+      mistakes: mv.filter(m => m.errorClass === 'mistake').length,
+      inaccuracies: mv.filter(m => m.errorClass === 'inaccuracy').length,
+      moves: mv.length,
+    };
+  }
+  const playerStats = sideStats(playerColor);
+  const oppStats = sideStats(playerColor === 'w' ? 'b' : 'w');
+
+  // Time-management signal: did the player blunder/mistake right after moving fast?
+  let timeSignal = null;
+  if (clocks.length) {
+    const playerMoves = annotatedMoves.filter(m => m.color === playerColor && !m.isBook && m.clockSeconds != null);
+    // Estimate seconds spent per move from the clock deltas (same side, consecutive)
+    let fastErrors = 0, fastTotal = 0;
+    for (let k = 2; k < playerMoves.length; k++) {
+      const spent = playerMoves[k - 1].clockSeconds - playerMoves[k].clockSeconds;
+      if (spent != null && spent >= 0 && spent < 5) { // moved in under 5s
+        fastTotal++;
+        if (playerMoves[k].errorClass === 'blunder' || playerMoves[k].errorClass === 'mistake') fastErrors++;
+      }
+    }
+    if (fastTotal >= 3) {
+      timeSignal = { fastMoves: fastTotal, fastErrors, ratio: Math.round((fastErrors / fastTotal) * 100) };
+    }
+  }
+
+  const gameQuality = {
+    player: playerStats,
+    opponent: oppStats,
+    timeControl,
+    timeSignal,
+    hasClocks: clocks.length > 0,
+  };
+
   return {
     headers,
     openingName,
@@ -421,10 +514,13 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
     missedOpportunities,
     goodMoments,
     bookDepth,
+    gameQuality,
+    timeControl,
   };
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
 
 
