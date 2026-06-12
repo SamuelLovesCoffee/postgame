@@ -345,7 +345,97 @@ async function generateMoveByMove(analysisResult) {
   }
 }
 
-module.exports = { generateCoaching, generateMoveByMove };
+
+// ═══════════════════════════════════════
+// PLAYER FEEDBACK SYNTHESIS (the qualitative portal)
+// Takes the coaching from a user's analysed games and synthesises a
+// coach's-notebook view of the player. Reasons over stored text + imported
+// quantitative data; never re-analyses games.
+// ═══════════════════════════════════════
+
+async function generatePlayerFeedback(games) {
+  // games: [{ openingName, playerColor, headers, metrics, coaching, createdAt }]
+  if (!games || games.length === 0) return null;
+
+  // Build a compact digest of each game for the AI to reason over.
+  const digest = games.slice(0, 30).map((g, idx) => {
+    const co = g.coaching || {};
+    const m = g.metrics || {};
+    const ratingTag = g.playerColor === 'w' ? 'WhiteElo' : 'BlackElo';
+    const rating = (g.headers && g.headers[ratingTag]) || m.rating || null;
+    // Only include accuracy if it came from the platform import, never self-calculated
+    const importedAccuracy = (m.platformAccuracy != null) ? m.platformAccuracy : null;
+    return {
+      game: idx + 1,
+      opening: g.openingName || 'Unknown',
+      colour: g.playerColor === 'w' ? 'White' : 'Black',
+      result: (g.headers && g.headers.Result) || '?',
+      rating: rating ? Number(rating) : null,
+      source: m.source || 'other',
+      timeControl: m.timeControl || null,
+      importedAccuracy,
+      summary: co.summary || '',
+      strengths: co.strengths || [],
+      improvementAreas: co.improvementAreas || [],
+      study: co.studyRecommendation || '',
+    };
+  });
+
+  const gameCount = games.length;
+
+  const systemPrompt = `You are a chess coach reviewing your private notes on a student, written after coaching them through several of their games. Your job is to step back and synthesise what you have learned about this player into a coherent, honest picture — the way a real coach mentally holds a model of each student.
+
+You are writing a CURATED FEEDBACK PORTAL, not a stats page. The student's online platforms already show them numbers (accuracy, rating graphs). Your value is the qualitative read they cannot get elsewhere: the patterns, the recurring themes, the human-language understanding of how they play and what would most help them improve.
+
+CRITICAL RULES:
+- Base everything ONLY on the game notes provided. Do not invent games, moves, or patterns not supported by the notes.
+- This is based on the games the student CHOSE to analyse (${gameCount} of them), which may not be their complete play. Frame your read as "based on the games you've reviewed with me" — never claim it is their complete record.
+- Be appropriately humble and honest: distinguish strong recurring patterns (seen across several games) from one-offs. If you have only a few games, say the picture is still forming.
+- Any mention of accuracy MUST come only from the importedAccuracy values provided (these are from the player's actual platform). NEVER cite or invent an accuracy percentage that is not in the data. If no importedAccuracy is present, do not mention accuracy numbers at all — speak qualitatively instead.
+- Write in warm, direct, experienced-coach prose. Address the student as "you".
+- Prioritise actionability: what should they actually work on next?
+
+Respond ONLY with valid JSON, no preamble or markdown:
+{
+  "headline": "One sentence capturing where this player is right now, in a coach's voice",
+  "recurringThemes": [
+    { "theme": "Short name of the pattern", "detail": "1-2 sentences explaining it in plain language", "games": "how often / which games it showed up, qualitatively" }
+  ],
+  "strengths": [
+    { "strength": "Short name", "detail": "1-2 sentences on what they do well" }
+  ],
+  "focusNext": {
+    "priority": "The single most important thing to work on next",
+    "why": "1-2 sentences on why this matters most for their results",
+    "how": "Concrete, specific advice on how to work on it"
+  },
+  "phaseRead": "A short paragraph on where in the game (opening/middlegame/endgame) their strengths and weaknesses tend to fall",
+  "encouragement": "One honest, motivating closing line — not empty praise, grounded in what you've seen"
+}
+
+recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items.`;
+
+  const userPrompt = `Here are my notes from this student's ${gameCount} analysed game(s):\n\n${JSON.stringify(digest, null, 2)}\n\nSynthesise your coaching read of this player.`;
+
+  try {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+    });
+    let text = response.content[0].text.trim();
+    text = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+    const parsed = JSON.parse(text);
+    return parsed;
+  } catch (err) {
+    console.error('Player feedback synthesis error:', err.message);
+    return null;
+  }
+}
+
+module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
