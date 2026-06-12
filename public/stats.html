@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your stats · postgame</title>
+  <title>Your coaching feedback · postgame</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -13,43 +13,45 @@
       <a href="/" class="reset-logo">post<span>game</span></a>
       <a href="/" class="new-game-btn" style="text-decoration:none">Analyse a game</a>
     </div>
-    <h1 class="stats-title">Your performance</h1>
+    <h1 class="stats-title">Your coaching feedback</h1>
+    <p class="portal-intro" id="portalIntro" style="display:none"></p>
 
-    <div id="statsLoading"><p class="reset-info">Loading your stats…</p></div>
+    <div id="statsLoading"><p class="reset-info">Reviewing your games…</p></div>
     <div id="statsEmpty" style="display:none">
-      <p class="reset-info">You haven't analysed any games yet. Once you do, this page will track your accuracy, your recurring mistakes, and how you're improving over time.</p>
+      <p class="reset-info">Once you've analysed a few games, your coach will build a picture of how you play — your recurring patterns, your strengths, and what to work on next. This isn't a stats page; it's your coach's read on you.</p>
       <a href="/" class="modal-btn" style="display:block;text-align:center;text-decoration:none;max-width:240px;margin:16px auto 0">Analyse your first game</a>
     </div>
 
-    <div id="statsContent" style="display:none">
-      <div class="admin-grid">
-        <div class="admin-card"><div class="admin-num" id="gameCount">–</div><div class="admin-label">Games analysed</div></div>
-        <div class="admin-card"><div class="admin-num" id="totalBlunders">–</div><div class="admin-label">Total blunders</div></div>
-        <div class="admin-card"><div class="admin-num" id="totalMistakes">–</div><div class="admin-label">Total mistakes</div></div>
-        <div class="admin-card"><div class="admin-num" id="timeTrouble">–</div><div class="admin-label">Time-trouble errors</div></div>
+    <div id="portalContent" style="display:none">
+      <!-- Headline -->
+      <div class="portal-headline" id="portalHeadline"></div>
+
+      <!-- Focus next (the most important block, shown prominently) -->
+      <div class="portal-focus" id="portalFocus"></div>
+
+      <!-- Recurring themes -->
+      <div class="portal-section" id="themesSection">
+        <h3>What I keep noticing</h3>
+        <div id="themesList"></div>
       </div>
 
-      <div class="admin-section">
-        <h3>Rating over time</h3>
-        <div id="eloChart" class="acc-chart"></div>
-        <div id="eloLegend" class="elo-legend"></div>
-        <p class="chart-note" id="trendNote"></p>
+      <!-- Strengths -->
+      <div class="portal-section" id="strengthsSection">
+        <h3>What you do well</h3>
+        <div id="strengthsList"></div>
       </div>
 
-      <div class="admin-section">
-        <h3>Error breakdown</h3>
-        <div class="error-bars" id="errorBars"></div>
+      <!-- Phase read -->
+      <div class="portal-section" id="phaseSection">
+        <h3>Across the phases</h3>
+        <p class="portal-prose" id="phaseRead"></p>
       </div>
 
-      <div class="admin-section" id="weaknessSection">
-        <h3>Recurring weaknesses</h3>
-        <p class="chart-note">Patterns your coach has flagged across multiple games — the things to focus your training on.</p>
-        <div id="weaknessList"></div>
-      </div>
+      <!-- Encouragement -->
+      <div class="portal-encouragement" id="portalEncouragement"></div>
 
-      <div class="admin-section" id="openingSection">
-        <h3>Openings</h3>
-        <div id="openingList"></div>
+      <div class="portal-refresh">
+        <button class="new-game-btn" onclick="loadFeedback(true)">Regenerate feedback</button>
       </div>
     </div>
   </div>
@@ -57,15 +59,20 @@
   <script>
     const authToken = localStorage.getItem('pg_token');
 
-    async function load(){
-      if (!authToken){ showEmpty('Please log in to see your stats.'); return; }
+    async function loadFeedback(refresh){
+      document.getElementById('statsLoading').style.display = 'block';
+      document.getElementById('portalContent').style.display = 'none';
+      document.getElementById('statsEmpty').style.display = 'none';
+      document.getElementById('portalIntro').style.display = 'none';
+      if (!authToken){ showEmpty('Please log in to see your coaching feedback.'); return; }
       try {
-        const r = await fetch('/api/my-stats', { headers: { Authorization: 'Bearer ' + authToken } });
+        const url = '/api/my-feedback' + (refresh ? '?refresh=1' : '');
+        const r = await fetch(url, { headers: { Authorization: 'Bearer ' + authToken } });
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || 'Failed');
         if (!d.hasData){ showEmpty(); return; }
         render(d);
-      } catch(e){ showEmpty(); }
+      } catch(e){ showEmpty('Could not load your feedback right now. Please try again shortly.'); }
     }
 
     function showEmpty(msg){
@@ -75,121 +82,63 @@
       el.style.display = 'block';
     }
 
+    function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
     function render(d){
-      document.getElementById('gameCount').textContent = d.gameCount;
-      document.getElementById('totalBlunders').textContent = d.errorTotals.blunders;
-      document.getElementById('totalMistakes').textContent = d.errorTotals.mistakes;
-      document.getElementById('timeTrouble').textContent = (d.timeTrouble != null ? d.timeTrouble + '%' : 'n/a');
+      const f = d.feedback || {};
+      // Intro line acknowledging this is based on analysed games
+      const intro = document.getElementById('portalIntro');
+      intro.textContent = `Based on the ${d.gameCount} game${d.gameCount===1?'':'s'} you've analysed with me. The more you review, the sharper this gets.`;
+      intro.style.display = 'block';
 
-      // Elo over time, per source
-      drawEloChart(d.eloBySource || {});
+      document.getElementById('portalHeadline').textContent = f.headline || '';
 
-      // Error breakdown bars
-      const e = d.errorTotals;
-      const maxE = Math.max(e.blunders, e.mistakes, e.inaccuracies, 1);
-      document.getElementById('errorBars').innerHTML = [
-        ['Blunders', e.blunders, '#dc2626'],
-        ['Mistakes', e.mistakes, '#e97a25'],
-        ['Inaccuracies', e.inaccuracies, '#d4a72c'],
-      ].map(([label, val, col]) =>
-        `<div class="ebar-row"><span class="ebar-label">${label}</span>
-         <div class="ebar-track"><div class="ebar-fill" style="width:${(val/maxE*100)}%;background:${col}"></div></div>
-         <span class="ebar-val">${val}</span></div>`
-      ).join('');
-
-      // Recurring weaknesses
-      const ws = d.recurringWeaknesses || [];
-      if (ws.length){
-        document.getElementById('weaknessList').innerHTML = ws.map(w =>
-          `<div class="weakness-item"><span class="weakness-count">${w.count}×</span> ${w.theme}</div>`
-        ).join('');
-      } else {
-        document.getElementById('weaknessSection').style.display = 'none';
+      // Focus next
+      if (f.focusNext){
+        document.getElementById('portalFocus').innerHTML =
+          `<div class="focus-tag">Work on this next</div>
+           <div class="focus-priority">${esc(f.focusNext.priority)}</div>
+           <p class="focus-why">${esc(f.focusNext.why)}</p>
+           <div class="focus-how"><strong>How:</strong> ${esc(f.focusNext.how)}</div>`;
       }
 
-      // Openings
-      const ops = d.openings || [];
-      if (ops.length){
-        document.getElementById('openingList').innerHTML = ops.map(o =>
-          `<div class="admin-row"><span>${o.name} <span style="color:var(--text-3)">(${o.games})</span></span><span>${o.accuracy}%</span></div>`
+      // Recurring themes
+      const themes = f.recurringThemes || [];
+      if (themes.length){
+        document.getElementById('themesList').innerHTML = themes.map(t =>
+          `<div class="theme-card">
+             <div class="theme-name">${esc(t.theme)}</div>
+             <p class="theme-detail">${esc(t.detail)}</p>
+             ${t.games ? `<div class="theme-games">${esc(t.games)}</div>` : ''}
+           </div>`
         ).join('');
-      } else {
-        document.getElementById('openingSection').style.display = 'none';
+      } else { document.getElementById('themesSection').style.display = 'none'; }
+
+      // Strengths
+      const strengths = f.strengths || [];
+      if (strengths.length){
+        document.getElementById('strengthsList').innerHTML = strengths.map(s =>
+          `<div class="strength-card">
+             <div class="strength-name">${esc(s.strength)}</div>
+             <p class="strength-detail">${esc(s.detail)}</p>
+           </div>`
+        ).join('');
+      } else { document.getElementById('strengthsSection').style.display = 'none'; }
+
+      // Phase read
+      if (f.phaseRead){ document.getElementById('phaseRead').textContent = f.phaseRead; }
+      else { document.getElementById('phaseSection').style.display = 'none'; }
+
+      // Encouragement
+      if (f.encouragement){
+        document.getElementById('portalEncouragement').textContent = f.encouragement;
       }
 
       document.getElementById('statsLoading').style.display = 'none';
-      document.getElementById('statsContent').style.display = 'block';
+      document.getElementById('portalContent').style.display = 'block';
     }
 
-    const SOURCE_META = {
-      lichess:  { label: 'Lichess',  color: '#e94560' },
-      chesscom: { label: 'Chess.com', color: '#16a34a' },
-      other:    { label: 'OTB / other', color: '#3b82f6' },
-    };
-
-    function drawEloChart(bySource){
-      const box = document.getElementById('eloChart');
-      const legend = document.getElementById('eloLegend');
-      const sources = Object.keys(bySource).filter(s => (bySource[s] || []).length);
-      if (!sources.length){
-        box.innerHTML = '<p class="chart-note">No rating data yet. Import rated games from Chess.com or Lichess to see your rating over time.</p>';
-        legend.innerHTML = '';
-        return;
-      }
-      const w = 600, h = 160, pad = 28;
-      // Global min/max across all series for a shared y-axis
-      let allElos = [];
-      sources.forEach(s => bySource[s].forEach(p => allElos.push(p.elo)));
-      const min = Math.min(...allElos) - 20, max = Math.max(...allElos) + 20;
-
-      let svg = `<svg viewBox="0 0 ${w} ${h}" class="acc-svg" preserveAspectRatio="xMidYMid meet">`;
-      // y-axis labels (min/max)
-      svg += `<text x="2" y="${pad}" class="axis-lbl">${Math.round(max)}</text>`;
-      svg += `<text x="2" y="${h-pad+4}" class="axis-lbl">${Math.round(min)}</text>`;
-
-      sources.forEach(src => {
-        const series = bySource[src];
-        const col = (SOURCE_META[src] || SOURCE_META.other).color;
-        const n = series.length;
-        const xStep = (w - pad*2) / Math.max(1, n - 1);
-        const pts = series.map((p, i) => {
-          const x = pad + i * xStep;
-          const y = h - pad - ((p.elo - min) / (max - min || 1)) * (h - pad*2);
-          return [x, y];
-        });
-        if (n === 1) {
-          svg += `<circle cx="${pts[0][0].toFixed(1)}" cy="${pts[0][1].toFixed(1)}" r="4" fill="${col}"/>`;
-        } else {
-          const path = pts.map((p, i) => (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-          svg += `<path d="${path}" fill="none" stroke="${col}" stroke-width="2"/>`;
-          svg += pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="${col}"/>`).join('');
-        }
-      });
-      svg += `</svg>`;
-      box.innerHTML = svg;
-
-      // Legend
-      legend.innerHTML = sources.map(s => {
-        const meta = SOURCE_META[s] || SOURCE_META.other;
-        const latest = bySource[s][bySource[s].length - 1].elo;
-        return `<span class="elo-leg-item"><span class="elo-dot" style="background:${meta.color}"></span>${meta.label} <strong>${latest}</strong></span>`;
-      }).join('');
-
-      // Trend note based on the source with the most data
-      const main = sources.sort((a,b)=>bySource[b].length-bySource[a].length)[0];
-      const ser = bySource[main];
-      if (ser.length >= 3){
-        const diff = ser[ser.length-1].elo - ser[0].elo;
-        const note = document.getElementById('trendNote');
-        const meta = SOURCE_META[main] || SOURCE_META.other;
-        if (diff > 0) note.textContent = `Your ${meta.label} rating is up ${diff} points across your analysed games.`;
-        else if (diff < 0) note.textContent = `Your ${meta.label} rating is down ${Math.abs(diff)} points across your analysed games — keep working at it.`;
-        else note.textContent = `Your ${meta.label} rating is holding steady.`;
-      }
-    }
-
-    load();
+    loadFeedback(false);
   </script>
 </body>
 </html>
-
