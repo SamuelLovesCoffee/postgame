@@ -101,6 +101,7 @@
 
     // Study resources (links; affiliate-ready later)
     const STUDY_RESOURCES = [
+      // Openings — /opening/{Name} pages (verified working)
       { keys:['scandinavian'], label:'Scandinavian Defense', url:'https://lichess.org/opening/Scandinavian_Defense' },
       { keys:['sicilian'], label:'Sicilian Defense', url:'https://lichess.org/opening/Sicilian_Defense' },
       { keys:['french'], label:'French Defense', url:'https://lichess.org/opening/French_Defense' },
@@ -109,18 +110,26 @@
       { keys:['italian'], label:'Italian Game', url:'https://lichess.org/opening/Italian_Game' },
       { keys:['london'], label:'London System', url:'https://lichess.org/opening/London_System' },
       { keys:["queen's gambit",'queens gambit','qgd'], label:"Queen's Gambit", url:'https://lichess.org/opening/Queens_Gambit' },
-      { keys:['opening principle','development','develop'], label:'Opening principles', url:'https://lichess.org/practice/fundamentals/the-opening/' },
-      { keys:['pin'], label:'Pin tactics', url:'https://lichess.org/training/pin' },
-      { keys:['fork'], label:'Fork tactics', url:'https://lichess.org/training/fork' },
-      { keys:['skewer'], label:'Skewer tactics', url:'https://lichess.org/training/skewer' },
-      { keys:['discovered'], label:'Discovered attacks', url:'https://lichess.org/training/discoveredAttack' },
-      { keys:['back rank','back-rank'], label:'Back-rank mates', url:'https://lichess.org/training/backRankMate' },
-      { keys:['hanging'], label:'Hanging pieces', url:'https://lichess.org/training/hangingPiece' },
-      { keys:['pawn endgame','pawn ending'], label:'Pawn endgames', url:'https://lichess.org/practice/pawn-endgames/key-positions-pawn-endgames/' },
-      { keys:['rook endgame','rook ending'], label:'Rook endgames', url:'https://lichess.org/practice/rook-endgames/the-philidor-position/' },
-      { keys:['endgame','ending'], label:'Endgame practice', url:'https://lichess.org/practice' },
-      { keys:['king safety','castl'], label:'King safety', url:'https://lichess.org/practice/fundamentals/king-safety/' },
-      { keys:['tactic','combination'], label:'Tactics trainer', url:'https://lichess.org/training' },
+      { keys:['caroli','english opening'], label:'English Opening', url:'https://lichess.org/opening/English_Opening' },
+      // Tactics — verified Lichess Practice lessons
+      { keys:['pin'], label:'The Pin (Practice)', url:'https://lichess.org/practice/fundamental-tactics/the-pin/9ogFv8Ac' },
+      { keys:['skewer'], label:'The Skewer (Practice)', url:'https://lichess.org/practice/fundamental-tactics/the-skewer/tuoBxVE5' },
+      { keys:['fork'], label:'The Fork (Practice)', url:'https://lichess.org/practice/fundamental-tactics/the-fork/Qj281y1p' },
+      { keys:['discovered'], label:'Discovered Attacks (Practice)', url:'https://lichess.org/practice/fundamental-tactics/discovered-attacks/MnsJEWnI' },
+      { keys:['double check'], label:'Double Check (Practice)', url:'https://lichess.org/practice/fundamental-tactics/double-check/RUQASaZm' },
+      { keys:['deflection'], label:'Deflection (Practice)', url:'https://lichess.org/practice/advanced-tactics/deflection/kdKpaYLW' },
+      { keys:['overload'], label:'Overloaded Pieces (Practice)', url:'https://lichess.org/practice/fundamental-tactics/overloaded-pieces/o734CNqp' },
+      // Endgames — verified Practice lessons
+      { keys:['pawn endgame','pawn ending','king and pawn'], label:'Pawn Endgames: Opposition', url:'https://lichess.org/practice/pawn-endgames/opposition/A4ujYOer' },
+      { keys:['rook endgame','rook ending','lucena','philidor'], label:'Basic Rook Endgames', url:'https://lichess.org/practice/rook-endgames/basic-rook-endgames/pqUSUw8Y' },
+      { keys:['checkmate pattern','mating pattern','basic mate','checkmate'], label:'Checkmate Patterns (Practice)', url:'https://lichess.org/practice/checkmates/checkmate-patterns-i/fE4k21MW' },
+      { keys:['endgame','ending'], label:'Endgame Practice', url:'https://lichess.org/practice' },
+      // Fundamentals — general practice hub + puzzle themes (verified)
+      { keys:['opening principle','development','develop','attacking before','attack before','piece activity'], label:'Practice your chess', url:'https://lichess.org/practice' },
+      { keys:['king safety','castl'], label:'Practice your chess', url:'https://lichess.org/practice' },
+      { keys:['hanging','blunder','undefended'], label:'Puzzle: Hanging Pieces', url:'https://lichess.org/training/hangingPiece' },
+      { keys:['back rank','back-rank'], label:'Puzzle: Back-rank Mates', url:'https://lichess.org/training/backRankMate' },
+      { keys:['tactic','combination','calculation'], label:'Puzzle Trainer', url:'https://lichess.org/training' },
     ];
     function findResource(topic){
       if(!topic) return null;
@@ -246,6 +255,7 @@
   </script>
 </body>
 </html>
+
 
 
 
