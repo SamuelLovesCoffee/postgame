@@ -1275,3 +1275,6 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   text-align: center;
 }
 .portal-refresh { text-align: center; }
+
+
+.portal-cost-note { font-size: 12px; color: var(--text-3); text-align: center; margin-top: 12px; }
