@@ -23,12 +23,14 @@
         <div class="admin-card"><div class="admin-num" id="analysesTotal">–</div><div class="admin-label">Total analyses</div><div class="admin-sub" id="analysesNew">–</div></div>
         <div class="admin-card"><div class="admin-num" id="revenueTotal">–</div><div class="admin-label">Revenue</div><div class="admin-sub" id="revenueWeek">–</div></div>
         <div class="admin-card"><div class="admin-num" id="creditsOutstanding">–</div><div class="admin-label">Credits outstanding</div><div class="admin-sub" id="creditsSold">–</div></div>
+        <div class="admin-card" id="failCard"><div class="admin-num" id="failuresTotal">–</div><div class="admin-label">Failed analyses</div><div class="admin-sub" id="failuresNew">–</div></div>
       </div>
 
       <div class="admin-section">
         <h3>Today</h3>
         <div class="admin-row"><span>New signups</span><span id="todaySignups">–</span></div>
         <div class="admin-row"><span>Analyses run</span><span id="todayAnalyses">–</span></div>
+        <div class="admin-row"><span>Failed analyses</span><span id="todayFailures">–</span></div>
       </div>
 
       <div class="admin-section">
@@ -36,6 +38,7 @@
         <div class="admin-row"><span>New signups</span><span id="weekSignups">–</span></div>
         <div class="admin-row"><span>Analyses run</span><span id="weekAnalyses">–</span></div>
         <div class="admin-row"><span>Revenue</span><span id="weekRevenue">–</span></div>
+        <div class="admin-row"><span>Failed analyses</span><span id="weekFailures">–</span></div>
       </div>
 
       <div class="admin-note">
@@ -79,6 +82,15 @@
       document.getElementById('creditsOutstanding').textContent = s.credits.outstanding;
       document.getElementById('creditsSold').textContent = s.credits.sold + ' sold all-time';
 
+      const f = s.failures || { total: 0, today: 0, week: 0 };
+      document.getElementById('failuresTotal').textContent = f.total;
+      document.getElementById('failuresNew').textContent = '+' + f.week + ' this week';
+      document.getElementById('todayFailures').textContent = f.today;
+      document.getElementById('weekFailures').textContent = f.week;
+      // Visual alert if failures occurred today
+      const fc = document.getElementById('failCard');
+      if (f.today > 0) { fc.style.borderColor = 'var(--red)'; document.getElementById('failuresTotal').style.color = 'var(--red)'; }
+
       document.getElementById('todaySignups').textContent = s.users.today;
       document.getElementById('todayAnalyses').textContent = s.analyses.today;
       document.getElementById('weekSignups').textContent = s.users.week;
@@ -98,3 +110,4 @@
   </script>
 </body>
 </html>
+
