@@ -421,10 +421,12 @@ Respond ONLY with valid JSON, no preamble or markdown:
     "how": "Concrete, specific advice on how to work on it"
   },
   "phaseRead": "A short paragraph on where in the game (opening/middlegame/endgame) their strengths and weaknesses tend to fall",
-  "encouragement": "One honest, motivating closing line — not empty praise, grounded in what you've seen"
-}
+  "encouragement": "One honest, motivating closing line — not empty praise, grounded in what you've seen",
+  "trainingPlan": [
+    { "task": "A specific, concrete practice task the student can act on (e.g. 'Play 5 slow games focusing on completing development before move 10')", "topic": "A short keyword for the chess theme this relates to, for linking resources (e.g. 'opening principles', 'tactics', 'endgames', 'pins', 'Scandinavian Defense')" }
+  ]
 
-recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items.`;
+recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. trainingPlan: 2-3 concrete, actionable tasks the student can work on now, each with a topic keyword for linking study resources.`;
 
   const userPrompt = `Here are my notes from this student's ${gameCount} analysed game(s):\n\n${JSON.stringify(digest, null, 2)}\n\nSynthesise your coaching read of this player.`;
 
@@ -446,6 +448,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items.`;
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
