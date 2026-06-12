@@ -1210,3 +1210,25 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   font-family: var(--font-mono); font-weight: 700; color: var(--accent);
   margin-right: 8px;
 }
+
+
+/* ── Elo chart legend ── */
+.elo-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.elo-leg-item { font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
+.elo-leg-item strong { color: var(--text); font-family: var(--font-mono); }
+.elo-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.axis-lbl { font-size: 9px; fill: var(--text-3); font-family: var(--font-mono); }
+
+/* ── Game management (delete) in history ── */
+.history-item { position: relative; }
+.history-delete {
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: 1px solid var(--border); color: var(--text-3);
+  border-radius: 6px; width: 30px; height: 30px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; opacity: 0; touch-action: manipulation;
+}
+.history-item:hover .history-delete { opacity: 1; }
+.history-delete:hover { border-color: var(--red); color: var(--red); }
+.history-delete svg { width: 14px; height: 14px; }
+@media (max-width: 900px) { .history-delete { opacity: 1; } }
