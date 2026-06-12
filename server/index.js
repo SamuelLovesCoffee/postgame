@@ -278,6 +278,21 @@ app.get('/api/admin/stats', authMiddleware, async (req, res) => {
   }
 });
 
+// ═══ PLAYER DASHBOARD ═══
+
+app.get('/api/my-stats', authMiddleware, async (req, res) => {
+  try {
+    const profile = await buildPlayerProfile(req.user.id);
+    if (!profile || !profile.dashboard) {
+      return res.json({ hasData: false });
+    }
+    res.json({ hasData: true, ...profile.dashboard });
+  } catch (err) {
+    console.error('My-stats error:', err.message);
+    res.status(500).json({ error: 'Could not load stats' });
+  }
+});
+
 // ═══ ACCOUNT MANAGEMENT ═══
 
 app.get('/api/account', authMiddleware, async (req, res) => {
@@ -526,6 +541,9 @@ app.get('/admin', (req, res) => {
 app.get('/reset-password', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'reset-password.html'));
 });
+app.get('/stats', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'stats.html'));
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
@@ -541,6 +559,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
