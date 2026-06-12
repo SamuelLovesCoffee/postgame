@@ -73,12 +73,16 @@ async function lichessCloudEval(fen) {
 // ── Lichess Opening Explorer ──
 async function checkOpeningBook(fen) {
   try {
-    const url = `https://explorer.lichess.ovh/lichess?fen=${encodeURIComponent(fen)}&speeds=bullet,blitz,rapid,classical&ratings=1600,1800,2000,2200,2500&topGames=0&recentGames=0`;
+    // Use the full ratings range so established sidelines are recognised, not just
+    // elite mainlines. The Lichess explorer aggregates a huge game database.
+    const url = `https://explorer.lichess.ovh/lichess?fen=${encodeURIComponent(fen)}&speeds=blitz,rapid,classical&ratings=1000,1200,1400,1600,1800,2000,2200,2500&topGames=0&recentGames=0`;
     const r = await fetch(url);
     if (!r.ok) return null;
     const d = await r.json();
     const total = (d.white || 0) + (d.draws || 0) + (d.black || 0);
-    if (total < 10) return null;
+    // A position played in a meaningful number of real games is "book".
+    // Lower threshold so legitimate but less-common opening lines still count.
+    if (total < 30) return null;
     return { inBook: true, opening: d.opening, totalGames: total };
   } catch { return null; }
 }
@@ -268,12 +272,19 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
   const bookPositions = new Set();
   let openingName = null;
 
-  for (let i = 0; i < positions.length; i++) {
+  let misses = 0;
+  for (let i = 0; i < positions.length && i < 24; i++) {
     const bookData = await checkOpeningBook(positions[i].fen);
     if (bookData && bookData.inBook) {
       bookPositions.add(positions[i].fen);
       if (bookData.opening && bookData.opening.name) openingName = bookData.opening.name;
-    } else break;
+      misses = 0;
+    } else {
+      // Tolerate a single gap (transposition / rarely-recorded position),
+      // but stop once we're clearly out of theory.
+      misses++;
+      if (misses >= 2) break;
+    }
   }
   const bookDepth = bookPositions.size;
 
@@ -520,6 +531,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
 
 
