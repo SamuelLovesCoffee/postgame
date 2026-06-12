@@ -16,7 +16,7 @@
   </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>postgame — AI Chess Coach</title>
+<title>postgame — Understand why you lost, and how to win</title>
 <meta name="description" content="AI-powered chess coaching. An AI coach explains your chess games: what went wrong, why, and what to study next.">
 
   <!-- Favicons -->
@@ -40,7 +40,7 @@
   <meta name="twitter:title" content="postgame — AI Chess Coaching">
   <meta name="twitter:description" content="Stop losing the same way twice. A real coach explains why, and what to study next.">
   <meta name="twitter:image" content="https://www.post-game.net/social-share.png">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -170,184 +170,136 @@
     </div>
   </div>
 
+
   <!-- ═══ LANDING (logged out) ═══ -->
   <main class="landing" id="landingView">
-    <section class="hero">
-      <p class="hero-eyebrow">AI-powered chess coaching</p>
-      <h1>Stop losing the<br>same way twice.</h1>
-      <p class="hero-sub">Your current chess tools tell you a move was bad. postgame explains <em>why</em>, names the concept you missed, and learns the mistakes you keep making. Import straight from Lichess or Chess.com and get a coach who remembers every game.</p>
-      <button class="cta-btn" onclick="showAuthModal('signup')">Analyse your first game free</button>
-      <p class="hero-trust">Free to start · No card required · Works with Chess.com &amp; Lichess</p>
+
+    <!-- HERO -->
+    <section class="lp-hero">
+      <span class="lp-eyebrow">AI chess coaching</span>
+      <h1 class="lp-display">Understand why you lost, <span class="lp-win">and how to win.</span></h1>
+      <p class="lp-lede">Engines tell you a move was bad. postgame explains why, names the idea you missed, and learns the mistakes you keep making — like a coach who actually remembers you.</p>
+      <div class="lp-cta-row">
+        <button class="lp-btn lp-btn-primary" onclick="showAuthModal('signup')">Analyse a game free</button>
+        <a class="lp-btn lp-btn-outline" href="#lp-coaching">See a real review →</a>
+      </div>
+      <p class="lp-proof">Import from Chess.com &amp; Lichess · 3 free analyses · No card needed</p>
     </section>
 
-    <!-- Bento Grid -->
-    <section class="bento">
-      <div class="bento-grid">
-        <!-- Large card: coaching example -->
-        <div class="bento-card bento-main">
-          <div class="bento-label">Real coaching, not labels</div>
-          <div class="critical-card type-blunder demo-card">
-            <div class="cc-header"><span class="cc-badge blunder">blunder</span><span class="cc-move">5...Bxd1</span></div>
-            <div class="cc-title">Falling for L&eacute;gal&rsquo;s Mate</div>
-            <div class="cc-explanation">Taking the queen with 5...Bxd1 looks tempting, but White&rsquo;s knight on e5 was never really hanging — it was bait. The pin on the f3 knight was an illusion because White was willing to give up the queen. The right move was 5...Nxe5, simply recapturing the piece and coming out a pawn up with a fine position.</div>
-            <span class="cc-concept">Recognising false pins and avoiding material traps</span>
-            <div class="cc-tip"><span class="cc-tip-icon" id="demoTipIcon"></span><span>Before capturing a piece, always ask: what happens if I don&rsquo;t take it?</span></div>
-          </div>
-          <p class="bento-desc">Every critical moment gets a coaching card explaining the tactic, the strategy, and what to practise.</p>
-        </div>
+    <!-- THE LOOP -->
+    <section class="lp-block" id="lp-how">
+      <div class="lp-block-head">
+        <span class="lp-eyebrow lp-section-eyebrow">How it works</span>
+        <h2 class="lp-block-title">From a game you lost to a lesson you'll remember — in minutes.</h2>
+      </div>
+      <div class="lp-loop">
+        <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">01</span></div><div class="lp-loop-h">Import your game</div><div class="lp-loop-p">Connect your Chess.com or Lichess username and pick a game, or paste any PGN. No setup.</div></div>
+        <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">02</span></div><div class="lp-loop-h">The engine finds the truth</div><div class="lp-loop-p">Stockfish evaluates every position — the exact moments your game turned, with no guesswork.</div></div>
+        <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">03</span></div><div class="lp-loop-h">Your coach explains why</div><div class="lp-loop-p">An AI coach turns that into plain-language coaching: what you missed, why it mattered, what to do next.</div></div>
+      </div>
+    </section>
 
-        <!-- Animated board video -->
-        <div class="bento-card bento-board-card">
-          <div class="bento-label">See the moment it goes wrong</div>
-          <video class="mini-board-video" autoplay loop muted playsinline>
+    <!-- REAL COACHING CARD -->
+    <section class="lp-block" id="lp-coaching">
+      <div class="lp-demo-wrap">
+        <div class="lp-cc">
+          <div class="lp-cc-top"><span class="lp-cc-badge">blunder</span><span class="lp-cc-move">5...Bxd1</span></div>
+          <div class="lp-cc-title">Falling for L&eacute;gal's Mate</div>
+          <div class="lp-cc-body">Taking the queen with 5...Bxd1 looks tempting, but White's knight on e5 was never really hanging — it was bait. The pin on the f3 knight was an illusion because White was willing to give up the queen. The right move was 5...Nxe5, simply recapturing and coming out a pawn up.</div>
+          <span class="lp-cc-concept">Recognising false pins &amp; material traps</span>
+          <div class="lp-cc-tip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Before capturing a piece, always ask: what happens if I don't take it?</span></div>
+        </div>
+        <div class="lp-demo-copy">
+          <span class="lp-eyebrow lp-section-eyebrow">Why, not just what</span>
+          <h3 class="lp-demo-h">Real coaching, not a label on a move.</h3>
+          <p class="lp-demo-p">Other tools flag the move red and move on. postgame names the trap, explains the idea you misread, and gives you the question to ask next time — the way a coach sitting beside you would.</p>
+          <div class="lp-compare"><b>Elsewhere:</b> "5...Bxd1 — Blunder. −4.2."&nbsp;&nbsp;<b>postgame:</b> the whole story.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- BOARD VISUAL REFERENCE -->
+    <section class="lp-block lp-board-band">
+      <div class="lp-board-wrap">
+        <div class="lp-board-media">
+          <video class="lp-board-video" autoplay loop muted playsinline>
             <source src="/chess.mp4" type="video/mp4">
           </video>
-          <p class="bento-desc">Every game replays move by move on an interactive board, so you can study exactly where things turned.</p>
         </div>
-
-        <!-- How it works -->
-        <div class="bento-card bento-steps">
-          <div class="bento-label">How it works</div>
-          <div class="bento-step"><span>1</span> Import from Lichess/Chess.com or paste a PGN</div>
-          <div class="bento-step"><span>2</span> Stockfish + Claude AI analyse</div>
-          <div class="bento-step"><span>3</span> Read, learn, improve</div>
-          <p class="bento-desc">Three minutes from game to lesson. Connect your Lichess or Chess.com account, or paste any PGN.</p>
-        </div>
-
-        <!-- Comparison card (moved down, swapped with board) -->
-        <div class="bento-card bento-compare">
-          <div class="bento-label">Why, not just what</div>
-          <div class="compare-stack">
-            <div class="compare-side other">
-              <div class="compare-side-head">What you get elsewhere</div>
-              <div class="compare-output">
-                <span class="co-move"><span class="co-dot"></span>5&hellip;Bxd1</span>
-                <span class="co-verdict">Blunder. Best: Nxe5</span>
-              </div>
-            </div>
-            <div class="compare-side ours">
-              <div class="compare-side-head accent">What postgame tells you</div>
-              <div class="compare-output">
-                <p class="co-text">Study L&eacute;gal&rsquo;s Mate and similar opening traps — not just to avoid falling into them, but to understand the underlying idea that a pin on the queen is not always permanent. A great exercise is to set up the position after 4...Bg4 and practise finding why 5.Nxe5 works, so you can spot this pattern from both sides.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Missed ideas -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>
-          <div class="bento-label">Missed ideas</div>
-          <p class="bento-desc">Your move was fine, but there was something better. We flag positions where you missed a tactic or a stronger plan.</p>
-        </div>
-
-        <!-- Archive -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></div>
-          <div class="bento-label">Every game archived</div>
-          <p class="bento-desc">All your analyses are saved to your account. Revisit any past game, replay it on the board, and re-read the coaching anytime.</p>
-        </div>
-
-        <!-- Study recs -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
-          <div class="bento-label">Study recommendations</div>
-          <p class="bento-desc">Every review ends with concrete homework: what concept to study, what puzzles to solve, what patterns to recognise.</p>
-        </div>
-
-        <!-- Export -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></div>
-          <div class="bento-label">Export your review</div>
-          <p class="bento-desc">Download the full coaching report as Markdown. Share it with your coach, your club, or just keep it for yourself.</p>
-        </div>
-
-        <!-- Lichess import -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div>
-          <div class="bento-label">One-click game import</div>
-          <p class="bento-desc">Enter your Lichess or Chess.com username and pull your recent games straight in. No copy-pasting PGNs — just pick a game and analyse.</p>
-        </div>
-
-        <!-- Coach that remembers you -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
-          <div class="bento-label">A coach that remembers you</div>
-          <p class="bento-desc">postgame learns your recurring mistakes across games. Instead of reviewing each game in isolation, it spots the patterns you keep repeating — and tells you what to fix.</p>
-        </div>
-
-        <!-- Track your progress -->
-        <div class="bento-card">
-          <div class="bento-icon"><svg class="bento-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
-          <div class="bento-label">Track your progress</div>
-          <p class="bento-desc">Your personal dashboard charts your rating over time across Chess.com and Lichess, breaks down your blunders and mistakes, and surfaces the openings and weaknesses to work on.</p>
+        <div class="lp-board-copy">
+          <span class="lp-eyebrow lp-section-eyebrow">See the moment it goes wrong</span>
+          <h3 class="lp-demo-h">Replay every game, move by move.</h3>
+          <p class="lp-demo-p">Your game comes back to life on an interactive board. Step through it, see the engine's best line drawn out, and study exactly where things turned — with your coach's notes alongside every critical moment.</p>
         </div>
       </div>
     </section>
 
-    <!-- Social proof / outcome -->
-    <section class="proof">
-      <div class="proof-inner">
-        <div class="proof-stat">
-          <div class="proof-num">Every move</div>
-          <div class="proof-label">analysed by Stockfish, the world's strongest engine</div>
+    <!-- FEEDBACK PORTAL -->
+    <section class="lp-portal" id="lp-portal">
+      <div class="lp-portal-grid">
+        <div class="lp-portal-copy">
+          <span class="lp-eyebrow lp-section-eyebrow">A coach who remembers you</span>
+          <h2 class="lp-block-title">The more you play, the better it knows you.</h2>
+          <p class="lp-block-sub">postgame doesn't review your games in isolation. It builds a picture of you as a player across every game you analyse — then tells you, in plain words, what to work on.</p>
+          <ul class="lp-portal-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Recurring patterns</b> — the mistakes you keep repeating, spotted across games.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>What to work on next</b> — one clear priority, not a wall of numbers.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Your real strengths</b> — what you do well, so you know what to lean on.</span></li>
+          </ul>
         </div>
-        <div class="proof-stat">
-          <div class="proof-num">Plain English</div>
-          <div class="proof-label">coaching that explains ideas, not just engine lines</div>
-        </div>
-        <div class="proof-stat">
-          <div class="proof-num">3 minutes</div>
-          <div class="proof-label">from pasting your game to a full coaching report</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Who it's for -->
-    <section class="audience">
-      <h2>Built for players who want to improve</h2>
-      <p class="audience-sub">Whether you're climbing from 800 to 1200 or pushing past a plateau, postgame turns your own games into your best study material.</p>
-    </section>
-
-    <!-- Pricing -->
-    <section class="pricing" id="pricing">
-      <h2>Simple pricing</h2>
-      <p class="pricing-sub">One credit, one game. No subscriptions, no expiry. Start with 3 free.</p>
-      <div class="pricing-grid">
-        <div class="price-card">
-          <div class="price-name">Try</div>
-          <div class="price-amount">Free</div>
-          <div class="price-detail">3 credits included with signup</div>
-          <button class="price-btn" onclick="showAuthModal('signup')">Sign up</button>
-        </div>
-        <div class="price-card featured">
-          <div class="price-badge">Popular</div>
-          <div class="price-name">Starter</div>
-          <div class="price-amount">$4.99</div>
-          <div class="price-detail">10 credits · $0.50 each</div>
-          <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
-        </div>
-        <div class="price-card">
-          <div class="price-name">Club</div>
-          <div class="price-amount">$11.99</div>
-          <div class="price-detail">30 credits · $0.40 each</div>
-          <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
-        </div>
-        <div class="price-card">
-          <div class="price-name">Serious</div>
-          <div class="price-amount">$24.99</div>
-          <div class="price-detail">75 credits · $0.33 each</div>
-          <button class="price-btn" onclick="showAuthModal('signup')">Get started</button>
+        <div class="lp-pv">
+          <div class="lp-pv-tag">Your coaching feedback · 12 games</div>
+          <div class="lp-pv-headline">You play with real energy and love to attack — but you often go for the throat before your pieces are ready to back it up.</div>
+          <div class="lp-pv-focus"><div class="l">Work on this next</div><div class="t">Develop before you attack</div><div class="d">Several of your attacks started before your pieces were ready. Get your knights, bishops and king to safety first — then strike with your whole army.</div></div>
+          <div class="lp-pv-theme"><div class="dot"></div><div><div class="tn">Bringing the queen out too early</div><div class="td">Seen across 4 of your games</div></div></div>
+          <div class="lp-pv-theme"><div class="dot"></div><div><div class="tn">Blundering when you move fast</div><div class="td">A pattern in your blitz games</div></div></div>
+          <div class="lp-pv-strength"><div class="dot"></div><div><div class="tn">Strong tactical vision</div><div class="td">You find combinations most players miss</div></div></div>
         </div>
       </div>
     </section>
 
-    <section class="final-cta">
-      <h2>Your first analysis is free.</h2>
-      <button class="cta-btn" onclick="showAuthModal('signup')">Get started</button>
+    <!-- SECONDARY FEATURES -->
+    <section class="lp-block">
+      <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Everything in a review</span><h2 class="lp-block-title">A complete coach in every game.</h2></div>
+      <div class="lp-feat-grid">
+        <div class="lp-feat"><div class="lp-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div><div class="lp-feat-h">Missed ideas</div><div class="lp-feat-p">Your move was fine — but something was better. We flag where you missed a tactic or a stronger plan.</div></div>
+        <div class="lp-feat"><div class="lp-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg></div><div class="lp-feat-h">Brilliant moves</div><div class="lp-feat-p">When you find a genuine sacrifice or the only winning move, postgame celebrates it — not just your mistakes.</div></div>
+        <div class="lp-feat"><div class="lp-feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="lp-feat-h">What to study</div><div class="lp-feat-p">Every review ends with specific, linked resources — so you always know what to practise next.</div></div>
+      </div>
     </section>
 
-    <footer class="site-footer"><p>postgame</p><nav class="footer-links"><a href="/faq.html">FAQ</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:info@post-game.net">Contact</a></nav></footer>
+    <!-- PRICING -->
+    <section class="lp-block" id="lp-pricing">
+      <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Pricing</span><h2 class="lp-block-title">Start free. Pay only for what you analyse.</h2><p class="lp-block-sub">Three free credits when you sign up. 1 credit for a quick analysis. No expiry.</p></div>
+      <div class="lp-price-grid">
+        <div class="lp-price"><div class="lp-price-name">Try</div><div class="lp-price-amt">Free</div><div class="lp-price-det">3 credits with signup</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Start free</button></div>
+        <div class="lp-price"><div class="lp-price-name">Starter</div><div class="lp-price-amt">$4.99</div><div class="lp-price-det">10 credits</div><div class="lp-price-per">$0.50 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+        <div class="lp-price lp-price-feat"><div class="lp-price-name">Club</div><div class="lp-price-amt">$11.99</div><div class="lp-price-det">30 credits</div><div class="lp-price-per">$0.40 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+        <div class="lp-price"><div class="lp-price-name">Serious</div><div class="lp-price-amt">$24.99</div><div class="lp-price-det">75 credits</div><div class="lp-price-per">$0.33 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+      </div>
+    </section>
+
+    <!-- CTA BAND -->
+    <section class="lp-cta-band">
+      <h2>Your next game<br>deserves a coach.</h2>
+      <p>Import a game and see what you've been missing. Your first three are on us.</p>
+      <button class="lp-btn lp-btn-primary lp-btn-lg" onclick="showAuthModal('signup')">Analyse a game free</button>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="lp-footer">
+      <div class="lp-foot-inner">
+        <div class="lp-foot-logo">post<span>game</span></div>
+        <div class="lp-foot-links">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/faq.html">FAQ</a>
+          <a href="mailto:info@post-game.net">info@post-game.net</a>
+        </div>
+      </div>
+    </footer>
+
   </main>
 
   <!-- ═══ INPUT (logged in) ═══ -->
@@ -449,6 +401,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
