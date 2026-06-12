@@ -215,12 +215,20 @@ async function generateCoaching(analysisResult, detailed = false, playerProfile 
   calibration += `- Student level: ${rating ? rating + ' rating, ' : ''}${ratingBand}. Pitch your advice to this level — do not over-explain basics to a strong player or overload a beginner with deep theory.\n`;
   calibration += `- Time control: ${tcCategory}. ${tcCategory === 'bullet' || tcCategory === 'blitz' ? 'This is a fast game — be forgiving of small slips that are really just time pressure, and focus on the most important recurring patterns rather than every minor inaccuracy.' : 'This is a slower game — the student had time to think, so hold them to a higher standard on calculation and planning.'}\n`;
 
-  // Game quality assessment (earned, from the data)
-  if (ps.accuracy != null) {
-    calibration += `\nGAME QUALITY (use this to open with an honest assessment of how well the game was played):\n`;
-    calibration += `- Your student (${color}): ${ps.accuracy}% accuracy, ${ps.blunders} blunder(s), ${ps.mistakes} mistake(s), ${ps.inaccuracies} inaccuracy(ies).\n`;
-    calibration += `- Opponent: ${os.accuracy != null ? os.accuracy + '% accuracy' : 'n/a'}, ${os.blunders} blunder(s), ${os.mistakes} mistake(s).\n`;
-    calibration += `- Characterise the game fairly: a high-accuracy game with few errors was well played and should be acknowledged as such; a low-accuracy game with many errors was messy. Do not invent praise or criticism that the numbers do not support.\n`;
+  // Game quality assessment. Use ERROR COUNTS (reliable) for the verbal read.
+  // Only cite an accuracy PERCENTAGE if it came from the platform import — never
+  // our own engine-derived figure, which is not calibrated to the platforms.
+  const importedAcc = (analysisResult.headers && (analysisResult.headers[playerColor === 'w' ? 'WhiteAccuracy' : 'BlackAccuracy'])) || null;
+  if (ps.moves != null) {
+    calibration += `\nGAME QUALITY (use this to open with an honest, earned assessment of how well the game was played):\n`;
+    calibration += `- Your student (${color}) made ${ps.blunders} blunder(s), ${ps.mistakes} mistake(s), and ${ps.inaccuracies} inaccuracy(ies) across ${ps.moves} moves.\n`;
+    calibration += `- Opponent made ${os.blunders} blunder(s), ${os.mistakes} mistake(s), ${os.inaccuracies} inaccuracy(ies).\n`;
+    if (importedAcc) {
+      calibration += `- The platform reported an accuracy of ${importedAcc}% for your student this game — you MAY cite this figure since it comes from their platform.\n`;
+    } else {
+      calibration += `- Do NOT cite any accuracy percentage for this game — none was provided by the platform. Characterise quality qualitatively, using the error counts above (few errors = cleanly played; many = messy). Speak in words, not invented percentages.\n`;
+    }
+    calibration += `- Be fair and grounded: do not invent praise or criticism the error counts do not support.\n`;
   }
 
   // Time-management signal
@@ -435,6 +443,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items.`;
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
