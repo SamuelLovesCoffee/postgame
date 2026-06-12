@@ -180,14 +180,36 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
       // Build the metrics record for the dashboard + future profiles
       const gq = analysis.gameQuality || {};
       const ps = gq.player || {};
+      const H = analysis.headers || {};
       const ratingTag = playerColor === 'w' ? 'WhiteElo' : 'BlackElo';
+      const playerElo = H[ratingTag] && /^\d+$/.test(H[ratingTag]) ? parseInt(H[ratingTag]) : null;
+
+      // Detect the source platform from the Site/Event headers
+      const site = ((H.Site || '') + ' ' + (H.Event || '')).toLowerCase();
+      let source = 'other';
+      if (site.includes('lichess')) source = 'lichess';
+      else if (site.includes('chess.com')) source = 'chesscom';
+
+      // Game date for the Elo time-series (UTCDate/Date header, else now)
+      const dateStr = H.UTCDate || H.Date || null;
+      let gameDate = null;
+      if (dateStr && /^\d{4}\.\d{2}\.\d{2}$/.test(dateStr)) {
+        gameDate = dateStr.replace(/\./g, '-');
+      }
+
+      // Platform-provided accuracy only (from headers if present; usually absent — we no longer self-calculate)
+      const accTag = playerColor === 'w' ? 'WhiteAccuracy' : 'BlackAccuracy';
+      const platformAccuracy = H[accTag] && /^[\d.]+$/.test(H[accTag]) ? parseFloat(H[accTag]) : null;
+
       const metrics = {
-        accuracy: ps.accuracy,
         blunders: ps.blunders || 0,
         mistakes: ps.mistakes || 0,
         inaccuracies: ps.inaccuracies || 0,
         moves: ps.moves || 0,
-        rating: analysis.headers[ratingTag] ? parseInt(analysis.headers[ratingTag]) : null,
+        rating: playerElo,
+        platformAccuracy,
+        source,
+        gameDate,
         timeControl: (analysis.timeControl && analysis.timeControl.category) || null,
         hasClocks: !!gq.hasClocks,
         fastErrorRatio: (gq.timeSignal && gq.timeSignal.ratio) || 0,
@@ -559,6 +581,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
