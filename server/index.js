@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const StockfishEngine = require('./stockfish');
 const { analysePGN } = require('./analysis');
 const { Chess } = require('chess.js');
-const { generateCoaching, generateMoveByMove } = require('./coach');
+const { generateCoaching, generateMoveByMove, generatePlayerFeedback } = require('./coach');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
@@ -309,6 +309,55 @@ app.delete('/api/analysis/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ═══ FEEDBACK PORTAL ═══
+
+// Simple in-memory cache: userId -> { gameCount, feedback, ts }
+const feedbackCache = new Map();
+
+app.get('/api/my-feedback', authMiddleware, async (req, res) => {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const { data: games } = await supabase
+      .from('analyses')
+      .select('opening_name, player_color, headers, metrics, coaching, created_at')
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (!games || games.length === 0) {
+      return res.json({ hasData: false, gameCount: 0 });
+    }
+
+    // Return cached synthesis if the game count hasn't changed and it's recent (<1 day)
+    const cached = feedbackCache.get(req.user.id);
+    const fresh = cached && cached.gameCount === games.length && (Date.now() - cached.ts) < 86400000;
+    if (fresh && !req.query.refresh) {
+      return res.json({ hasData: true, gameCount: games.length, feedback: cached.feedback, cached: true });
+    }
+
+    // Map DB rows to the shape the synthesiser expects
+    const mapped = games.map(g => ({
+      openingName: g.opening_name,
+      playerColor: g.player_color,
+      headers: g.headers,
+      metrics: g.metrics,
+      coaching: g.coaching,
+      createdAt: g.created_at,
+    }));
+
+    const feedback = await generatePlayerFeedback(mapped);
+    if (!feedback) {
+      return res.status(500).json({ error: 'Could not generate feedback right now' });
+    }
+    feedbackCache.set(req.user.id, { gameCount: games.length, feedback, ts: Date.now() });
+    res.json({ hasData: true, gameCount: games.length, feedback });
+  } catch (err) {
+    console.error('Feedback portal error:', err.message);
+    res.status(500).json({ error: 'Could not load feedback' });
+  }
+});
+
 // ═══ PLAYER DASHBOARD ═══
 
 app.get('/api/my-stats', authMiddleware, async (req, res) => {
@@ -590,6 +639,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
