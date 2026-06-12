@@ -10,7 +10,7 @@ const { generateCoaching, generateMoveByMove } = require('./coach');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
-  saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile,
+  saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -300,6 +300,15 @@ app.get('/api/admin/stats', authMiddleware, async (req, res) => {
   }
 });
 
+app.delete('/api/analysis/:id', authMiddleware, async (req, res) => {
+  try {
+    await deleteAnalysis(req.user.id, req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ═══ PLAYER DASHBOARD ═══
 
 app.get('/api/my-stats', authMiddleware, async (req, res) => {
@@ -581,6 +590,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
