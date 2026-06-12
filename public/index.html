@@ -342,7 +342,8 @@
       <p class="subtitle">Paste your PGN and select your colour.</p>
       <div class="import-tabs">
         <button class="import-tab active" id="importTabPaste" onclick="switchImport('paste')">Paste PGN</button>
-        <button class="import-tab" id="importTabLichess" onclick="switchImport('lichess')">Import from Lichess</button>
+        <button class="import-tab" id="importTabLichess" onclick="switchImport('lichess')">Lichess</button>
+        <button class="import-tab" id="importTabChesscom" onclick="switchImport('chesscom')">Chess.com</button>
       </div>
 
       <div id="importPaste">
@@ -355,6 +356,14 @@
           <button class="lichess-fetch-btn" onclick="fetchLichessGames()">Fetch games</button>
         </div>
         <div id="lichessGames" class="lichess-games"></div>
+      </div>
+
+      <div id="importChesscom" style="display:none">
+        <div class="lichess-row">
+          <input type="text" id="chesscomUsername" class="modal-input" placeholder="Your Chess.com username" style="margin-bottom:0">
+          <button class="lichess-fetch-btn" onclick="fetchChesscomGames()">Fetch games</button>
+        </div>
+        <div id="chesscomGames" class="lichess-games"></div>
       </div>
 
       <div class="tier-select">
@@ -425,6 +434,7 @@
   </script>
 </body>
 </html>
+
 
 
 
