@@ -10,7 +10,7 @@ const { generateCoaching, generateMoveByMove, generatePlayerFeedback } = require
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
-  saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis,
+  saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -316,14 +316,7 @@ const feedbackCache = new Map();
 
 app.get('/api/my-feedback', authMiddleware, async (req, res) => {
   try {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-    const { data: games } = await supabase
-      .from('analyses')
-      .select('opening_name, player_color, headers, metrics, coaching, created_at')
-      .eq('user_id', req.user.id)
-      .order('created_at', { ascending: false })
-      .limit(30);
+    const games = await getGamesForFeedback(req.user.id, 30);
 
     if (!games || games.length === 0) {
       return res.json({ hasData: false, gameCount: 0 });
@@ -336,17 +329,7 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
       return res.json({ hasData: true, gameCount: games.length, feedback: cached.feedback, cached: true });
     }
 
-    // Map DB rows to the shape the synthesiser expects
-    const mapped = games.map(g => ({
-      openingName: g.opening_name,
-      playerColor: g.player_color,
-      headers: g.headers,
-      metrics: g.metrics,
-      coaching: g.coaching,
-      createdAt: g.created_at,
-    }));
-
-    const feedback = await generatePlayerFeedback(mapped);
+    const feedback = await generatePlayerFeedback(games);
     if (!feedback) {
       return res.status(500).json({ error: 'Could not generate feedback right now' });
     }
@@ -639,6 +622,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
