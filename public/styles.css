@@ -684,7 +684,7 @@ body {
   padding: 3px 10px; border-radius: 4px; margin-right: 6px;
 }
 .bcd-tip {
-  display: inline-block; font-size: 11px; color: var(--text-3); font-style: italic;
+  display: inline-block; font-size: 11px; color: var(--text-3); font-style: normal;
 }
 
 /* Compare list inside bento */
@@ -1269,10 +1269,10 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .theme-name, .strength-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
 .strength-name { color: var(--green); }
 .theme-detail, .strength-detail { font-size: 14px; color: var(--text-2); line-height: 1.6; }
-.theme-games { font-size: 12px; color: var(--text-3); margin-top: 8px; font-style: italic; }
+.theme-games { font-size: 12px; color: var(--text-3); margin-top: 8px; font-style: normal; }
 .portal-prose { font-size: 14px; color: var(--text-2); line-height: 1.7; }
 .portal-encouragement {
-  font-family: var(--font-display); font-size: 16px; font-style: italic;
+  font-family: var(--font-display); font-size: 16px; font-style: normal;
   color: var(--text); line-height: 1.5; padding: 20px;
   background: var(--surface); border-radius: var(--radius); margin: 8px 0 24px;
   text-align: center;
@@ -1428,3 +1428,23 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 }
 
 
+
+
+/* ── Training to-do list ── */
+.todo-item { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.todo-check {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 7px;
+  border: 1.5px solid var(--border-light); background: transparent;
+  color: var(--green); font-size: 14px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-top: 1px;
+}
+.todo-check:hover { border-color: var(--green); }
+.todo-item.done .todo-check { background: var(--green); border-color: var(--green); color: #08160f; }
+.todo-body { flex: 1; }
+.todo-task { font-size: 15px; color: var(--text); line-height: 1.5; }
+.todo-item.done .todo-task { color: var(--text-3); text-decoration: line-through; }
+.todo-resource {
+  display: inline-block; margin-top: 6px; font-family: var(--font-mono); font-size: 12px;
+  color: var(--accent); text-decoration: none;
+}
+.todo-resource:hover { text-decoration: underline; }
