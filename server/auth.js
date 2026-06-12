@@ -305,8 +305,62 @@ async function applyPasswordReset(accessToken, newPassword) {
   return true;
 }
 
+// ── Admin dashboard stats ──
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'samueljosephdavies@gmail.com')
+  .split(',').map(e => e.trim().toLowerCase());
+
+function isAdmin(email) {
+  return email && ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
+async function getAdminStats() {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
+
+  // Users
+  const { data: usersList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const users = (usersList && usersList.users) || [];
+  const totalUsers = users.length;
+  const newUsersToday = users.filter(u => u.created_at >= startOfDay).length;
+  const newUsersWeek = users.filter(u => u.created_at >= weekAgo).length;
+
+  // Analyses
+  const { count: totalAnalyses } = await supabase
+    .from('analyses').select('id', { count: 'exact', head: true });
+  const { count: analysesToday } = await supabase
+    .from('analyses').select('id', { count: 'exact', head: true })
+    .gte('created_at', startOfDay);
+  const { count: analysesWeek } = await supabase
+    .from('analyses').select('id', { count: 'exact', head: true })
+    .gte('created_at', weekAgo);
+
+  // Credits outstanding (sum of balances)
+  const { data: creditRows } = await supabase.from('credits').select('balance');
+  const creditsOutstanding = (creditRows || []).reduce((s, r) => s + (r.balance || 0), 0);
+
+  // Revenue + credits sold (from transactions)
+  const { data: txns } = await supabase
+    .from('transactions').select('credits_added, amount_cents, created_at');
+  const allTxns = txns || [];
+  const revenueCents = allTxns.reduce((s, t) => s + (t.amount_cents || 0), 0);
+  const creditsSold = allTxns.reduce((s, t) => s + (t.credits_added || 0), 0);
+  const revenueWeekCents = allTxns
+    .filter(t => t.created_at >= weekAgo)
+    .reduce((s, t) => s + (t.amount_cents || 0), 0);
+
+  return {
+    users: { total: totalUsers, today: newUsersToday, week: newUsersWeek },
+    analyses: { total: totalAnalyses || 0, today: analysesToday || 0, week: analysesWeek || 0 },
+    credits: { outstanding: creditsOutstanding, sold: creditsSold },
+    revenue: { totalCents: revenueCents, weekCents: revenueWeekCents, transactions: allTxns.length },
+  };
+}
+
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
+  isAdmin, getAdminStats,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -314,6 +368,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
