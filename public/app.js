@@ -368,8 +368,10 @@ let selectedTier = 'quick';
 function switchImport(mode) {
   document.getElementById('importPaste').style.display = mode === 'paste' ? 'block' : 'none';
   document.getElementById('importLichess').style.display = mode === 'lichess' ? 'block' : 'none';
+  document.getElementById('importChesscom').style.display = mode === 'chesscom' ? 'block' : 'none';
   document.getElementById('importTabPaste').classList.toggle('active', mode === 'paste');
   document.getElementById('importTabLichess').classList.toggle('active', mode === 'lichess');
+  document.getElementById('importTabChesscom').classList.toggle('active', mode === 'chesscom');
 }
 
 async function fetchLichessGames() {
@@ -417,6 +419,51 @@ function selectLichessGame(id) {
   document.querySelectorAll('.lichess-game').forEach(el => el.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   // Scroll the analyse button into view
+  document.getElementById('analyseBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function fetchChesscomGames() {
+  const username = document.getElementById('chesscomUsername').value.trim();
+  const container = document.getElementById('chesscomGames');
+  if (!username) { container.innerHTML = '<p class="lichess-msg">Enter your Chess.com username.</p>'; return; }
+  container.innerHTML = '<p class="lichess-msg">Fetching games...</p>';
+  try {
+    const r = await fetch('/api/chesscom/' + encodeURIComponent(username), {
+      headers: { Authorization: 'Bearer ' + authToken },
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Failed');
+    if (!data.games || !data.games.length) {
+      container.innerHTML = '<p class="lichess-msg">No games found for that user.</p>';
+      return;
+    }
+    window._chesscomGames = {};
+    container.innerHTML = data.games.map((g) => {
+      const resultClass = g.result === 'win' ? 'win' : g.result === 'loss' ? 'loss' : 'draw';
+      const resultLabel = g.result === 'win' ? 'Won' : g.result === 'loss' ? 'Lost' : 'Draw';
+      const date = g.createdAt ? new Date(g.createdAt).toLocaleDateString() : '';
+      const opp = g.playerColor === 'w' ? g.black : g.white;
+      window._chesscomGames[g.id] = g;
+      return `<div class="lichess-game" onclick="selectChesscomGame('${g.id}')">
+        <div class="lg-main">
+          <span class="lg-result ${resultClass}">${resultLabel}</span>
+          <span class="lg-opp">vs ${opp || 'Unknown'}</span>
+        </div>
+        <div class="lg-meta">${g.speed || ''} · ${date} · played ${g.playerColor === 'w' ? 'White' : 'Black'}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<p class="lichess-msg">' + e.message + '</p>';
+  }
+}
+
+function selectChesscomGame(id) {
+  const g = window._chesscomGames && window._chesscomGames[id];
+  if (!g) return;
+  document.getElementById('pgnInput').value = g.pgn;
+  document.getElementById('playerColor').value = g.playerColor;
+  document.querySelectorAll('#chesscomGames .lichess-game').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
   document.getElementById('analyseBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -961,6 +1008,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
