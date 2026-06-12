@@ -13,7 +13,7 @@ const {
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
-  isAdmin, getAdminStats,
+  isAdmin, getAdminStats, logAnalysisFailure,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
@@ -198,6 +198,8 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
     } catch (err) {
       console.error('Job error:', err);
       job.status = 'error'; job.error = err.message;
+      // Log the failure for the admin dashboard
+      await logAnalysisFailure(req.user.id, tier, err.message);
       // Refund credits on failure
       const { addCredits } = require('./auth');
       await addCredits(req.user.id, cost);
@@ -517,6 +519,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
