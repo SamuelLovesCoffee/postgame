@@ -115,7 +115,7 @@ async function addCredits(userId, amount) {
 
 // ── Analyses storage ──
 
-async function saveAnalysis(userId, pgn, playerColor, headers, openingName, coaching, engineSummary) {
+async function saveAnalysis(userId, pgn, playerColor, headers, openingName, coaching, engineSummary, metrics = null) {
   const { data, error } = await supabase
     .from('analyses')
     .insert({
@@ -126,11 +126,106 @@ async function saveAnalysis(userId, pgn, playerColor, headers, openingName, coac
       opening_name: openingName,
       coaching,
       engine_summary: engineSummary,
+      metrics,
     })
     .select('id')
     .single();
   if (error) console.error('Save analysis error:', error.message);
   return data ? data.id : null;
+}
+
+// Build a coaching profile from a user's past analysed games.
+// Returns { rating, summary, dashboard } or null if too little history.
+async function buildPlayerProfile(userId) {
+  const { data, error } = await supabase
+    .from('analyses')
+    .select('opening_name, player_color, headers, metrics, coaching, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (error || !data || data.length === 0) return null;
+
+  const games = data.filter(g => g.metrics);
+  if (games.length === 0) return { rating: null, summary: null, dashboard: null };
+
+  // Accuracy trend (oldest -> newest)
+  const accSeries = games
+    .filter(g => g.metrics.accuracy != null)
+    .map(g => ({ date: g.created_at, accuracy: g.metrics.accuracy }))
+    .reverse();
+
+  // Aggregate error counts
+  let blunders = 0, mistakes = 0, inaccuracies = 0, totalMoves = 0;
+  const openings = {};
+  const weaknessThemes = {};
+  let fastErrorGames = 0, gamesWithClocks = 0;
+  let latestRating = null;
+
+  for (const g of games) {
+    const m = g.metrics;
+    blunders += m.blunders || 0;
+    mistakes += m.mistakes || 0;
+    inaccuracies += m.inaccuracies || 0;
+    totalMoves += m.moves || 0;
+    // Opening performance
+    if (g.opening_name) {
+      const o = openings[g.opening_name] || { games: 0, accSum: 0, wins: 0 };
+      o.games++; o.accSum += (m.accuracy || 0);
+      openings[g.opening_name] = o;
+    }
+    // Recurring weakness themes from coaching improvementAreas
+    const areas = (g.coaching && g.coaching.improvementAreas) || [];
+    for (const a of areas) {
+      const key = a.toLowerCase().slice(0, 60);
+      weaknessThemes[key] = (weaknessThemes[key] || 0) + 1;
+    }
+    // Time trouble
+    if (m.hasClocks) { gamesWithClocks++; if (m.fastErrorRatio >= 40) fastErrorGames++; }
+    // Rating
+    if (!latestRating && m.rating) latestRating = m.rating;
+  }
+
+  const avgAccuracy = accSeries.length
+    ? Math.round((accSeries.reduce((s, a) => s + a.accuracy, 0) / accSeries.length) * 10) / 10
+    : null;
+
+  // Top recurring weaknesses (appearing in 2+ games)
+  const recurring = Object.entries(weaknessThemes)
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([theme, n]) => ({ theme, count: n }));
+
+  // Build a compact text summary for the coaching prompt
+  let summary = `The student has ${games.length} analysed game(s).`;
+  if (avgAccuracy != null) summary += ` Average accuracy ${avgAccuracy}%.`;
+  summary += ` Across these games: ${blunders} blunders, ${mistakes} mistakes, ${inaccuracies} inaccuracies.`;
+  if (recurring.length) {
+    summary += ` Recurring themes the coach has flagged before: ${recurring.map(r => r.theme).join('; ')}.`;
+  }
+  if (gamesWithClocks >= 3 && fastErrorGames / gamesWithClocks >= 0.4) {
+    summary += ` They have a tendency to blunder when moving too quickly.`;
+  }
+
+  // Opening dashboard data
+  const openingStats = Object.entries(openings)
+    .map(([name, o]) => ({ name, games: o.games, accuracy: Math.round((o.accSum / o.games) * 10) / 10 }))
+    .sort((a, b) => b.games - a.games)
+    .slice(0, 6);
+
+  return {
+    rating: latestRating,
+    summary,
+    dashboard: {
+      gameCount: games.length,
+      avgAccuracy,
+      accuracyTrend: accSeries.slice(-15),
+      errorTotals: { blunders, mistakes, inaccuracies, totalMoves },
+      recurringWeaknesses: recurring,
+      openings: openingStats,
+      timeTrouble: gamesWithClocks >= 3 ? Math.round((fastErrorGames / gamesWithClocks) * 100) : null,
+    },
+  };
 }
 
 async function getAnalyses(userId, limit = 20) {
@@ -384,6 +479,7 @@ async function getAdminStats() {
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
+  buildPlayerProfile,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -391,6 +487,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
