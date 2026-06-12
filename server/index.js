@@ -10,7 +10,7 @@ const { generateCoaching, generateMoveByMove } = require('./coach');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
-  saveAnalysis, getAnalyses, getAnalysis,
+  saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -164,7 +164,10 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
       });
 
       job.progress = 92; job.message = 'Generating coaching...';
-      const coaching = await generateCoaching(analysis);
+      // Cross-game memory: build the player's profile from their history
+      let playerProfile = null;
+      try { playerProfile = await buildPlayerProfile(req.user.id); } catch (e) { console.error('Profile build failed:', e.message); }
+      const coaching = await generateCoaching(analysis, tier === 'deep', playerProfile);
 
       // Deep tier: also generate move-by-move commentary
       let moveComments = {};
@@ -174,12 +177,30 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
       }
       console.log(`  Complete in ${((Date.now()-t0)/1000).toFixed(1)}s`);
 
+      // Build the metrics record for the dashboard + future profiles
+      const gq = analysis.gameQuality || {};
+      const ps = gq.player || {};
+      const ratingTag = playerColor === 'w' ? 'WhiteElo' : 'BlackElo';
+      const metrics = {
+        accuracy: ps.accuracy,
+        blunders: ps.blunders || 0,
+        mistakes: ps.mistakes || 0,
+        inaccuracies: ps.inaccuracies || 0,
+        moves: ps.moves || 0,
+        rating: analysis.headers[ratingTag] ? parseInt(analysis.headers[ratingTag]) : null,
+        timeControl: (analysis.timeControl && analysis.timeControl.category) || null,
+        hasClocks: !!gq.hasClocks,
+        fastErrorRatio: (gq.timeSignal && gq.timeSignal.ratio) || 0,
+        tier,
+      };
+
       // Save to database
       const analysisId = await saveAnalysis(
         req.user.id, pgn, playerColor,
         analysis.headers, analysis.openingName,
         coaching,
-        { totalMoves: analysis.totalMoves, bookDepth: analysis.bookDepth }
+        { totalMoves: analysis.totalMoves, bookDepth: analysis.bookDepth },
+        metrics
       );
 
       job.status = 'complete'; job.progress = 100; job.message = 'Done';
@@ -191,6 +212,7 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
           playerColor: analysis.playerColor,
           moves: analysis.moves,
           bookDepth: analysis.bookDepth,
+          gameQuality: analysis.gameQuality,
         },
         coaching,
         moveComments,
@@ -519,6 +541,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
