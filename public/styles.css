@@ -1459,3 +1459,13 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 }
 .todo-resource:hover { text-decoration: underline; }
 
+
+
+/* ── Training plan: more prominent ── */
+.portal-training { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; margin-top: 8px; }
+.training-heading {
+  font-family: var(--font-display); font-size: 24px; font-weight: 600;
+  letter-spacing: -0.025em; color: var(--text);
+  text-transform: none; margin-bottom: 6px;
+}
+.portal-training .chart-note { margin-bottom: 18px; }
