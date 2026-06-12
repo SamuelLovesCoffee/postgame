@@ -92,8 +92,8 @@ RULES:
 - NEVER invent, guess, or assume moves that aren't in the provided move list. If you reference a move, it must be one that was actually played and given to you. Do not extrapolate continuations as if they were played.
 - Return ONLY valid JSON`;
 
-async function generateCoaching(analysisResult, detailed = false) {
-  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, brilliantMoves, bookDepth, masterInfo } = analysisResult;
+async function generateCoaching(analysisResult, detailed = false, playerProfile = null) {
+  const { headers, openingName, playerColor, moves, criticalMoments, missedOpportunities, goodMoments, brilliantMoves, bookDepth, masterInfo, gameQuality, timeControl } = analysisResult;
   const color = playerColor === 'w' ? 'White' : 'Black';
 
   let moveText = '';
@@ -190,7 +190,51 @@ async function generateCoaching(analysisResult, detailed = false) {
     }
   }
 
-  const userPrompt = `Analyse this game for the student who played ${color}.
+  // ── Coaching calibration: player level, game quality, time, history ──
+  const q = gameQuality || {};
+  const ps = q.player || {};
+  const os = q.opponent || {};
+
+  // Player rating: prefer the rating from this game's headers, else profile
+  const ratingTag = playerColor === 'w' ? 'WhiteElo' : 'BlackElo';
+  const gameRating = headers[ratingTag] ? parseInt(headers[ratingTag]) : null;
+  const rating = gameRating || (playerProfile && playerProfile.rating) || null;
+  let ratingBand = 'intermediate';
+  if (rating) {
+    if (rating < 1000) ratingBand = 'beginner (focus on basic safety: hanging pieces, simple tactics, not losing material)';
+    else if (rating < 1400) ratingBand = 'novice (focus on tactics, basic opening principles, simple plans)';
+    else if (rating < 1800) ratingBand = 'intermediate (focus on positional ideas, pawn structure, calculation, opening understanding)';
+    else if (rating < 2100) ratingBand = 'advanced (focus on subtle positional nuance, prophylaxis, deep calculation, endgame technique)';
+    else ratingBand = 'expert (assume strong fundamentals; focus on the highest-level subtleties)';
+  }
+
+  const tc = timeControl || q.timeControl || {};
+  const tcCategory = tc.category || 'unknown';
+
+  let calibration = '\n\nCOACHING CALIBRATION:\n';
+  calibration += `- Student level: ${rating ? rating + ' rating, ' : ''}${ratingBand}. Pitch your advice to this level — do not over-explain basics to a strong player or overload a beginner with deep theory.\n`;
+  calibration += `- Time control: ${tcCategory}. ${tcCategory === 'bullet' || tcCategory === 'blitz' ? 'This is a fast game — be forgiving of small slips that are really just time pressure, and focus on the most important recurring patterns rather than every minor inaccuracy.' : 'This is a slower game — the student had time to think, so hold them to a higher standard on calculation and planning.'}\n`;
+
+  // Game quality assessment (earned, from the data)
+  if (ps.accuracy != null) {
+    calibration += `\nGAME QUALITY (use this to open with an honest assessment of how well the game was played):\n`;
+    calibration += `- Your student (${color}): ${ps.accuracy}% accuracy, ${ps.blunders} blunder(s), ${ps.mistakes} mistake(s), ${ps.inaccuracies} inaccuracy(ies).\n`;
+    calibration += `- Opponent: ${os.accuracy != null ? os.accuracy + '% accuracy' : 'n/a'}, ${os.blunders} blunder(s), ${os.mistakes} mistake(s).\n`;
+    calibration += `- Characterise the game fairly: a high-accuracy game with few errors was well played and should be acknowledged as such; a low-accuracy game with many errors was messy. Do not invent praise or criticism that the numbers do not support.\n`;
+  }
+
+  // Time-management signal
+  if (q.timeSignal && q.timeSignal.fastMoves >= 3) {
+    const ts = q.timeSignal;
+    calibration += `\nTIME MANAGEMENT: The student made ${ts.fastMoves} very fast moves (under 5 seconds), and ${ts.ratio}% of those were mistakes or blunders. ${ts.ratio >= 40 ? 'This is a real discipline issue worth raising: they are blundering when they move too quickly.' : 'Their fast moves were mostly fine.'} Only mention time management if it is genuinely relevant.\n`;
+  }
+
+  // Cross-game memory: recurring patterns from the player's history
+  if (playerProfile && playerProfile.summary) {
+    calibration += `\nSTUDENT HISTORY (from their previous analysed games — use this to spot recurring patterns, but be appropriately humble: frame these as tendencies to watch, not certainties, and only raise them if THIS game shows the same pattern):\n${playerProfile.summary}\n`;
+  }
+
+  const userPrompt = calibration + `\n\nAnalyse this game for the student who played ${color}.
 
 Game: ${headers.White || '?'} vs ${headers.Black || '?'}, ${headers.Result || '?'}
 Opening: ${openingName || headers.ECO || 'Unknown'}
@@ -302,6 +346,7 @@ async function generateMoveByMove(analysisResult) {
 }
 
 module.exports = { generateCoaching, generateMoveByMove };
+
 
 
 
