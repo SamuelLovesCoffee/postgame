@@ -146,6 +146,24 @@ async function deleteAnalysis(userId, analysisId) {
   return true;
 }
 
+async function getGamesForFeedback(userId, limit = 30) {
+  const { data, error } = await supabase
+    .from('analyses')
+    .select('opening_name, player_color, headers, metrics, coaching, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map(g => ({
+    openingName: g.opening_name,
+    playerColor: g.player_color,
+    headers: g.headers,
+    metrics: g.metrics,
+    coaching: g.coaching,
+    createdAt: g.created_at,
+  }));
+}
+
 async function buildPlayerProfile(userId) {
   const { data, error } = await supabase
     .from('analyses')
@@ -490,7 +508,7 @@ async function getAdminStats() {
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
-  buildPlayerProfile, deleteAnalysis,
+  buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -498,6 +516,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
