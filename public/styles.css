@@ -1233,3 +1233,45 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .history-delete svg { width: 14px; height: 14px; }
 @media (max-width: 900px) { .history-delete { opacity: 1; } }
 
+
+
+/* ── Coaching feedback portal ── */
+.portal-intro { font-size: 13px; color: var(--text-3); margin: -12px 0 24px; line-height: 1.5; }
+.portal-headline {
+  font-family: var(--font-display); font-size: 21px; font-weight: 500;
+  line-height: 1.4; color: var(--text); margin-bottom: 22px;
+  padding-bottom: 22px; border-bottom: 1px solid var(--border);
+}
+.portal-focus {
+  background: var(--bg-card); border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: 22px; margin-bottom: 24px;
+}
+.focus-tag {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--accent); margin-bottom: 10px;
+}
+.focus-priority { font-family: var(--font-display); font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+.focus-why { font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 12px; }
+.focus-how { font-size: 14px; color: var(--text); line-height: 1.6; }
+.focus-how strong { color: var(--accent); }
+.portal-section { margin-bottom: 24px; }
+.portal-section h3 {
+  font-size: 14px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+}
+.theme-card, .strength-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
+}
+.theme-name, .strength-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.strength-name { color: var(--green); }
+.theme-detail, .strength-detail { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+.theme-games { font-size: 12px; color: var(--text-3); margin-top: 8px; font-style: italic; }
+.portal-prose { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+.portal-encouragement {
+  font-family: var(--font-display); font-size: 16px; font-style: italic;
+  color: var(--text); line-height: 1.5; padding: 20px;
+  background: var(--surface); border-radius: var(--radius); margin: 8px 0 24px;
+  text-align: center;
+}
+.portal-refresh { text-align: center; }
