@@ -148,11 +148,8 @@ async function buildPlayerProfile(userId) {
   const games = data.filter(g => g.metrics);
   if (games.length === 0) return { rating: null, summary: null, dashboard: null };
 
-  // Accuracy trend (oldest -> newest)
-  const accSeries = games
-    .filter(g => g.metrics.accuracy != null)
-    .map(g => ({ date: g.created_at, accuracy: g.metrics.accuracy }))
-    .reverse();
+  // Elo time-series per source (lichess / chesscom / other)
+  const eloBySource = { lichess: [], chesscom: [], other: [] };
 
   // Aggregate error counts
   let blunders = 0, mistakes = 0, inaccuracies = 0, totalMoves = 0;
@@ -161,33 +158,39 @@ async function buildPlayerProfile(userId) {
   let fastErrorGames = 0, gamesWithClocks = 0;
   let latestRating = null;
 
+  // Process oldest -> newest for the time-series
+  const chronological = games.slice().reverse();
+  for (const g of chronological) {
+    const m = g.metrics;
+    if (m.rating) {
+      const src = m.source || 'other';
+      const bucket = eloBySource[src] || eloBySource.other;
+      bucket.push({ date: m.gameDate || g.created_at, elo: m.rating });
+    }
+  }
+
   for (const g of games) {
     const m = g.metrics;
     blunders += m.blunders || 0;
     mistakes += m.mistakes || 0;
     inaccuracies += m.inaccuracies || 0;
     totalMoves += m.moves || 0;
-    // Opening performance
     if (g.opening_name) {
-      const o = openings[g.opening_name] || { games: 0, accSum: 0, wins: 0 };
-      o.games++; o.accSum += (m.accuracy || 0);
+      const o = openings[g.opening_name] || { games: 0, wins: 0 };
+      o.games++;
       openings[g.opening_name] = o;
     }
-    // Recurring weakness themes from coaching improvementAreas
     const areas = (g.coaching && g.coaching.improvementAreas) || [];
     for (const a of areas) {
       const key = a.toLowerCase().slice(0, 60);
       weaknessThemes[key] = (weaknessThemes[key] || 0) + 1;
     }
-    // Time trouble
     if (m.hasClocks) { gamesWithClocks++; if (m.fastErrorRatio >= 40) fastErrorGames++; }
-    // Rating
     if (!latestRating && m.rating) latestRating = m.rating;
   }
 
-  const avgAccuracy = accSeries.length
-    ? Math.round((accSeries.reduce((s, a) => s + a.accuracy, 0) / accSeries.length) * 10) / 10
-    : null;
+  // Drop empty source buckets
+  Object.keys(eloBySource).forEach(k => { if (!eloBySource[k].length) delete eloBySource[k]; });
 
   // Top recurring weaknesses (appearing in 2+ games)
   const recurring = Object.entries(weaknessThemes)
@@ -198,7 +201,6 @@ async function buildPlayerProfile(userId) {
 
   // Build a compact text summary for the coaching prompt
   let summary = `The student has ${games.length} analysed game(s).`;
-  if (avgAccuracy != null) summary += ` Average accuracy ${avgAccuracy}%.`;
   summary += ` Across these games: ${blunders} blunders, ${mistakes} mistakes, ${inaccuracies} inaccuracies.`;
   if (recurring.length) {
     summary += ` Recurring themes the coach has flagged before: ${recurring.map(r => r.theme).join('; ')}.`;
@@ -207,9 +209,9 @@ async function buildPlayerProfile(userId) {
     summary += ` They have a tendency to blunder when moving too quickly.`;
   }
 
-  // Opening dashboard data
+  // Opening dashboard data (by frequency)
   const openingStats = Object.entries(openings)
-    .map(([name, o]) => ({ name, games: o.games, accuracy: Math.round((o.accSum / o.games) * 10) / 10 }))
+    .map(([name, o]) => ({ name, games: o.games }))
     .sort((a, b) => b.games - a.games)
     .slice(0, 6);
 
@@ -218,8 +220,7 @@ async function buildPlayerProfile(userId) {
     summary,
     dashboard: {
       gameCount: games.length,
-      avgAccuracy,
-      accuracyTrend: accSeries.slice(-15),
+      eloBySource,
       errorTotals: { blunders, mistakes, inaccuracies, totalMoves },
       recurringWeaknesses: recurring,
       openings: openingStats,
@@ -487,6 +488,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
