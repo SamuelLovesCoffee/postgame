@@ -199,7 +199,9 @@ async function showHistory() {
       const date = new Date(a.created_at).toLocaleDateString();
       const color = a.player_color === 'w' ? 'White' : 'Black';
       const summary = a.coaching?.summary?.slice(0, 120) || '';
+      const trash = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/></svg>';
       return `<div class="history-item" onclick="loadAnalysis('${a.id}')">
+        <button class="history-delete" title="Delete game" onclick="event.stopPropagation();deleteGame('${a.id}',this)">${trash}</button>
         <div class="hi-header">
           <strong>${h.White || '?'} vs ${h.Black || '?'}</strong>
           <span class="hi-date">${date}</span>
@@ -209,6 +211,25 @@ async function showHistory() {
       </div>`;
     }).join('');
   } catch { list.innerHTML = '<p>Failed to load history</p>'; }
+}
+
+async function deleteGame(id, btn) {
+  if (!confirm('Delete this game analysis? This cannot be undone.')) return;
+  try {
+    const r = await fetch('/api/analysis/' + id, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + authToken },
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Failed'); }
+    // Remove the item from the list
+    const item = btn.closest('.history-item');
+    if (item) item.remove();
+    // If the list is now empty, show the empty message
+    const list = document.getElementById('historyList');
+    if (list && !list.querySelector('.history-item')) {
+      list.innerHTML = '<p style="color:var(--text-3)">No games analysed yet.</p>';
+    }
+  } catch (e) { alert('Could not delete: ' + e.message); }
 }
 
 async function loadAnalysis(id) {
@@ -1008,6 +1029,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
