@@ -322,9 +322,19 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
       return res.json({ hasData: false, gameCount: 0 });
     }
 
-    // Return cached synthesis if the game count hasn't changed and it's recent (<1 day)
     const cached = feedbackCache.get(req.user.id);
     const fresh = cached && cached.gameCount === games.length && (Date.now() - cached.ts) < 86400000;
+
+    // Peek mode: never generate. Return cached feedback if we have a fresh one, else just the count.
+    if (req.query.peek) {
+      return res.json({
+        hasData: true,
+        gameCount: games.length,
+        feedback: fresh ? cached.feedback : null,
+      });
+    }
+
+    // Return cached synthesis if still fresh (and not a forced refresh)
     if (fresh && !req.query.refresh) {
       return res.json({ hasData: true, gameCount: games.length, feedback: cached.feedback, cached: true });
     }
@@ -622,6 +632,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
