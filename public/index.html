@@ -341,12 +341,12 @@
       <h1>Analyse a game</h1>
       <p class="subtitle">Paste your PGN and select your colour.</p>
       <div class="import-tabs">
-        <button class="import-tab active" id="importTabPaste" onclick="switchImport('paste')">Paste PGN</button>
+        <button class="import-tab active" id="importTabChesscom" onclick="switchImport('chesscom')">Chess.com</button>
         <button class="import-tab" id="importTabLichess" onclick="switchImport('lichess')">Lichess</button>
-        <button class="import-tab" id="importTabChesscom" onclick="switchImport('chesscom')">Chess.com</button>
+        <button class="import-tab" id="importTabPaste" onclick="switchImport('paste')">Paste PGN</button>
       </div>
 
-      <div id="importPaste">
+      <div id="importPaste" style="display:none">
         <textarea class="pgn-input" id="pgnInput" placeholder="Paste your PGN here..."></textarea>
       </div>
 
@@ -358,7 +358,7 @@
         <div id="lichessGames" class="lichess-games"></div>
       </div>
 
-      <div id="importChesscom" style="display:none">
+      <div id="importChesscom">
         <div class="lichess-row">
           <input type="text" id="chesscomUsername" class="modal-input" placeholder="Your Chess.com username" style="margin-bottom:0">
           <button class="lichess-fetch-btn" onclick="fetchChesscomGames()">Fetch games</button>
@@ -434,6 +434,7 @@
   </script>
 </body>
 </html>
+
 
 
 
