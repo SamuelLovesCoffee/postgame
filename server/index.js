@@ -13,6 +13,7 @@ const {
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
+  isAdmin, getAdminStats,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
@@ -235,6 +236,21 @@ app.post('/api/auth/reset-password', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// ═══ ADMIN ═══
+
+app.get('/api/admin/stats', authMiddleware, async (req, res) => {
+  if (!isAdmin(req.user.email)) {
+    return res.status(403).json({ error: 'Not authorised' });
+  }
+  try {
+    const stats = await getAdminStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('Admin stats error:', err.message);
+    res.status(500).json({ error: 'Could not load stats' });
   }
 });
 
@@ -493,6 +509,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
