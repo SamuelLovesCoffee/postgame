@@ -24,14 +24,15 @@
     <div id="statsContent" style="display:none">
       <div class="admin-grid">
         <div class="admin-card"><div class="admin-num" id="gameCount">–</div><div class="admin-label">Games analysed</div></div>
-        <div class="admin-card"><div class="admin-num" id="avgAccuracy">–</div><div class="admin-label">Average accuracy</div></div>
         <div class="admin-card"><div class="admin-num" id="totalBlunders">–</div><div class="admin-label">Total blunders</div></div>
+        <div class="admin-card"><div class="admin-num" id="totalMistakes">–</div><div class="admin-label">Total mistakes</div></div>
         <div class="admin-card"><div class="admin-num" id="timeTrouble">–</div><div class="admin-label">Time-trouble errors</div></div>
       </div>
 
       <div class="admin-section">
-        <h3>Accuracy over time</h3>
-        <div id="accuracyChart" class="acc-chart"></div>
+        <h3>Rating over time</h3>
+        <div id="eloChart" class="acc-chart"></div>
+        <div id="eloLegend" class="elo-legend"></div>
         <p class="chart-note" id="trendNote"></p>
       </div>
 
@@ -76,12 +77,12 @@
 
     function render(d){
       document.getElementById('gameCount').textContent = d.gameCount;
-      document.getElementById('avgAccuracy').textContent = (d.avgAccuracy != null ? d.avgAccuracy + '%' : '–');
       document.getElementById('totalBlunders').textContent = d.errorTotals.blunders;
+      document.getElementById('totalMistakes').textContent = d.errorTotals.mistakes;
       document.getElementById('timeTrouble').textContent = (d.timeTrouble != null ? d.timeTrouble + '%' : 'n/a');
 
-      // Accuracy trend sparkline (simple SVG)
-      drawAccuracyChart(d.accuracyTrend || []);
+      // Elo over time, per source
+      drawEloChart(d.eloBySource || {});
 
       // Error breakdown bars
       const e = d.errorTotals;
@@ -120,34 +121,70 @@
       document.getElementById('statsContent').style.display = 'block';
     }
 
-    function drawAccuracyChart(series){
-      const box = document.getElementById('accuracyChart');
-      if (!series.length){ box.innerHTML = '<p class="chart-note">Not enough games yet.</p>'; return; }
-      const w = 600, h = 140, pad = 20;
-      const accs = series.map(s => s.accuracy);
-      const min = Math.max(0, Math.min(...accs) - 5), max = Math.min(100, Math.max(...accs) + 5);
-      const xStep = (w - pad*2) / Math.max(1, series.length - 1);
-      const pts = series.map((s, i) => {
-        const x = pad + i * xStep;
-        const y = h - pad - ((s.accuracy - min) / (max - min || 1)) * (h - pad*2);
-        return [x, y];
-      });
-      const path = pts.map((p, i) => (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-      const dots = pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#e94560"/>`).join('');
-      box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="acc-svg" preserveAspectRatio="xMidYMid meet">
-        <path d="${path}" fill="none" stroke="#e94560" stroke-width="2"/>
-        ${dots}
-      </svg>`;
+    const SOURCE_META = {
+      lichess:  { label: 'Lichess',  color: '#e94560' },
+      chesscom: { label: 'Chess.com', color: '#16a34a' },
+      other:    { label: 'OTB / other', color: '#3b82f6' },
+    };
 
-      // Trend note
-      if (series.length >= 3){
-        const first = series.slice(0, Math.ceil(series.length/2)).reduce((s,a)=>s+a.accuracy,0) / Math.ceil(series.length/2);
-        const last = series.slice(Math.ceil(series.length/2)).reduce((s,a)=>s+a.accuracy,0) / Math.floor(series.length/2);
-        const diff = (last - first).toFixed(1);
+    function drawEloChart(bySource){
+      const box = document.getElementById('eloChart');
+      const legend = document.getElementById('eloLegend');
+      const sources = Object.keys(bySource).filter(s => (bySource[s] || []).length);
+      if (!sources.length){
+        box.innerHTML = '<p class="chart-note">No rating data yet. Import rated games from Chess.com or Lichess to see your rating over time.</p>';
+        legend.innerHTML = '';
+        return;
+      }
+      const w = 600, h = 160, pad = 28;
+      // Global min/max across all series for a shared y-axis
+      let allElos = [];
+      sources.forEach(s => bySource[s].forEach(p => allElos.push(p.elo)));
+      const min = Math.min(...allElos) - 20, max = Math.max(...allElos) + 20;
+
+      let svg = `<svg viewBox="0 0 ${w} ${h}" class="acc-svg" preserveAspectRatio="xMidYMid meet">`;
+      // y-axis labels (min/max)
+      svg += `<text x="2" y="${pad}" class="axis-lbl">${Math.round(max)}</text>`;
+      svg += `<text x="2" y="${h-pad+4}" class="axis-lbl">${Math.round(min)}</text>`;
+
+      sources.forEach(src => {
+        const series = bySource[src];
+        const col = (SOURCE_META[src] || SOURCE_META.other).color;
+        const n = series.length;
+        const xStep = (w - pad*2) / Math.max(1, n - 1);
+        const pts = series.map((p, i) => {
+          const x = pad + i * xStep;
+          const y = h - pad - ((p.elo - min) / (max - min || 1)) * (h - pad*2);
+          return [x, y];
+        });
+        if (n === 1) {
+          svg += `<circle cx="${pts[0][0].toFixed(1)}" cy="${pts[0][1].toFixed(1)}" r="4" fill="${col}"/>`;
+        } else {
+          const path = pts.map((p, i) => (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+          svg += `<path d="${path}" fill="none" stroke="${col}" stroke-width="2"/>`;
+          svg += pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="${col}"/>`).join('');
+        }
+      });
+      svg += `</svg>`;
+      box.innerHTML = svg;
+
+      // Legend
+      legend.innerHTML = sources.map(s => {
+        const meta = SOURCE_META[s] || SOURCE_META.other;
+        const latest = bySource[s][bySource[s].length - 1].elo;
+        return `<span class="elo-leg-item"><span class="elo-dot" style="background:${meta.color}"></span>${meta.label} <strong>${latest}</strong></span>`;
+      }).join('');
+
+      // Trend note based on the source with the most data
+      const main = sources.sort((a,b)=>bySource[b].length-bySource[a].length)[0];
+      const ser = bySource[main];
+      if (ser.length >= 3){
+        const diff = ser[ser.length-1].elo - ser[0].elo;
         const note = document.getElementById('trendNote');
-        if (last > first + 1) note.textContent = `Your accuracy is trending up (+${diff}% recently). Keep it going.`;
-        else if (last < first - 1) note.textContent = `Your accuracy has dipped recently (${diff}%). Worth reviewing your recent games.`;
-        else note.textContent = `Your accuracy is holding steady.`;
+        const meta = SOURCE_META[main] || SOURCE_META.other;
+        if (diff > 0) note.textContent = `Your ${meta.label} rating is up ${diff} points across your analysed games.`;
+        else if (diff < 0) note.textContent = `Your ${meta.label} rating is down ${Math.abs(diff)} points across your analysed games — keep working at it.`;
+        else note.textContent = `Your ${meta.label} rating is holding steady.`;
       }
     }
 
@@ -155,3 +192,4 @@
   </script>
 </body>
 </html>
+
