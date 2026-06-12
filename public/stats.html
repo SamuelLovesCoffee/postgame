@@ -53,6 +53,13 @@
         <p class="portal-prose" id="phaseRead"></p>
       </div>
 
+      <!-- Training plan / to-do -->
+      <div class="portal-section" id="trainingSection">
+        <h3>Your training plan</h3>
+        <p class="chart-note">Work through these. Tick them off as you go — your progress is saved.</p>
+        <div id="trainingList"></div>
+      </div>
+
       <!-- Encouragement -->
       <div class="portal-encouragement" id="portalEncouragement"></div>
 
@@ -90,6 +97,65 @@
     }
 
     function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+
+    // Study resources (links; affiliate-ready later)
+    const STUDY_RESOURCES = [
+      { keys:['scandinavian'], label:'Scandinavian Defense', url:'https://lichess.org/opening/Scandinavian_Defense' },
+      { keys:['sicilian'], label:'Sicilian Defense', url:'https://lichess.org/opening/Sicilian_Defense' },
+      { keys:['french'], label:'French Defense', url:'https://lichess.org/opening/French_Defense' },
+      { keys:['caro'], label:'Caro-Kann Defense', url:'https://lichess.org/opening/Caro-Kann_Defense' },
+      { keys:['ruy lopez','spanish'], label:'Ruy Lopez', url:'https://lichess.org/opening/Ruy_Lopez' },
+      { keys:['italian'], label:'Italian Game', url:'https://lichess.org/opening/Italian_Game' },
+      { keys:['london'], label:'London System', url:'https://lichess.org/opening/London_System' },
+      { keys:["queen's gambit",'queens gambit','qgd'], label:"Queen's Gambit", url:'https://lichess.org/opening/Queens_Gambit' },
+      { keys:['opening principle','development','develop'], label:'Opening principles', url:'https://lichess.org/practice/fundamentals/the-opening/' },
+      { keys:['pin'], label:'Pin tactics', url:'https://lichess.org/training/pin' },
+      { keys:['fork'], label:'Fork tactics', url:'https://lichess.org/training/fork' },
+      { keys:['skewer'], label:'Skewer tactics', url:'https://lichess.org/training/skewer' },
+      { keys:['discovered'], label:'Discovered attacks', url:'https://lichess.org/training/discoveredAttack' },
+      { keys:['back rank','back-rank'], label:'Back-rank mates', url:'https://lichess.org/training/backRankMate' },
+      { keys:['hanging'], label:'Hanging pieces', url:'https://lichess.org/training/hangingPiece' },
+      { keys:['pawn endgame','pawn ending'], label:'Pawn endgames', url:'https://lichess.org/practice/pawn-endgames/key-positions-pawn-endgames/' },
+      { keys:['rook endgame','rook ending'], label:'Rook endgames', url:'https://lichess.org/practice/rook-endgames/the-philidor-position/' },
+      { keys:['endgame','ending'], label:'Endgame practice', url:'https://lichess.org/practice' },
+      { keys:['king safety','castl'], label:'King safety', url:'https://lichess.org/practice/fundamentals/king-safety/' },
+      { keys:['tactic','combination'], label:'Tactics trainer', url:'https://lichess.org/training' },
+    ];
+    function findResource(topic){
+      if(!topic) return null;
+      const t = topic.toLowerCase();
+      for(const r of STUDY_RESOURCES){ if(r.keys.some(k=>t.includes(k))) return r; }
+      return null;
+    }
+
+    // To-do persistence via localStorage, keyed per task text
+    function todoKey(task){ return 'pg_todo_' + btoa(unescape(encodeURIComponent(task))).slice(0,40); }
+    function isDone(task){ try { return localStorage.getItem(todoKey(task)) === '1'; } catch(e){ return false; } }
+    function setDone(task, done){ try { localStorage.setItem(todoKey(task), done?'1':'0'); } catch(e){} }
+
+    function renderTraining(plan){
+      const section = document.getElementById('trainingSection');
+      if(!plan || !plan.length){ section.style.display='none'; return; }
+      const list = document.getElementById('trainingList');
+      list.innerHTML = plan.map((item, i) => {
+        const res = findResource(item.topic);
+        const done = isDone(item.task);
+        const resLink = res ? `<a class="todo-resource" href="${res.url}" target="_blank" rel="noopener">${res.label} →</a>` : '';
+        return `<div class="todo-item ${done?'done':''}" data-task="${esc(item.task)}">
+          <button class="todo-check" onclick="toggleTodo(this)" aria-label="Toggle done">${done?'✓':''}</button>
+          <div class="todo-body"><div class="todo-task">${esc(item.task)}</div>${resLink}</div>
+        </div>`;
+      }).join('');
+    }
+    function toggleTodo(btn){
+      const item = btn.closest('.todo-item');
+      const task = item.getAttribute('data-task');
+      const nowDone = !item.classList.contains('done');
+      item.classList.toggle('done', nowDone);
+      btn.textContent = nowDone ? '✓' : '';
+      setDone(task, nowDone);
+    }
 
     function render(d){
       const f = d.feedback || {};
@@ -136,6 +202,9 @@
       if (f.phaseRead){ document.getElementById('phaseRead').textContent = f.phaseRead; }
       else { document.getElementById('phaseSection').style.display = 'none'; }
 
+      // Training plan
+      renderTraining(f.trainingPlan || []);
+
       // Encouragement
       if (f.encouragement){
         document.getElementById('portalEncouragement').textContent = f.encouragement;
@@ -177,5 +246,6 @@
   </script>
 </body>
 </html>
+
 
 
