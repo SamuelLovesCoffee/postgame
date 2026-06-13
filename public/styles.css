@@ -1469,3 +1469,18 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   text-transform: none; margin-bottom: 6px;
 }
 .portal-training .chart-note { margin-bottom: 18px; }
+
+
+/* ── New-games-available banner ── */
+.new-games-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--accent-soft); border: 1px solid rgba(233,69,96,0.3);
+  border-radius: 12px; padding: 14px 18px; margin-bottom: 24px;
+  font-size: 14px; color: var(--text);
+}
+.banner-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; font-family: var(--font-body);
+}
+.banner-btn:hover { opacity: 0.9; }
