@@ -11,6 +11,7 @@ const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
   saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
+  saveFeedback, getSavedFeedback,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -311,40 +312,40 @@ app.delete('/api/analysis/:id', authMiddleware, async (req, res) => {
 
 // ═══ FEEDBACK PORTAL ═══
 
-// Simple in-memory cache: userId -> { gameCount, feedback, ts }
-const feedbackCache = new Map();
-
 app.get('/api/my-feedback', authMiddleware, async (req, res) => {
   try {
     const games = await getGamesForFeedback(req.user.id, 30);
+    const gameCount = games ? games.length : 0;
 
-    if (!games || games.length === 0) {
+    if (gameCount === 0) {
       return res.json({ hasData: false, gameCount: 0 });
     }
 
-    const cached = feedbackCache.get(req.user.id);
-    const fresh = cached && cached.gameCount === games.length && (Date.now() - cached.ts) < 86400000;
+    // Load any previously-saved feedback for this user
+    const saved = await getSavedFeedback(req.user.id);
+    // How many new games have been analysed since the saved feedback was generated
+    const newGames = saved ? Math.max(0, gameCount - (saved.game_count || 0)) : 0;
 
-    // Peek mode: never generate. Return cached feedback if we have a fresh one, else just the count.
+    // Peek mode: never generate. Return the saved feedback (persisted) plus a flag
+    // telling the user whether newer games make a fresh synthesis worthwhile.
     if (req.query.peek) {
       return res.json({
         hasData: true,
-        gameCount: games.length,
-        feedback: fresh ? cached.feedback : null,
+        gameCount,
+        feedback: saved ? saved.feedback : null,
+        generatedAt: saved ? saved.generated_at : null,
+        savedGameCount: saved ? saved.game_count : 0,
+        newGamesSince: newGames,
       });
     }
 
-    // Return cached synthesis if still fresh (and not a forced refresh)
-    if (fresh && !req.query.refresh) {
-      return res.json({ hasData: true, gameCount: games.length, feedback: cached.feedback, cached: true });
-    }
-
+    // Generate fresh synthesis (explicit user action), then persist it
     const feedback = await generatePlayerFeedback(games);
     if (!feedback) {
       return res.status(500).json({ error: 'Could not generate feedback right now' });
     }
-    feedbackCache.set(req.user.id, { gameCount: games.length, feedback, ts: Date.now() });
-    res.json({ hasData: true, gameCount: games.length, feedback });
+    await saveFeedback(req.user.id, feedback, gameCount);
+    res.json({ hasData: true, gameCount, feedback, generatedAt: new Date().toISOString(), savedGameCount: gameCount, newGamesSince: 0 });
   } catch (err) {
     console.error('Feedback portal error:', err.message);
     res.status(500).json({ error: 'Could not load feedback' });
@@ -632,6 +633,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
