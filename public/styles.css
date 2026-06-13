@@ -1484,3 +1484,16 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   white-space: nowrap; flex-shrink: 0; font-family: var(--font-body);
 }
 .banner-btn:hover { opacity: 0.9; }
+
+
+/* ── Portal preview: training-plan checklist ── */
+.lp-pv-todo { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.lp-pv-todo-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-3); margin-bottom: 10px; }
+.lp-pv-todo-item { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; color: var(--text-2); }
+.lp-pv-check {
+  width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0;
+  background: var(--green); color: #08160f; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.lp-pv-check.empty { background: transparent; border: 1.5px solid var(--border-light); }
+.lp-pv-todo-item .done { text-decoration: line-through; color: var(--text-3); }
