@@ -29,6 +29,10 @@
     </div>
 
     <div id="portalContent" style="display:none">
+      <div id="newGamesBanner" class="new-games-banner" style="display:none">
+        <span id="newGamesText"></span>
+        <button class="banner-btn" onclick="loadFeedback(true)">Refresh feedback</button>
+      </div>
       <!-- Headline -->
       <div class="portal-headline" id="portalHeadline"></div>
 
@@ -73,6 +77,7 @@
     const authToken = localStorage.getItem('pg_token');
 
     async function loadFeedback(refresh){
+      const b = document.getElementById('newGamesBanner'); if (b) b.style.display = 'none';
       document.getElementById('statsStart').style.display = 'none';
       document.getElementById('statsLoading').style.display = 'block';
       document.getElementById('portalContent').style.display = 'none';
@@ -170,7 +175,12 @@
       const f = d.feedback || {};
       // Intro line acknowledging this is based on analysed games
       const intro = document.getElementById('portalIntro');
-      intro.textContent = `Based on the ${d.gameCount} game${d.gameCount===1?'':'s'} you've analysed with me. The more you review, the sharper this gets.`;
+      let introText = `Based on the ${d.savedGameCount || d.gameCount} game${(d.savedGameCount||d.gameCount)===1?'':'s'} you've analysed with me.`;
+      if (d.generatedAt){
+        const dt = new Date(d.generatedAt);
+        introText += ` Last updated ${dt.toLocaleDateString(undefined,{day:'numeric',month:'short'})}.`;
+      }
+      intro.textContent = introText;
       intro.style.display = 'block';
 
       document.getElementById('portalHeadline').textContent = f.headline || '';
@@ -233,10 +243,18 @@
         if (!d.hasData){ showEmpty(); return; }
         document.getElementById('statsLoading').style.display = 'none';
         if (d.feedback){
-          // We have a cached summary — show it immediately, no new AI call
+          // Show the saved feedback immediately, no new AI call
           render(d);
+          // If newer games exist, surface a gentle "refresh available" banner
+          if (d.newGamesSince > 0){
+            const banner = document.getElementById('newGamesBanner');
+            const n = d.newGamesSince;
+            document.getElementById('newGamesText').textContent =
+              `You've analysed ${n} new game${n===1?'':'s'} since this feedback was generated. Refresh for an updated read.`;
+            banner.style.display = 'flex';
+          }
         } else {
-          // Games exist but no summary yet — show the generate button
+          // No saved feedback yet — show the generate button
           showStart(d.gameCount);
         }
       } catch(e){ showEmpty('Could not load right now. Please try again shortly.'); }
@@ -255,6 +273,7 @@
   </script>
 </body>
 </html>
+
 
 
 
