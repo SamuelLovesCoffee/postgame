@@ -505,10 +505,37 @@ async function getAdminStats() {
   };
 }
 
+// ── Player feedback persistence ──
+
+async function saveFeedback(userId, feedback, gameCount) {
+  // Upsert: one feedback row per user
+  const { error } = await supabase
+    .from('player_feedback')
+    .upsert({
+      user_id: userId,
+      feedback,
+      game_count: gameCount,
+      generated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+  if (error) console.error('Save feedback error:', error.message);
+  return !error;
+}
+
+async function getSavedFeedback(userId) {
+  const { data, error } = await supabase
+    .from('player_feedback')
+    .select('feedback, game_count, generated_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
   buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
+  saveFeedback, getSavedFeedback,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -516,6 +543,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
