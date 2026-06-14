@@ -26,6 +26,7 @@ const TIERS = {
 };
 
 const app = express();
+app.set('trust proxy', true);
 
 // Stripe webhook needs raw body
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -115,7 +116,10 @@ app.get('/api/packages', (req, res) => {
 app.post('/api/checkout', authMiddleware, async (req, res) => {
   try {
     const { packageId } = req.body;
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    // Force canonical https + www host so Stripe success/cancel URLs never hit a 301 redirect
+    let host = req.get('host') || 'www.post-game.net';
+    if (host === 'post-game.net') host = 'www.post-game.net';
+    const baseUrl = process.env.PUBLIC_BASE_URL || `https://${host}`;
     const session = await createCheckoutSession(req.user.id, req.user.email, packageId, baseUrl);
     res.json(session);
   } catch (err) {
@@ -655,6 +659,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
