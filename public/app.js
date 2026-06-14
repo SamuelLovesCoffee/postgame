@@ -1,3 +1,22 @@
+// Mobile burger menu
+function toggleBurger(){
+  const items = document.getElementById('navItems');
+  const btn = document.getElementById('burgerBtn');
+  if (!items) return;
+  const open = items.classList.toggle('open');
+  if (btn){ btn.classList.toggle('active', open); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+}
+// Close burger when tapping outside or selecting an item
+document.addEventListener('click', function(e){
+  const items = document.getElementById('navItems');
+  const btn = document.getElementById('burgerBtn');
+  if (!items || !btn) return;
+  if (items.classList.contains('open')){
+    if (e.target.closest('#navItems a, #navItems button')){ items.classList.remove('open'); btn.classList.remove('active'); btn.setAttribute('aria-expanded','false'); return; }
+    if (!items.contains(e.target) && !btn.contains(e.target)){ items.classList.remove('open'); btn.classList.remove('active'); btn.setAttribute('aria-expanded','false'); }
+  }
+});
+
 // ═══════════════════════════════════════
 // AUTH STATE
 // ═══════════════════════════════════════
@@ -1025,6 +1044,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
