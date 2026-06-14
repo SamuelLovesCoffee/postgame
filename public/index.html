@@ -116,6 +116,16 @@
   plausible.init()
 </script>
 
+<!-- Sentry error monitoring (browser) -->
+<script src="https://browser.sentry-cdn.com/8.0.0/bundle.min.js"></script>
+<script>
+  Sentry.init({
+    dsn: 'https://9e5af7df877e8786387fe230684a32a9@o4511563775213568.ingest.de.sentry.io/4511563797626960',
+    environment: 'production',
+    tracesSampleRate: 0.0,
+  });
+</script>
+
 </head>
 <body>
   <header class="header">
@@ -509,6 +519,7 @@
   </script>
 </body>
 </html>
+
 
 
 
