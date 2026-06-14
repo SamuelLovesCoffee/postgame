@@ -1512,3 +1512,24 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   transition: width 0.25s ease;
 }
 #loadingStage { text-align: center; }
+
+
+/* ── My Coaching: meta box with regenerate button ── */
+.portal-meta-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px; margin: -8px 0 28px;
+}
+.portal-meta-text { font-size: 13.5px; color: var(--text-2); line-height: 1.5; flex: 1; min-width: 200px; }
+.meta-regen-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 9px;
+  padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); white-space: nowrap; transition: opacity 0.15s;
+}
+.meta-regen-btn:hover { opacity: 0.9; }
+.meta-regen-btn.disabled {
+  background: var(--surface); color: var(--text-3); cursor: not-allowed;
+  border: 1px solid var(--border);
+}
+.meta-regen-btn.disabled:hover { opacity: 1; }
