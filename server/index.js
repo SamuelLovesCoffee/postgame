@@ -327,8 +327,10 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
     const genCount = saved ? (saved.generation_count || 0) : 0;
 
     // Entitlement: the first generation is free. Further generations require a purchase.
+    // Admins always bypass the limit.
     const purchased = await hasEverPurchased(req.user.id);
-    const canGenerate = genCount < 1 || purchased;
+    const admin = isAdmin(req.user.email);
+    const canGenerate = admin || genCount < 1 || purchased;
 
     if (req.query.peek) {
       return res.json({
@@ -653,6 +655,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
