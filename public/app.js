@@ -79,6 +79,9 @@ function showLoggedOut() {
 }
 
 function showAuthModal(mode) {
+  // Reset terms checkbox whenever the modal opens
+  const cb = document.getElementById('termsCheckbox');
+  if (cb) cb.checked = false;
   authMode = mode;
   document.getElementById('authModalTitle').textContent = mode === 'login' ? 'Log in' : 'Create account';
   document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Log in' : 'Sign up';
@@ -133,6 +136,14 @@ async function submitAuth() {
   errEl.textContent = '';
 
   if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
+
+  if (authMode === 'signup') {
+    const cb = document.getElementById('termsCheckbox');
+    if (cb && !cb.checked) {
+      errEl.textContent = 'Please agree to the Terms of Service and Privacy Policy to continue.';
+      return;
+    }
+  }
 
   const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
   const body = { email, password };
@@ -1075,6 +1086,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
