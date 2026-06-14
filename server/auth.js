@@ -21,6 +21,10 @@ const PACKAGES = [
 
 // ── Auth helpers ──
 
+// Resend email config (shared)
+const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.SMTP_PASS;
+const RESEND_FROM = process.env.RESEND_FROM || 'postgame <info@post-game.net>';
+
 async function signUp(email, password, metadata = {}) {
   // Create user with email pre-confirmed so they can sign in immediately
   // (no email validation step).
@@ -49,15 +53,11 @@ async function signUp(email, password, metadata = {}) {
 
 
 async function sendWelcomeEmail(email, firstName) {
-  const apiKey = process.env.SMTP_PASS; // Resend API key
-  if (!apiKey) { console.log('[welcome] No Resend API key, skipping'); return; }
+  if (!RESEND_API_KEY) { console.log('[welcome] No Resend API key, skipping'); return; }
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'Samuel at postgame <info@post-game.net>',
         to: email,
@@ -455,24 +455,23 @@ async function deleteAccount(userId) {
 }
 
 
-// ── Admin notification emails (via Resend SMTP) ──
-const nodemailer = require('nodemailer');
-const adminMailer = process.env.SMTP_HOST ? nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '465'),
-  secure: true,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-}) : null;
-
+// ── Email (via Resend HTTP API) ──
 async function sendAdminNotification(subject, text) {
-  if (!adminMailer) return; // silently skip if SMTP not configured
+  if (!RESEND_API_KEY) { console.log('[notify] No Resend API key, skipping'); return; }
   try {
-    await adminMailer.sendMail({
-      from: `"postgame" <${process.env.SMTP_USER}>`,
-      to: process.env.ADMIN_NOTIFY_EMAIL || 'samueljosephdavies@gmail.com',
-      subject,
-      text,
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: RESEND_FROM,
+        to: process.env.ADMIN_NOTIFY_EMAIL || 'samueljosephdavies@gmail.com',
+        subject,
+        text,
+      }),
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+    console.log('[notify] Admin email sent — id:', data.id);
   } catch (err) {
     // Never let a notification failure break the main flow
     console.error('[notify] Email failed:', err.message);
@@ -641,6 +640,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
