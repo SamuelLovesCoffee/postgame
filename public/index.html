@@ -113,7 +113,7 @@
 <body>
   <header class="header">
     <div class="header-inner">
-      <a href="/" class="logo"><span class="logo-text">post<em>game</em></span></a>
+      <a href="/" class="logo"><span class="logo-text">post<span class="logo-accent">game</span></span></a>
       <div class="header-right">
         <div id="authBtns" class="auth-btns">
           <button class="hdr-btn" onclick="showAuthModal('login')">Log in</button>
@@ -121,11 +121,16 @@
         </div>
         <div id="userInfo" class="user-info" style="display:none">
           <span class="credit-badge" id="creditBadge">0</span>
-          <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
-          <a class="hdr-btn" href="/stats" style="text-decoration:none">My coaching</a>
-          <button class="hdr-btn" onclick="showHistory()">My games</button>
-          <button class="hdr-btn" onclick="showAccount()">Account</button>
-          <button class="hdr-btn subtle" onclick="logout()">Log out</button>
+          <div class="nav-items" id="navItems">
+            <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
+            <a class="hdr-btn" href="/stats" style="text-decoration:none">My coaching</a>
+            <button class="hdr-btn" onclick="showHistory()">My games</button>
+            <button class="hdr-btn" onclick="showAccount()">Account</button>
+            <button class="hdr-btn subtle" onclick="logout()">Log out</button>
+          </div>
+          <button class="burger" id="burgerBtn" onclick="toggleBurger()" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
         </div>
       </div>
     </div>
@@ -477,6 +482,7 @@
   </script>
 </body>
 </html>
+
 
 
 
