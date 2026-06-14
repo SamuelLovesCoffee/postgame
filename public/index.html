@@ -243,6 +243,25 @@
   </div>
 
 
+  <!-- ═══ WELCOME MODAL (first login) ═══ -->
+  <div class="modal-overlay" id="welcomeModal" style="display:none">
+    <div class="modal-card welcome-card">
+      <div class="welcome-eyebrow">Welcome to postgame</div>
+      <h2 class="welcome-title" id="welcomeTitle">Welcome!</h2>
+      <p class="welcome-intro">Here's how to get the most out of your coach.</p>
+      <div class="welcome-step">
+        <div class="welcome-step-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div><div class="welcome-step-h">Game analysis</div><div class="welcome-step-p">Import a game and your coach reviews it move by move — explaining why your mistakes were mistakes, not just that they were. Each analysis uses credits (you have 3 free to start).</div></div>
+      </div>
+      <div class="welcome-step">
+        <div class="welcome-step-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
+        <div><div class="welcome-step-h">Coaching feedback</div><div class="welcome-step-p">Once you've analysed a few games, your coach synthesises everything into a picture of you as a player — your patterns, strengths, and what to work on next.</div></div>
+      </div>
+      <div class="welcome-callout">The more games you analyse, the sharper your coaching feedback becomes. Your coach learns your habits over time, just like a real one would.</div>
+      <button class="modal-btn" onclick="closeWelcome()">Let's go →</button>
+    </div>
+  </div>
+
   <!-- ═══ LANDING (logged out) ═══ -->
   <main class="landing" id="landingView">
 
@@ -483,6 +502,7 @@
   </script>
 </body>
 </html>
+
 
 
 
