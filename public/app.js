@@ -529,11 +529,7 @@ async function startAnalysis() {
   document.getElementById('loadingMsg').textContent = 'Submitting game...';
 
   try {
-    // Estimate time: count moves in PGN, multiply by per-position seconds
-    const moveCount = (pgn.match(/\d+\./g) || []).length * 2;
-    const perPos = selectedTier === 'deep' ? 4 : 1.5;
-    const estMin = Math.max(1, Math.round((moveCount * perPos) / 60));
-    document.getElementById('loadingMsg').textContent = `Estimated time: about ${estMin} minute${estMin > 1 ? 's' : ''}`;
+    document.getElementById('loadingMsg').textContent = 'Submitting your game…';
 
     const submitRes = await fetch('/api/analyse', {
       method: 'POST',
@@ -1029,6 +1025,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
