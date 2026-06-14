@@ -508,13 +508,16 @@ async function getAdminStats() {
 // ── Player feedback persistence ──
 
 async function saveFeedback(userId, feedback, gameCount) {
-  // Upsert: one feedback row per user
+  // Read existing generation count so we can increment it
+  const existing = await getSavedFeedback(userId);
+  const prevCount = existing ? (existing.generation_count || 0) : 0;
   const { error } = await supabase
     .from('player_feedback')
     .upsert({
       user_id: userId,
       feedback,
       game_count: gameCount,
+      generation_count: prevCount + 1,
       generated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
   if (error) console.error('Save feedback error:', error.message);
@@ -524,18 +527,29 @@ async function saveFeedback(userId, feedback, gameCount) {
 async function getSavedFeedback(userId) {
   const { data, error } = await supabase
     .from('player_feedback')
-    .select('feedback, game_count, generated_at')
+    .select('feedback, game_count, generated_at, generation_count')
     .eq('user_id', userId)
     .maybeSingle();
   if (error || !data) return null;
   return data;
 }
 
+// Has the user ever purchased credits? (one transaction row = yes)
+async function hasEverPurchased(userId) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id')
+    .eq('user_id', userId)
+    .limit(1);
+  if (error || !data) return false;
+  return data.length > 0;
+}
+
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
   buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
-  saveFeedback, getSavedFeedback,
+  saveFeedback, getSavedFeedback, hasEverPurchased,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -543,6 +557,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
