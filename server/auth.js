@@ -306,22 +306,35 @@ async function createCheckoutSession(userId, email, packageId, baseUrl) {
 }
 
 async function handleStripeWebhook(body, signature) {
+  console.log('[WEBHOOK] Received Stripe event');
   if (!stripe) throw new Error('Stripe not configured');
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
-  if (webhookSecret) {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-  } else {
-    event = JSON.parse(body);
+  try {
+    if (webhookSecret) {
+      console.log('[WEBHOOK] Verifying signature with webhook secret');
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      console.log('[WEBHOOK] Signature verified');
+    } else {
+      console.log('[WEBHOOK] WARNING: No webhook secret configured, parsing raw JSON (unsafe for production)');
+      event = JSON.parse(body);
+    }
+  } catch (err) {
+    console.error('[WEBHOOK] Signature verification failed:', err.message);
+    throw err;
   }
+
+  console.log(`[WEBHOOK] Event type: ${event.type}`);
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const userId = session.metadata.user_id;
-    const credits = parseInt(session.metadata.credits);
-    const packageId = session.metadata.package_id;
+    const userId = session.metadata?.user_id;
+    const credits = parseInt(session.metadata?.credits);
+    const packageId = session.metadata?.package_id;
     const pkg = PACKAGES.find(p => p.id === packageId);
+
+    console.log(`[WEBHOOK] Checkout completed: session=${session.id}, userId=${userId}, credits=${credits}, pkg=${packageId}`);
 
     if (userId && credits > 0) {
       // Idempotency: if we've already recorded this session, skip (Stripe may
@@ -332,9 +345,10 @@ async function handleStripeWebhook(body, signature) {
         .eq('stripe_session_id', session.id)
         .maybeSingle();
       if (existing) {
-        console.log(`  Duplicate webhook for session ${session.id}, skipping`);
+        console.log(`[WEBHOOK] Duplicate webhook for session ${session.id}, skipping`);
         return;
       }
+      console.log(`[WEBHOOK] Adding ${credits} credits to user ${userId}`);
       await addCredits(userId, credits);
       await supabase.from('transactions').insert({
         user_id: userId,
@@ -342,8 +356,12 @@ async function handleStripeWebhook(body, signature) {
         amount_cents: pkg ? pkg.price_cents : 0,
         stripe_session_id: session.id,
       });
-      console.log(`  Credits added: ${credits} for user ${userId}`);
+      console.log(`[WEBHOOK] ✓ Credits added: ${credits} for user ${userId}`);
+    } else {
+      console.log(`[WEBHOOK] Invalid session data: userId=${userId}, credits=${credits}`);
     }
+  } else {
+    console.log(`[WEBHOOK] Ignoring event type: ${event.type}`);
   }
 }
 
@@ -565,6 +583,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
