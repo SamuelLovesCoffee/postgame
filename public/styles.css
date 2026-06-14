@@ -1578,3 +1578,48 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 /* ── Pricing currency note ── */
 .lp-price-currency-note { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); margin-top: 10px; letter-spacing: 0.02em; }
 
+
+
+/* ── Auth modal: professional layout ── */
+.auth-header { margin-bottom: 20px; }
+.auth-logo { font-family: var(--font-display); font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); margin-bottom: 10px; }
+.auth-logo span { color: var(--accent); }
+.modal-card h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.auth-subtitle { font-size: 13.5px; color: var(--text-3); margin: 0; }
+
+/* Input groups with labels */
+.input-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.input-group.half { margin-bottom: 0; }
+.input-label { font-size: 12px; font-weight: 500; color: var(--text-2); letter-spacing: 0.01em; }
+.name-row { display: flex; gap: 10px; margin-bottom: 0; }
+.name-row .input-group { flex: 1; }
+
+/* Optional fields divider */
+.auth-optional-divider { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+.auth-optional-divider span { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+.auth-optional-divider::before,
+.auth-optional-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Terms checkbox */
+.auth-terms { margin: 12px 0 4px; }
+.terms-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.terms-checkbox {
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+  border: 1.5px solid var(--border); border-radius: 4px;
+  background: var(--surface); cursor: pointer; transition: all 0.15s;
+}
+.terms-checkbox:checked { background: var(--accent); border-color: var(--accent); }
+.terms-checkbox:checked::after {
+  content: ''; display: block; width: 4px; height: 8px;
+  border: 2px solid white; border-top: none; border-left: none;
+  transform: rotate(45deg) translate(2px, -1px);
+}
+.terms-label span { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+.terms-label a { color: var(--accent); text-decoration: none; }
+.terms-label a:hover { text-decoration: underline; }
+
+/* Auth footer */
+.auth-footer { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; }
+.modal-forgot, .modal-switch { margin: 0; }
+.modal-btn { margin-top: 14px; }
