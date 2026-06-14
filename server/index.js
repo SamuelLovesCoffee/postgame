@@ -1,4 +1,5 @@
 require('dotenv').config();
+const Sentry = require('@sentry/node');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -27,6 +28,17 @@ const TIERS = {
 
 const app = express();
 app.set('trust proxy', true);
+
+// Initialize Sentry error monitoring
+Sentry.init({
+  dsn: 'https://9e5af7df877e8786387fe230684a32a9@o4511563775213568.ingest.de.sentry.io/4511563797626960',
+  environment: process.env.NODE_ENV || 'production',
+  integrations: [
+    new Sentry.Integrations.Http({ tracing: false }),
+    new Sentry.Integrations.OnUncaughtException(),
+    new Sentry.Integrations.OnUnhandledRejection(),
+  ],
+});
 
 // Stripe webhook needs raw body
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -717,6 +729,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
