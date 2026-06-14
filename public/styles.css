@@ -1573,3 +1573,7 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 .welcome-step-p { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
 .welcome-callout { background: var(--green-soft); border: 1px solid rgba(62,207,142,0.25); border-radius: 12px; padding: 14px 16px; font-size: 13.5px; color: var(--text); line-height: 1.55; margin: 4px 0 22px; }
 .welcome-card .modal-btn { width: 100%; }
+
+
+/* ── Pricing currency note ── */
+.lp-price-currency-note { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); margin-top: 10px; letter-spacing: 0.02em; }
