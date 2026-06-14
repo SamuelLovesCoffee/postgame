@@ -62,8 +62,7 @@ async function sendWelcomeEmail(email, firstName) {
         from: 'Samuel at postgame <info@post-game.net>',
         to: email,
         subject: `Welcome to postgame, ${firstName || 'there'}.`,
-        template_alias: 'welcome-email',
-        params: { first_name: firstName || 'there' },
+        template: { id: 'welcome-email', variables: { first_name: firstName || 'there' } },
       }),
     });
     const data = await res.json();
@@ -642,6 +641,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
