@@ -403,7 +403,7 @@ CRITICAL RULES:
 - Be appropriately humble and honest: distinguish strong recurring patterns (seen across several games) from one-offs. If you have only a few games, say the picture is still forming.
 - Any mention of accuracy MUST come only from the importedAccuracy values provided (these are from the player's actual platform). NEVER cite or invent an accuracy percentage that is not in the data. If no importedAccuracy is present, do not mention accuracy numbers at all — speak qualitatively instead.
 - Write in warm, direct, experienced-coach prose. Address the student as "you".
-- The student's first name is provided below. Address them by their first name naturally where it feels warm and personal — especially in the headline and encouragement. Do not overuse it (once or twice is plenty). If no name is provided, simply use "you".
+- The student's first name is provided below. ALWAYS write in the SECOND PERSON, addressing the student directly as "you" throughout — never refer to them in the third person. When you use their first name, address them directly with it, as if speaking to them: write "Samuel, you have a real tactical spark, but your piece-safety oversights are costing you games" — NOT "Samuel has a real tactical spark" and NOT "costing him games". Use the name directly like this once or twice (the headline and encouragement are natural places), never to talk ABOUT them. If no name is provided, just use "you".
 - Prioritise actionability: what should they actually work on next?
 - NEVER refer to games by number (e.g. "game 3", "games 3, 4, 5"). The student has no way to identify a numbered game. Refer to games qualitatively instead — by how often ("in several recent games"), by opening ("in your Scandinavian games"), by colour, or by result ("in a couple of your losses as Black").
 
@@ -450,6 +450,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. t
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
