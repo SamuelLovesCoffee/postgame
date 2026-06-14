@@ -15,7 +15,10 @@
       <a href="/" class="new-game-btn" style="text-decoration:none">Analyse a game</a>
     </div>
     <h1 class="stats-title">Your coaching feedback</h1>
-    <p class="portal-intro" id="portalIntro" style="display:none"></p>
+    <div class="portal-meta-box" id="portalMetaBox" style="display:none">
+      <div class="portal-meta-text" id="portalIntro"></div>
+      <button class="meta-regen-btn" id="regenBtn" onclick="onRegenClick()">Regenerate feedback</button>
+    </div>
 
     <div id="statsStart" style="display:none">
       <p class="reset-info" id="startBlurb"></p>
@@ -70,14 +73,36 @@
       <!-- Encouragement -->
       <div class="portal-encouragement" id="portalEncouragement"></div>
 
-      <div class="portal-refresh">
-        <button class="new-game-btn" onclick="loadFeedback(true)">Regenerate feedback</button>
-      </div>
+
     </div>
   </div>
 
   <script>
     const authToken = localStorage.getItem('pg_token');
+
+    let canRegenerate = false;
+    function setRegenState(canGen){
+      canRegenerate = !!canGen;
+      const btn = document.getElementById('regenBtn');
+      if (!btn) return;
+      if (canGen){
+        btn.classList.remove('disabled');
+        btn.title = 'Regenerate your coaching feedback';
+      } else {
+        btn.classList.add('disabled');
+        btn.title = 'Unavailable — buy credits to regenerate your feedback as your history grows';
+      }
+    }
+    function onRegenClick(){
+      if (canRegenerate){ loadFeedback(true); }
+      else { showCreditsPrompt(); }
+    }
+    function showCreditsPrompt(){
+      // Soft prompt: send them to buy credits
+      if (confirm('You\'ve used your free coaching feedback. Buy credits to regenerate it as your game history grows. Go to your account to buy credits?')){
+        window.location.href = '/#buy';
+      }
+    }
 
     let progressTimer = null;
     function startProgress(){
@@ -122,6 +147,15 @@
         const url = '/api/my-feedback' + (refresh ? '?refresh=1' : '');
         const r = await fetch(url, { headers: { Authorization: 'Bearer ' + authToken } });
         const d = await r.json();
+        if (r.status === 403 && d.error === 'feedback_limit'){
+          finishProgress();
+          document.getElementById('statsLoading').style.display = 'none';
+          setRegenState(false);
+          alert(d.message || 'Buy credits to regenerate your feedback.');
+          // Re-show existing saved feedback via peek
+          init();
+          return;
+        }
         if (!r.ok) throw new Error(d.error || 'Failed');
         if (!d.hasData){ showEmpty(); return; }
         render(d);
@@ -213,10 +247,13 @@
       let introText = `Based on the ${d.savedGameCount || d.gameCount} game${(d.savedGameCount||d.gameCount)===1?'':'s'} you've analysed with me.`;
       if (d.generatedAt){
         const dt = new Date(d.generatedAt);
-        introText += ` Last updated ${dt.toLocaleDateString(undefined,{day:'numeric',month:'short'})}.`;
+        introText += ` Last updated ${dt.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}.`;
       }
       intro.textContent = introText;
-      intro.style.display = 'block';
+      document.getElementById('portalMetaBox').style.display = 'flex';
+      // Configure the regenerate button based on entitlement
+      setRegenState(d.canGenerate);
+      // (meta box visibility handled below)
 
       document.getElementById('portalHeadline').textContent = f.headline || '';
 
@@ -309,6 +346,7 @@
   </script>
 </body>
 </html>
+
 
 
 
