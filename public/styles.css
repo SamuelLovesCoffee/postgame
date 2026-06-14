@@ -1497,3 +1497,18 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
 }
 .lp-pv-check.empty { background: transparent; border: 1.5px solid var(--border-light); }
 .lp-pv-todo-item .done { text-decoration: line-through; color: var(--text-3); }
+
+
+/* ── Feedback synthesis progress bar ── */
+.feedback-progress {
+  width: 100%; max-width: 360px; height: 6px; margin: 16px auto 0;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 100px; overflow: hidden;
+}
+.feedback-progress-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  border-radius: 100px;
+  transition: width 0.25s ease;
+}
+#loadingStage { text-align: center; }
