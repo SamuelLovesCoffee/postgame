@@ -37,6 +37,11 @@ async function signUp(email, password, metadata = {}) {
   });
   if (error) throw new Error(error.message);
   if (!data.user) throw new Error('Signup failed');
+  // Notify admin of new signup (fire-and-forget)
+  sendAdminNotification(
+    `New signup: ${metadata.firstName || ''} ${metadata.lastName || ''} <${email}>`,
+    `New account created on postgame\n\nName: ${metadata.firstName || ''} ${metadata.lastName || ''}\nEmail: ${email}\nRating: ${metadata.rating || 'not provided'}\nChess username: ${metadata.chessUsername || 'not provided'}\nTime: ${new Date().toUTCString()}`
+  );
   return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
 }
 
@@ -421,6 +426,31 @@ async function deleteAccount(userId) {
   return true;
 }
 
+
+// ── Admin notification emails (via Resend SMTP) ──
+const nodemailer = require('nodemailer');
+const adminMailer = process.env.SMTP_HOST ? nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '465'),
+  secure: true,
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+}) : null;
+
+async function sendAdminNotification(subject, text) {
+  if (!adminMailer) return; // silently skip if SMTP not configured
+  try {
+    await adminMailer.sendMail({
+      from: `"postgame" <${process.env.SMTP_USER}>`,
+      to: process.env.ADMIN_NOTIFY_EMAIL || 'samueljosephdavies@gmail.com',
+      subject,
+      text,
+    });
+  } catch (err) {
+    // Never let a notification failure break the main flow
+    console.error('[notify] Email failed:', err.message);
+  }
+}
+
 // ── Password reset ──
 
 // Request a reset email. Supabase sends it via its own SMTP (bypasses Railway's block).
@@ -583,6 +613,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
