@@ -1,3 +1,16 @@
+// Hide the "local currency at checkout" note for US users (USD is their currency)
+(function(){
+  try {
+    const loc = (navigator.language || '').toUpperCase();
+    if (loc.endsWith('-US') || loc === 'EN'){
+      document.addEventListener('DOMContentLoaded', function(){
+        const n = document.getElementById('currencyNote');
+        if (n) n.style.display = 'none';
+      });
+    }
+  } catch(e){}
+})();
+
 // Mobile burger menu
 function toggleBurger(){
   const items = document.getElementById('navItems');
@@ -1062,6 +1075,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
