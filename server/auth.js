@@ -534,6 +534,14 @@ async function getSavedFeedback(userId) {
   return data;
 }
 
+async function getUserFirstName(userId) {
+  try {
+    const { data } = await supabase.auth.admin.getUserById(userId);
+    const meta = (data && data.user && data.user.user_metadata) || {};
+    return (meta.first_name || '').trim();
+  } catch { return ''; }
+}
+
 // Has the user ever purchased credits? (one transaction row = yes)
 async function hasEverPurchased(userId) {
   const { data, error } = await supabase
@@ -549,7 +557,7 @@ module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
   buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
-  saveFeedback, getSavedFeedback, hasEverPurchased,
+  saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
   saveAnalysis, getAnalyses, getAnalysis,
@@ -557,6 +565,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
