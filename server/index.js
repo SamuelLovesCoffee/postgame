@@ -74,6 +74,48 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000);
 
+// ── Concurrency gate ──
+// Limit how many analyses run at once so a traffic spike queues rather than
+// overwhelming CPU/memory (and paces API spend). Tune MAX_CONCURRENT to vCPU.
+const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT_ANALYSES || '3');
+let activeAnalyses = 0;
+const waitQueue = [];
+function acquireSlot() {
+  return new Promise((resolve) => {
+    if (activeAnalyses < MAX_CONCURRENT) { activeAnalyses++; resolve(); }
+    else { waitQueue.push(resolve); }
+  });
+}
+function releaseSlot() {
+  activeAnalyses = Math.max(0, activeAnalyses - 1);
+  const next = waitQueue.shift();
+  if (next) { activeAnalyses++; next(); }
+}
+function queuePosition() {
+  // 0 means a slot is free now; >0 means this many ahead in line
+  return Math.max(0, (activeAnalyses - MAX_CONCURRENT) + waitQueue.length + 1);
+}
+
+// ── Per-user rate limiting ──
+// Stop a single account from scripting a flood of analyses (protects API + compute budget).
+const MAX_ANALYSES_PER_WINDOW = parseInt(process.env.MAX_ANALYSES_PER_WINDOW || '20');
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const userAnalyseLog = new Map(); // userId -> [timestamps]
+function checkRateLimit(userId) {
+  const now = Date.now();
+  const arr = (userAnalyseLog.get(userId) || []).filter(t => now - t < RATE_WINDOW_MS);
+  if (arr.length >= MAX_ANALYSES_PER_WINDOW) {
+    userAnalyseLog.set(userId, arr);
+    return false;
+  }
+  arr.push(now);
+  userAnalyseLog.set(userId, arr);
+  return true;
+}
+
+// Input guard: reject absurdly large PGNs before they reach the engine/AI
+const MAX_PGN_CHARS = 25000; // a very long game is ~5-8k chars; 25k is a generous ceiling
+
 // ═══ AUTH ROUTES ═══
 
 app.post('/api/auth/signup', async (req, res) => {
@@ -132,7 +174,15 @@ app.post('/api/checkout', authMiddleware, async (req, res) => {
 app.post('/api/analyse', authMiddleware, async (req, res) => {
   const { pgn, playerColor, tier = 'quick' } = req.body;
   if (!pgn) return res.status(400).json({ error: 'PGN is required' });
+  if (typeof pgn !== 'string' || pgn.length > MAX_PGN_CHARS) {
+    return res.status(400).json({ error: 'That game is too large to analyse. Please submit a single standard game.' });
+  }
   if (!['w', 'b'].includes(playerColor)) return res.status(400).json({ error: 'playerColor must be "w" or "b"' });
+
+  // Per-user rate limit (skip for admins)
+  if (!isAdmin(req.user.email) && !checkRateLimit(req.user.id)) {
+    return res.status(429).json({ error: 'You\'re analysing very quickly. Please wait a little while before submitting more games.' });
+  }
 
   const tierConfig = TIERS[tier] || TIERS.quick;
   const cost = tierConfig.credits;
@@ -160,9 +210,15 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
 
   // Background analysis
   (async () => {
+    // If all slots are busy, tell the user they're queued while they wait
+    if (activeAnalyses >= MAX_CONCURRENT) {
+      job.message = `In queue (position ${queuePosition()})…`;
+    }
+    await acquireSlot();
     try {
-      console.log(`\n── Job ${jobId.slice(0, 8)} (${playerColor === 'w' ? 'White' : 'Black'}) user: ${req.user.email} ──`);
+      console.log(`\n── Job ${jobId.slice(0, 8)} (${playerColor === 'w' ? 'White' : 'Black'}) user: ${req.user.email} | active: ${activeAnalyses}/${MAX_CONCURRENT} ──`);
       const t0 = Date.now();
+      job.message = 'Starting analysis...';
       const sf = await getEngine();
       const analysis = await analysePGN(pgn, playerColor, sf, (pct, msg) => {
         job.progress = pct; job.message = msg;
@@ -252,6 +308,8 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
       // Refund credits on failure
       const { addCredits } = require('./auth');
       await addCredits(req.user.id, cost);
+    } finally {
+      releaseSlot();
     }
   })();
 });
@@ -659,6 +717,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
