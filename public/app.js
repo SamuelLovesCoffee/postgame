@@ -153,9 +153,27 @@ async function submitAuth() {
     closeModal('authModal');
     await checkAuth();
     showInputView();
+    // First-login welcome: show right after signup (the very first authenticated moment)
+    if (authMode === 'signup'){
+      const fn = (currentUser && currentUser.firstName) ? currentUser.firstName : '';
+      showWelcome(fn);
+    }
   } catch (err) {
     errEl.textContent = err.message;
   }
+}
+
+function showWelcome(firstName){
+  try { if (localStorage.getItem('pg_welcomed') === '1') return; } catch(e){}
+  const title = document.getElementById('welcomeTitle');
+  if (title) title.textContent = firstName ? `Welcome, ${firstName}!` : 'Welcome!';
+  const m = document.getElementById('welcomeModal');
+  if (m) m.style.display = 'flex';
+  try { localStorage.setItem('pg_welcomed', '1'); } catch(e){}
+}
+function closeWelcome(){
+  const m = document.getElementById('welcomeModal');
+  if (m) m.style.display = 'none';
 }
 
 function logout() {
@@ -1044,6 +1062,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
