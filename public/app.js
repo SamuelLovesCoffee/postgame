@@ -83,14 +83,18 @@ function showAuthModal(mode) {
   const cb = document.getElementById('termsCheckbox');
   if (cb) cb.checked = false;
   authMode = mode;
-  document.getElementById('authModalTitle').textContent = mode === 'login' ? 'Log in' : 'Create account';
-  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Log in' : 'Sign up';
+  document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Log in' : 'Sign up free';
   document.getElementById('authSwitch').innerHTML = mode === 'login'
     ? 'Don\'t have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a>'
     : 'Already have an account? <a href="#" onclick="toggleAuthMode();return false">Log in</a>';
   document.getElementById('authError').textContent = '';
   document.getElementById('nameRow').style.display = mode === 'signup' ? 'flex' : 'none';
   document.getElementById('optionalFields').style.display = mode === 'signup' ? 'block' : 'none';
+  const termsRow = document.getElementById('termsRow');
+  if (termsRow) termsRow.style.display = mode === 'signup' ? 'block' : 'none';
+  const subtitle = document.getElementById('authSubtitle');
+  if (subtitle) subtitle.textContent = mode === 'signup' ? 'Create your free account. No card needed.' : 'Welcome back.';
+  document.getElementById('authModalTitle').textContent = mode === 'signup' ? 'Sign up' : 'Log in';
   document.getElementById('forgotLink').style.display = mode === 'login' ? 'block' : 'none';
   document.getElementById('authModal').style.display = 'flex';
 }
