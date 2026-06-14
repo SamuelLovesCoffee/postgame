@@ -363,6 +363,20 @@ app.get('/api/admin/stats', authMiddleware, async (req, res) => {
   }
   try {
     const stats = await getAdminStats();
+    // Append live server memory stats
+    const mem = process.memoryUsage();
+    const mb = v => Math.round(v / 1024 / 1024);
+    stats.server = {
+      memory: {
+        rss:       mb(mem.rss),        // total RAM the process is using (MB)
+        heapUsed:  mb(mem.heapUsed),   // JS heap actually in use (MB)
+        heapTotal: mb(mem.heapTotal),  // JS heap allocated (MB)
+        external:  mb(mem.external),   // Buffers/native (Stockfish etc) (MB)
+      },
+      uptime: Math.round(process.uptime() / 60), // minutes
+      activeAnalyses,
+      queuedAnalyses: waitQueue.length,
+    };
     res.json(stats);
   } catch (err) {
     console.error('Admin stats error:', err.message);
@@ -727,6 +741,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
