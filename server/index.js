@@ -11,7 +11,7 @@ const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
   saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
-  saveFeedback, getSavedFeedback,
+  saveFeedback, getSavedFeedback, hasEverPurchased,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -323,11 +323,13 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
 
     // Load any previously-saved feedback for this user
     const saved = await getSavedFeedback(req.user.id);
-    // How many new games have been analysed since the saved feedback was generated
     const newGames = saved ? Math.max(0, gameCount - (saved.game_count || 0)) : 0;
+    const genCount = saved ? (saved.generation_count || 0) : 0;
 
-    // Peek mode: never generate. Return the saved feedback (persisted) plus a flag
-    // telling the user whether newer games make a fresh synthesis worthwhile.
+    // Entitlement: the first generation is free. Further generations require a purchase.
+    const purchased = await hasEverPurchased(req.user.id);
+    const canGenerate = genCount < 1 || purchased;
+
     if (req.query.peek) {
       return res.json({
         hasData: true,
@@ -336,16 +338,33 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
         generatedAt: saved ? saved.generated_at : null,
         savedGameCount: saved ? saved.game_count : 0,
         newGamesSince: newGames,
+        generationCount: genCount,
+        canGenerate,
+        purchased,
       });
     }
 
-    // Generate fresh synthesis (explicit user action), then persist it
+    // Enforce the limit server-side (never trust the client)
+    if (!canGenerate) {
+      return res.status(403).json({
+        error: 'feedback_limit',
+        message: 'You have used your free coaching feedback. Buy credits to regenerate it as your game history grows.',
+      });
+    }
+
     const feedback = await generatePlayerFeedback(games);
     if (!feedback) {
       return res.status(500).json({ error: 'Could not generate feedback right now' });
     }
     await saveFeedback(req.user.id, feedback, gameCount);
-    res.json({ hasData: true, gameCount, feedback, generatedAt: new Date().toISOString(), savedGameCount: gameCount, newGamesSince: 0 });
+    res.json({
+      hasData: true, gameCount, feedback,
+      generatedAt: new Date().toISOString(),
+      savedGameCount: gameCount, newGamesSince: 0,
+      generationCount: genCount + 1,
+      canGenerate: purchased, // after a free first gen, further gens need purchase
+      purchased,
+    });
   } catch (err) {
     console.error('Feedback portal error:', err.message);
     res.status(500).json({ error: 'Could not load feedback' });
@@ -633,6 +652,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
