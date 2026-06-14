@@ -42,7 +42,95 @@ async function signUp(email, password, metadata = {}) {
     `New signup: ${metadata.firstName || ''} ${metadata.lastName || ''} <${email}>`,
     `New account created on postgame\n\nName: ${metadata.firstName || ''} ${metadata.lastName || ''}\nEmail: ${email}\nRating: ${metadata.rating || 'not provided'}\nChess username: ${metadata.chessUsername || 'not provided'}\nTime: ${new Date().toUTCString()}`
   );
+  // Send welcome email to new user (fire-and-forget)
+  sendWelcomeEmail(email, metadata.firstName || '');
   return { user: { id: data.user.id, email: data.user.email, firstName: metadata.firstName } };
+}
+
+
+async function sendWelcomeEmail(email, firstName) {
+  if (!adminMailer) return;
+  const name = firstName ? firstName : 'there';
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap');
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#111113;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#111113;padding:40px 0;">
+  <tr>
+    <td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background-color:#1a1a1f;border:1px solid #2e2e38;border-radius:14px;overflow:hidden;font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+
+        <!-- Header -->
+        <tr>
+          <td style="padding:28px 32px 20px;border-bottom:1px solid #2e2e38;">
+            <span style="font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:17px;font-weight:600;color:#e8e8ed;letter-spacing:-0.03em;">post<span style="color:#e94560;">game</span></span>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 32px 24px;">
+            <h1 style="font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:22px;font-weight:600;color:#e8e8ed;margin:0 0 12px;line-height:1.2;letter-spacing:-0.02em;">
+              Welcome, ${name}.
+            </h1>
+            <p style="font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.65;color:#a0a0ae;margin:0 0 20px;font-weight:400;">
+              Your postgame account is ready. You have three free credits to start — enough to get a real sense of what your coach can tell you.
+            </p>
+            <p style="font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.65;color:#a0a0ae;margin:0 0 28px;font-weight:400;">
+              Import a game you've played recently — one where something went wrong that you couldn't quite explain — and your coach will break it down in plain language. The more games you analyse, the sharper the coaching becomes.
+            </p>
+
+            <!-- CTA -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr>
+                <td style="background-color:#e94560;border-radius:9px;">
+                  <a href="https://www.post-game.net"
+                     style="display:inline-block;padding:13px 28px;font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.01em;">
+                    Analyse your first game →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;line-height:1.6;color:#6e6e7e;margin:0;font-weight:400;">
+              Questions or feedback? Reply to this email — I read every one.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 32px;border-top:1px solid #2e2e38;">
+            <p style="font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#6e6e7e;margin:0;font-weight:400;">
+              postgame &middot; <a href="https://www.post-game.net" style="color:#6e6e7e;text-decoration:underline;">post-game.net</a> &middot; <a href="mailto:info@post-game.net" style="color:#6e6e7e;text-decoration:underline;">info@post-game.net</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>`;
+
+  try {
+    await adminMailer.sendMail({
+      from: '"Samuel at postgame" <info@post-game.net>',
+      to: email,
+      subject: `Welcome to postgame, ${name}.`,
+      html,
+      text: `Welcome to postgame, ${name}.\n\nYour account is ready. You have three free credits to start.\n\nImport a game you've played recently and your coach will break it down in plain language. The more games you analyse, the sharper the coaching becomes.\n\nAnalyse your first game: https://www.post-game.net\n\nQuestions or feedback? Just reply to this email.\n\nSamuel\npost-game.net`,
+    });
+    console.log('[welcome] Sent to', email);
+  } catch (err) {
+    console.error('[welcome] Email failed:', err.message);
+  }
 }
 
 async function signIn(email, password) {
@@ -613,6 +701,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
