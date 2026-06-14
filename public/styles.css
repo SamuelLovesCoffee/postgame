@@ -1533,3 +1533,29 @@ button, .move-chip, .var-move, .move-comment, .critical-card,
   border: 1px solid var(--border);
 }
 .meta-regen-btn.disabled:hover { opacity: 1; }
+
+
+/* ── Logo accent (replaces italic em) ── */
+.logo-accent { color: var(--accent); font-style: normal; }
+
+/* ── Mobile burger menu ── */
+.burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; }
+.burger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: transform 0.2s, opacity 0.2s; }
+.burger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.burger.active span:nth-child(2) { opacity: 0; }
+.burger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 720px) {
+  .burger { display: flex; }
+  .nav-items {
+    position: absolute; top: 100%; right: 0; z-index: 60;
+    display: none; flex-direction: column; align-items: stretch;
+    background: var(--bg-raised); border: 1px solid var(--border);
+    border-radius: 12px; padding: 8px; min-width: 180px; gap: 2px;
+    box-shadow: 0 20px 50px -12px rgba(0,0,0,0.6); margin-top: 8px;
+  }
+  .nav-items.open { display: flex; }
+  .nav-items .hdr-btn { text-align: left; width: 100%; padding: 11px 14px; }
+  .header-inner { position: relative; }
+  .user-info { position: relative; }
+}
