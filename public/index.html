@@ -157,21 +157,52 @@
   <div class="modal-overlay" id="authModal" style="display:none">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('authModal')">✕</button>
-      <h2 id="authModalTitle">Log in</h2>
-      <div class="name-row" id="nameRow" style="display:none">
-        <input type="text" id="authFirstName" placeholder="First name" class="modal-input half" autocomplete="given-name">
-        <input type="text" id="authLastName" placeholder="Last name" class="modal-input half" autocomplete="family-name">
+      <div class="auth-header">
+        <div class="auth-logo">post<span>game</span></div>
+        <h2 id="authModalTitle">Log in</h2>
+        <p class="auth-subtitle" id="authSubtitle">Welcome back.</p>
       </div>
-      <input type="email" id="authEmail" placeholder="Email" class="modal-input" autocomplete="email">
-      <input type="password" id="authPassword" placeholder="Password" class="modal-input" autocomplete="current-password">
+      <div class="name-row" id="nameRow" style="display:none">
+        <div class="input-group half">
+          <label class="input-label">First name</label>
+          <input type="text" id="authFirstName" placeholder="Samuel" class="modal-input" autocomplete="given-name">
+        </div>
+        <div class="input-group half">
+          <label class="input-label">Last name</label>
+          <input type="text" id="authLastName" placeholder="Davies" class="modal-input" autocomplete="family-name">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Email address</label>
+        <input type="email" id="authEmail" placeholder="you@example.com" class="modal-input" autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Password</label>
+        <input type="password" id="authPassword" placeholder="Min. 6 characters" class="modal-input" autocomplete="current-password">
+      </div>
       <div id="optionalFields" style="display:none">
-        <input type="number" id="authRating" placeholder="Chess rating (optional)" class="modal-input" min="100" max="3000">
-        <input type="text" id="authChessUsername" placeholder="Chess.com or Lichess username (optional)" class="modal-input">
+        <div class="auth-optional-divider"><span>Optional — helps personalise your coaching</span></div>
+        <div class="input-group">
+          <label class="input-label">Chess rating</label>
+          <input type="number" id="authRating" placeholder="e.g. 1200" class="modal-input" min="100" max="3000">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Chess.com or Lichess username</label>
+          <input type="text" id="authChessUsername" placeholder="your_username" class="modal-input">
+        </div>
+      </div>
+      <div class="auth-terms" id="termsRow" style="display:none">
+        <label class="terms-label">
+          <input type="checkbox" id="termsCheckbox" class="terms-checkbox">
+          <span>I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>. I understand that credits are non-refundable once added to my account.</span>
+        </label>
       </div>
       <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
       <div class="modal-error" id="authError"></div>
-      <div class="modal-forgot" id="forgotLink"><a href="#" onclick="showForgotPassword();return false">Forgot password?</a></div>
-      <div class="modal-switch" id="authSwitch">Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up</a></div>
+      <div class="auth-footer">
+        <div class="modal-forgot" id="forgotLink"><a href="#" onclick="showForgotPassword();return false">Forgot your password?</a></div>
+        <div class="modal-switch" id="authSwitch">Don't have an account? <a href="#" onclick="toggleAuthMode();return false">Sign up free</a></div>
+      </div>
     </div>
   </div>
   <div class="modal-overlay" id="forgotModal" style="display:none">
@@ -519,6 +550,7 @@
   </script>
 </body>
 </html>
+
 
 
 
