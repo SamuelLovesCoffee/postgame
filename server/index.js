@@ -29,15 +29,10 @@ const TIERS = {
 const app = express();
 app.set('trust proxy', true);
 
-// Initialize Sentry error monitoring
+// Initialize Sentry error monitoring (v8 API)
 Sentry.init({
   dsn: 'https://9e5af7df877e8786387fe230684a32a9@o4511563775213568.ingest.de.sentry.io/4511563797626960',
   environment: process.env.NODE_ENV || 'production',
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: false }),
-    new Sentry.Integrations.OnUncaughtException(),
-    new Sentry.Integrations.OnUnhandledRejection(),
-  ],
 });
 
 // Stripe webhook needs raw body
@@ -719,6 +714,9 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
+// Sentry error handler — must be after all routes (v8 API)
+Sentry.setupExpressErrorHandler(app);
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`\n  postgame running on http://localhost:${PORT}\n`);
@@ -729,6 +727,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
