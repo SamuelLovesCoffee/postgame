@@ -11,7 +11,7 @@ const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
   saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
-  saveFeedback, getSavedFeedback, hasEverPurchased,
+  saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -352,7 +352,8 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
       });
     }
 
-    const feedback = await generatePlayerFeedback(games);
+    const firstName = await getUserFirstName(req.user.id);
+    const feedback = await generatePlayerFeedback(games, firstName);
     if (!feedback) {
       return res.status(500).json({ error: 'Could not generate feedback right now' });
     }
@@ -652,6 +653,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
