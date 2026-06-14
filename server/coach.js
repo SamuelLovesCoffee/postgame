@@ -363,7 +363,7 @@ async function generateMoveByMove(analysisResult) {
 // quantitative data; never re-analyses games.
 // ═══════════════════════════════════════
 
-async function generatePlayerFeedback(games) {
+async function generatePlayerFeedback(games, firstName = '') {
   // games: [{ openingName, playerColor, headers, metrics, coaching, createdAt }]
   if (!games || games.length === 0) return null;
 
@@ -403,6 +403,7 @@ CRITICAL RULES:
 - Be appropriately humble and honest: distinguish strong recurring patterns (seen across several games) from one-offs. If you have only a few games, say the picture is still forming.
 - Any mention of accuracy MUST come only from the importedAccuracy values provided (these are from the player's actual platform). NEVER cite or invent an accuracy percentage that is not in the data. If no importedAccuracy is present, do not mention accuracy numbers at all — speak qualitatively instead.
 - Write in warm, direct, experienced-coach prose. Address the student as "you".
+- The student's first name is provided below. Address them by their first name naturally where it feels warm and personal — especially in the headline and encouragement. Do not overuse it (once or twice is plenty). If no name is provided, simply use "you".
 - Prioritise actionability: what should they actually work on next?
 - NEVER refer to games by number (e.g. "game 3", "games 3, 4, 5"). The student has no way to identify a numbered game. Refer to games qualitatively instead — by how often ("in several recent games"), by opening ("in your Scandinavian games"), by colour, or by result ("in a couple of your losses as Black").
 
@@ -428,7 +429,8 @@ Respond ONLY with valid JSON, no preamble or markdown:
 
 recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. trainingPlan: 2-3 concrete, actionable tasks the student can work on now, each with a topic keyword for linking study resources.`;
 
-  const userPrompt = `Here are my notes from this student's ${gameCount} analysed game(s):\n\n${JSON.stringify(digest, null, 2)}\n\nSynthesise your coaching read of this player.`;
+  const nameLine = firstName ? `The student's first name is ${firstName}.\n\n` : '';
+  const userPrompt = nameLine + `Here are my notes from this student's ${gameCount} analysed game(s):\n\n${JSON.stringify(digest, null, 2)}\n\nSynthesise your coaching read of this player.`;
 
   try {
     const response = await client.messages.create({
@@ -448,6 +450,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. t
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
