@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About postgame — AI chess coaching that explains why you lost</title>
+<meta name="description" content="postgame is an AI chess coach that reviews your games, explains why your moves were mistakes in plain language, and learns the patterns you keep repeating. Built for chess players who want to actually improve.">
+<link rel="canonical" href="https://www.post-game.net/about.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.post-game.net/about.html">
+<meta property="og:site_name" content="postgame">
+<meta property="og:title" content="About postgame — AI chess coaching that explains why you lost">
+<meta property="og:description" content="An AI chess coach that explains why your moves were mistakes and learns the patterns you keep repeating across games.">
+<meta property="og:image" content="https://www.post-game.net/social-share.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="About postgame — AI chess coaching">
+<meta name="twitter:description" content="An AI chess coach that explains why your moves were mistakes and learns your patterns across games.">
+<meta name="twitter:image" content="https://www.post-game.net/social-share.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About postgame",
+  "url": "https://www.post-game.net/about.html",
+  "description": "postgame is an AI chess coach that reviews your games, explains why your moves were mistakes, and learns the patterns you repeat across games.",
+  "mainEntity": {
+    "@type": "SoftwareApplication",
+    "name": "postgame",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web",
+    "url": "https://www.post-game.net"
+  }
+}
+</script>
+<style>
+.about{max-width:760px;margin:0 auto;padding:56px 24px 96px}
+.about .eyebrow{font-family:var(--font-mono);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);display:block;margin-bottom:18px}
+.about h1{font-family:var(--font-display);font-size:clamp(32px,5vw,46px);font-weight:600;letter-spacing:-.03em;line-height:1.08;margin-bottom:20px}
+.about .lead{font-size:19px;line-height:1.6;color:var(--text-2);margin-bottom:48px}
+.about h2{font-family:var(--font-display);font-size:26px;font-weight:600;letter-spacing:-.02em;margin:44px 0 14px}
+.about h3{font-size:17px;font-weight:600;margin:28px 0 8px}
+.about p{font-size:16px;line-height:1.7;color:var(--text-2);margin-bottom:16px}
+.about strong{color:var(--text);font-weight:600}
+.about .example{background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:12px;padding:20px 22px;margin:20px 0}
+.about .example .ex-move{font-family:var(--font-mono);font-size:13px;color:var(--accent);margin-bottom:8px}
+.about .example .ex-text{font-size:15px;color:var(--text-2);line-height:1.65;margin:0}
+.about .feat-list{list-style:none;padding:0;margin:16px 0}
+.about .feat-list li{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:15.5px;color:var(--text-2);line-height:1.6}
+.about .feat-list li svg{width:18px;height:18px;flex-shrink:0;stroke:var(--green);margin-top:3px}
+.about .feat-list b{color:var(--text);font-weight:600}
+.about .cta{margin-top:48px;text-align:center}
+.about .cta a{display:inline-block;background:var(--accent);color:#fff;font-size:16px;font-weight:600;padding:15px 32px;border-radius:11px;text-decoration:none}
+.about .back{display:inline-block;margin-bottom:32px;font-size:14px;color:var(--text-3);text-decoration:none}
+.about .back:hover{color:var(--text-2)}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-inner"><a href="/" class="logo"><span class="logo-text">post<span class="logo-accent">game</span></span></a></div></header>
+
+<main class="about">
+  <a href="/" class="back">← Back to postgame</a>
+  <span class="eyebrow">About postgame</span>
+  <h1>The chess coach that explains why you lost, not just that you did.</h1>
+  <p class="lead">postgame is an AI chess coach for players who want to actually improve. It reviews your games, explains your mistakes in plain language, names the ideas you missed, and remembers the patterns you keep repeating — the way a real coach would.</p>
+
+  <h2>The problem with engine analysis</h2>
+  <p>Every chess site already gives you an engine. You play a game, click "analyse," and a number tells you a move was a blunder. Maybe an arrow shows you the move you should have played instead. But the engine never tells you the thing you actually need to know: <strong>why</strong> was your move wrong, and what should you have been thinking?</p>
+  <p>A centipawn score isn't coaching. Knowing that you dropped from +1.2 to -2.4 doesn't teach you anything if you don't understand the idea you missed. That gap — between knowing a move was bad and understanding why — is exactly where improvement actually happens, and it's exactly where engines leave you on your own.</p>
+
+  <h2>What postgame does differently</h2>
+  <p>postgame combines the raw strength of a chess engine with an AI coach that explains things in human language. The engine (Stockfish, one of the strongest in the world) finds the truth of each position. Then an AI coach translates that into the kind of explanation a strong human teacher would give you.</p>
+
+  <div class="example">
+    <div class="ex-move">5...Bxd1 · blunder</div>
+    <p class="ex-text">"Taking the queen looks tempting, but White's knight on e5 was never really hanging — it was bait. The pin on your knight was an illusion because White was happy to give up the queen for a forced mate. The lesson: before you capture a piece, always ask what your opponent gets to do in return."</p>
+  </div>
+
+  <p>That's the difference. Not "blunder, -4.2." Instead: what the trap was, why you fell for it, and the habit that stops it happening again.</p>
+
+  <h2>A coach that remembers you</h2>
+  <p>This is what makes postgame genuinely different from any single-game analysis tool. The more games you review, the more postgame understands you as a player. It builds a picture across your games and tells you, in plain words, what's actually holding your rating back.</p>
+  <p>Maybe you develop your pieces well but consistently launch attacks before you're ready. Maybe you're tactically sharp but you rush in winning positions. These are patterns no single-game engine review can see — but they're exactly what a coach who watches you play over time would notice. postgame notices them, and gives you a focused plan to fix them.</p>
+
+  <h2>What you get</h2>
+  <ul class="feat-list">
+    <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Plain-language game reviews</b> — every critical moment explained, with the concept you missed named and a tip to remember.</span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Direct import from Chess.com and Lichess</b> — enter your username and pick a game, or paste any PGN.</span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Cross-game coaching feedback</b> — a synthesised read on your recurring patterns, strengths, and what to focus on next.</span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>A personalised training plan</b> — concrete tasks you can tick off, with linked practice resources.</span></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>An interactive board</b> — replay your game move by move with the engine's best lines and your coach's notes alongside.</span></li>
+  </ul>
+
+  <h2>Who it's for</h2>
+  <p>postgame is built for improving chess players — roughly 600 to 2000 rated — who are tired of analysis that tells them <em>what</em> happened without explaining <em>why</em>. If you've ever finished a game frustrated, knowing you lost but not understanding the lesson, this is built for you. The coaching adapts to your level, so a beginner and a club player each get advice that fits.</p>
+
+  <h2>How it works</h2>
+  <p>Sign up and you get three free analyses to try it — no card needed. Import a game, choose a quick or deep review, and within a few minutes you have a full coaching report. Analyse a few games and your cross-game coaching feedback unlocks, building the picture of you as a player. It's the closest thing to having a personal coach review every game you play, at a fraction of the cost.</p>
+
+  <div class="cta">
+    <a href="/">Analyse your first game free →</a>
+  </div>
+</main>
+</body>
+</html>
