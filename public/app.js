@@ -658,9 +658,31 @@ function parseFEN(fen) {
 }
 function sqToVisual(f,r) { return flipped ? {vr:7-r,vf:7-f} : {vr:r,vf:f}; }
 function sqNameToCoords(sq) { return {f:sq.charCodeAt(0)-97,r:8-parseInt(sq[1])}; }
+const PIECE_GLYPHS = {
+  wK:'\u2654', wQ:'\u2655', wR:'\u2656', wB:'\u2657', wN:'\u2658', wP:'\u2659',
+  bK:'\u265A', bQ:'\u265B', bR:'\u265C', bB:'\u265D', bN:'\u265E', bP:'\u265F'
+};
 function mkPiece(code) {
-  if (usePieceImg && pieceCache[code]) { const i = document.createElement('img'); i.src = pieceCache[code]; i.draggable = false; return i; }
-  return null;
+  // Prefer the loaded SVG image if available
+  if (usePieceImg && pieceCache[code]) {
+    const i = document.createElement('img');
+    i.src = pieceCache[code];
+    i.draggable = false;
+    i.className = 'piece-img';
+    // If the image fails to render for any reason, swap to the glyph
+    i.onerror = function(){
+      const span = document.createElement('span');
+      span.className = 'piece-glyph ' + (code[0] === 'w' ? 'piece-white' : 'piece-black');
+      span.textContent = PIECE_GLYPHS[code] || '';
+      if (i.parentNode) i.parentNode.replaceChild(span, i);
+    };
+    return i;
+  }
+  // Fallback: always render a Unicode glyph so a piece is never missing
+  const span = document.createElement('span');
+  span.className = 'piece-glyph ' + (code[0] === 'w' ? 'piece-white' : 'piece-black');
+  span.textContent = PIECE_GLYPHS[code] || '';
+  return span;
 }
 function renderBoardStatic(fen,from,to) {
   const board = parseFEN(fen), el = document.getElementById('board'); el.innerHTML = '';
@@ -1090,6 +1112,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
