@@ -556,7 +556,7 @@ app.get('/api/lichess/:username', authMiddleware, async (req, res) => {
   }
   try {
     const url = `https://lichess.org/api/games/user/${encodeURIComponent(username)}`
-      + '?max=15&pgnInJson=true&clocks=false&evals=false&opening=true&moves=true';
+      + '?max=25&pgnInJson=true&clocks=false&evals=false&opening=true&moves=true';
     const r = await fetch(url, { headers: { Accept: 'application/x-ndjson' } });
 
     if (r.status === 404) return res.status(404).json({ error: 'Lichess user not found' });
@@ -625,7 +625,7 @@ app.get('/api/chesscom/:username', authMiddleware, async (req, res) => {
 
     // Pull the most recent archive, and the previous one if we need more games
     const collected = [];
-    for (let i = archives.length - 1; i >= 0 && collected.length < 15 && i >= archives.length - 2; i--) {
+    for (let i = archives.length - 1; i >= 0 && collected.length < 25 && i >= archives.length - 3; i--) {
       const mRes = await fetch(archives[i], { headers: { 'User-Agent': 'postgame/1.0 (post-game.net)' } });
       if (!mRes.ok) continue;
       const mData = await mRes.json();
@@ -633,7 +633,7 @@ app.get('/api/chesscom/:username', authMiddleware, async (req, res) => {
       // newest first within the month
       monthGames.reverse();
       for (const g of monthGames) {
-        if (collected.length >= 15) break;
+        if (collected.length >= 25) break;
         collected.push(g);
       }
     }
@@ -754,6 +754,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
