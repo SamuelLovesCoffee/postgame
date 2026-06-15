@@ -7,6 +7,20 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+<style>
+.admin-table { width:100%; border-collapse:collapse; font-size:13px; }
+.admin-table th { text-align:left; padding:8px 12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); border-bottom:1px solid var(--border); white-space:nowrap; }
+.admin-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text-2); vertical-align:middle; }
+.admin-table tr:last-child td { border-bottom:none; }
+.admin-table tr:hover td { background:var(--surface); }
+.admin-table .user-email { font-size:12px; color:var(--text-3); margin-top:2px; }
+.tier-badge { font-family:var(--font-mono); font-size:11px; padding:2px 7px; border-radius:5px; }
+.tier-deep { background:rgba(233,69,96,0.15); color:var(--accent); }
+.tier-quick { background:var(--surface); color:var(--text-3); }
+.result-w { color:var(--green); font-weight:600; }
+.result-l { color:var(--accent); font-weight:600; }
+.result-d { color:var(--text-2); }
+</style>
 </head>
 <body>
   <div class="admin-page">
@@ -54,6 +68,29 @@
         <div class="admin-row"><span>Active analyses</span><span id="activeAnalyses">–</span></div>
         <div class="admin-row"><span>Queued analyses</span><span id="queuedAnalyses">–</span></div>
         <div class="admin-row"><span>Est. API cost</span><span id="costEstimate">–</span></div>
+      </div>
+
+
+      <!-- Analyses table -->
+      <div class="admin-section">
+        <h3>Recent analyses <span id="analysesMeta" style="font-size:12px;font-weight:400;color:var(--text-3);margin-left:8px;"></span></h3>
+        <div style="overflow-x:auto;margin-top:8px;">
+          <table class="admin-table" id="analysesTable">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Opening</th>
+                <th>Colour</th>
+                <th>Result</th>
+                <th>Tier</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="analysesBody">
+              <tr><td colspan="6" style="color:var(--text-3);text-align:center;padding:20px;">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
@@ -143,6 +180,49 @@
     }
 
     loadStats();
+    loadAnalysesTable();
+
+    async function loadAnalysesTable(){
+      try {
+        const r = await fetch('/api/admin/analyses?limit=100', {
+          headers: { Authorization: 'Bearer ' + authToken }
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        renderTable(d.analyses || []);
+      } catch(e){
+        document.getElementById('analysesBody').innerHTML =
+          '<tr><td colspan="6" style="color:var(--text-3);text-align:center;padding:20px;">Could not load analyses</td></tr>';
+      }
+    }
+
+    function renderTable(rows){
+      document.getElementById('analysesMeta').textContent = rows.length + ' most recent';
+      if (!rows.length){
+        document.getElementById('analysesBody').innerHTML =
+          '<tr><td colspan="6" style="color:var(--text-3);text-align:center;padding:20px;">No analyses yet</td></tr>';
+        return;
+      }
+      const html = rows.map(r => {
+        const dt = new Date(r.createdAt);
+        const date = dt.toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' });
+        const time = dt.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+        const resultClass = r.result === '1-0' ? (r.color === 'White' ? 'result-w' : 'result-l')
+                          : r.result === '0-1' ? (r.color === 'Black' ? 'result-w' : 'result-l')
+                          : 'result-d';
+        const resultText = r.result === '1-0' ? 'White wins' : r.result === '0-1' ? 'Black wins' : 'Draw';
+        const tierClass = r.tier === 'deep' ? 'tier-deep' : 'tier-quick';
+        return `<tr>
+          <td><div>${r.userName}</div><div class="user-email">${r.userEmail}</div></td>
+          <td>${r.opening}</td>
+          <td>${r.color}</td>
+          <td><span class="${resultClass}">${resultText}</span></td>
+          <td><span class="tier-badge ${tierClass}">${r.tier}</span></td>
+          <td><div>${date}</div><div class="user-email">${time}</div></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('analysesBody').innerHTML = html;
+    }
   </script>
 </body>
 </html>
