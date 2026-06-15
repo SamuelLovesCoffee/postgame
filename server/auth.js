@@ -671,7 +671,7 @@ async function getRecentAnalysesAdmin(limit = 100) {
 
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
-  isAdmin, getAdminStats, logAnalysisFailure,
+  isAdmin, getAdminStats, getRecentAnalysesAdmin, logAnalysisFailure,
   buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   requestPasswordReset, applyPasswordReset,
@@ -681,6 +681,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
