@@ -183,16 +183,26 @@
     loadAnalysesTable();
 
     async function loadAnalysesTable(){
+      const body = document.getElementById('analysesBody');
       try {
         const r = await fetch('/api/admin/analyses?limit=100', {
           headers: { Authorization: 'Bearer ' + authToken }
         });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error);
+        let d;
+        const text = await r.text();
+        try { d = JSON.parse(text); }
+        catch(parseErr){
+          // Response wasn't JSON — show the raw status + first part of body
+          body.innerHTML = '<tr><td colspan="6" style="color:var(--accent);padding:14px;font-family:var(--font-mono);font-size:12px;">HTTP ' + r.status + ' — non-JSON response: ' + text.slice(0,200).replace(/</g,'&lt;') + '</td></tr>';
+          return;
+        }
+        if (!r.ok){
+          body.innerHTML = '<tr><td colspan="6" style="color:var(--accent);padding:14px;font-family:var(--font-mono);font-size:12px;">HTTP ' + r.status + ' — ' + (d.error || 'unknown error') + '</td></tr>';
+          return;
+        }
         renderTable(d.analyses || []);
       } catch(e){
-        document.getElementById('analysesBody').innerHTML =
-          '<tr><td colspan="6" style="color:var(--text-3);text-align:center;padding:20px;">Could not load analyses</td></tr>';
+        body.innerHTML = '<tr><td colspan="6" style="color:var(--accent);padding:14px;font-family:var(--font-mono);font-size:12px;">Fetch failed: ' + (e.message || e) + '</td></tr>';
       }
     }
 
@@ -226,3 +236,4 @@
   </script>
 </body>
 </html>
+
