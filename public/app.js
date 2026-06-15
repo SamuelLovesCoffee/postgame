@@ -563,7 +563,7 @@ let moveComments = {};
 let variationMoves = null; // active clicked variation overlay
 let variationBaseFen = null;
 
-const PIECE_CDN = 'https://lichess1.org/assets/piece/tatiana/';
+const PIECE_CDN = '/pieces/';
 const pieceCache = {};
 let usePieceImg = true;
 (async () => {
@@ -1112,6 +1112,7 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 // (Landing board is now a video element — no JS needed)
+
 
 
 
