@@ -628,6 +628,47 @@ async function hasEverPurchased(userId) {
   return data.length > 0;
 }
 
+
+async function getRecentAnalysesAdmin(limit = 100) {
+  // Fetch recent analyses
+  const { data: rows, error } = await supabase
+    .from('analyses')
+    .select('id, user_id, opening_name, player_color, headers, metrics, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error || !rows) return [];
+
+  // Fetch all users to map user_id -> email + name
+  const { data: usersList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const users = (usersList && usersList.users) || [];
+  const userMap = {};
+  for (const u of users) {
+    const meta = u.user_metadata || {};
+    userMap[u.id] = {
+      email: u.email,
+      name: [meta.first_name, meta.last_name].filter(Boolean).join(' ') || u.email,
+    };
+  }
+
+  return rows.map(r => {
+    const u = userMap[r.user_id] || { email: 'unknown', name: 'unknown' };
+    const headers = r.headers || {};
+    const metrics = r.metrics || {};
+    const result = headers.Result || '?';
+    const tier = metrics.tier || 'quick';
+    return {
+      id: r.id,
+      userEmail: u.email,
+      userName: u.name,
+      opening: r.opening_name || 'Unknown opening',
+      color: r.player_color === 'w' ? 'White' : 'Black',
+      result,
+      tier,
+      createdAt: r.created_at,
+    };
+  });
+}
+
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
   isAdmin, getAdminStats, logAnalysisFailure,
@@ -640,6 +681,7 @@ module.exports = {
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 };
+
 
 
 
