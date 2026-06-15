@@ -15,7 +15,7 @@ const {
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
-  isAdmin, getAdminStats, logAnalysisFailure,
+  isAdmin, getAdminStats, getRecentAnalysesAdmin, logAnalysisFailure,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
@@ -754,6 +754,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
