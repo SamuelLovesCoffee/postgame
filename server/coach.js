@@ -409,7 +409,7 @@ CRITICAL RULES:
 
 Respond ONLY with valid JSON, no preamble or markdown:
 {
-  "headline": "One sentence capturing where this player is right now, in a coach's voice",
+  "headline": "One sentence addressing the student directly in second person — e.g. 'You have real tactical instincts, but...' or 'Samuel, you build winning positions consistently but...'. NEVER third person like 'Samuel has...' or 'This player...'",
   "recurringThemes": [
     { "theme": "Short name of the pattern", "detail": "1-2 sentences explaining it in plain language", "games": "how often it showed up, described QUALITATIVELY (e.g. 'in several of your recent games' or 'in your Sicilian games as Black') — NEVER use game numbers like 'game 3' or 'games 3, 4, 5', because the student cannot identify those." }
   ],
@@ -422,7 +422,7 @@ Respond ONLY with valid JSON, no preamble or markdown:
     "how": "Concrete, specific advice on how to work on it"
   },
   "phaseRead": "A short paragraph on where in the game (opening/middlegame/endgame) their strengths and weaknesses tend to fall",
-  "encouragement": "One honest, motivating closing line — not empty praise, grounded in what you've seen",
+  "encouragement": "One honest, motivating closing line addressed directly to the student in second person ('you') — not empty praise, grounded in what you've seen",
   "trainingPlan": [
     { "task": "A specific, concrete practice task the student can act on (e.g. 'Play 5 slow games focusing on completing development before move 10')", "topic": "A short keyword for the chess theme this relates to, for linking resources (e.g. 'opening principles', 'tactics', 'endgames', 'pins', 'Scandinavian Defense')" }
   ]
@@ -450,6 +450,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. t
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
