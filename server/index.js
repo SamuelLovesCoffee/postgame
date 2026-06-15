@@ -384,6 +384,19 @@ app.get('/api/admin/stats', authMiddleware, async (req, res) => {
   }
 });
 
+
+app.get('/api/admin/analyses', authMiddleware, async (req, res) => {
+  if (!isAdmin(req.user.email)) return res.status(403).json({ error: 'Not authorised' });
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '100'), 500);
+    const rows = await getRecentAnalysesAdmin(limit);
+    res.json({ analyses: rows });
+  } catch (err) {
+    console.error('Admin analyses error:', err.message);
+    res.status(500).json({ error: 'Could not load analyses' });
+  }
+});
+
 app.delete('/api/analysis/:id', authMiddleware, async (req, res) => {
   try {
     await deleteAnalysis(req.user.id, req.params.id);
@@ -741,6 +754,7 @@ app.listen(PORT, async () => {
 
 process.on('SIGINT', () => { if (engine) engine.destroy(); process.exit(); });
 process.on('SIGTERM', () => { if (engine) engine.destroy(); process.exit(); });
+
 
 
 
