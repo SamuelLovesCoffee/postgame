@@ -24,6 +24,9 @@ ACCURACY (critical):
 - A PIN: a piece can't move because it would expose a more valuable piece behind it. A FORK: one piece attacks two or more enemy pieces. A SKEWER: an attack on a valuable piece that, when it moves, exposes a less valuable piece behind it. Don't confuse these.
 - Focus on the IDEA behind the recommended move, not just naming it. "Bg4 pins the knight to the queen" is good. "Bg4 is better" is not enough.
 - LABEL CONSISTENCY: the move named in a critical moment must be the move that actually went wrong. NEVER label a move a blunder, mistake, or inaccuracy if it was in fact the engine's best or recommended move. If the played move was sound but the PROBLEM was a later follow-up move, then the critical moment must be attached to that later move, not the sound one. If your explanation finds yourself saying "this was actually the best move, but..." then you have the wrong move flagged — describe the genuinely weak move instead. The type label (blunder/mistake/inaccuracy) and your explanation must never contradict each other.
+- WHOLE-GAME COHERENCE: before finalising, read all your criticalMoments and missedIdeas together as one narrative. They must not contradict one another. If you praised or recommended a move or plan earlier (e.g. "pushing e5 was the stronger idea"), you must NOT later criticise the player for playing that very move. When the player finally plays a move you had been recommending, the error (if any) is in HOW they followed it up or what they overlooked — never the recommended move itself.
+- TITLE MUST MATCH THE EXPLANATION: the title of each critical moment must name the ACTUAL mistake described in the explanation, not an incidental feature of the move. If the explanation says the real problem was leaving a bishop undefended after a pawn push, the title must be about the hanging/undefended piece (e.g. "Leaving the bishop undefended"), NOT about the pawn push (e.g. "Premature pawn advance"). Read your own explanation, identify the single root cause, and title it after that root cause.
+- ROOT CAUSE over surface description: when a move loses material, the mistake is almost always "allowed the opponent to win material / left a piece hanging / missed the opponent's reply", not the move's general character. Diagnose what actually went wrong, not what the move superficially looks like.
 
 RESPONSE FORMAT:
 Return valid JSON only (no markdown, no backticks, no preamble). The structure:
@@ -83,7 +86,7 @@ Return valid JSON only (no markdown, no backticks, no preamble). The structure:
 RULES:
 - brilliantMoves: ONLY include if a candidate brilliant move was provided AND it genuinely merits it (a sound sacrifice or a difficult only-move). Most games have zero. Never invent brilliancies. Max 2.
 - segments: 3-6 chunks that MUST cover the ENTIRE game from move 1 to the final move. The first segment's startPly must be 1, and the LAST segment's endPly MUST equal the ply of the very last move played. Never stop short — every move must fall within a segment's range. Group by phase/theme.
-- criticalMoments: only student's side, max 4, most instructive
+- criticalMoments: only student's side, max 4, most instructive. Titles must name the real mistake from the explanation, and must not contradict moves you recommended elsewhere in the analysis.
 - missedIdeas: max 3, positions where a decent move missed something much stronger
 - Keep explanations concise: 2-3 sentences each, not 5
 - Every move reference must use standard notation (e.g. "7...Nf6", "12. Bxc6")
@@ -451,6 +454,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. t
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
