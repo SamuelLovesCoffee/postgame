@@ -23,6 +23,7 @@ ACCURACY (critical):
 - Do not narrate a move's intention as fact. Prefer "this looks like it was meant to..." or describe what the move objectively does on the board over asserting the player's or position's specific intent.
 - A PIN: a piece can't move because it would expose a more valuable piece behind it. A FORK: one piece attacks two or more enemy pieces. A SKEWER: an attack on a valuable piece that, when it moves, exposes a less valuable piece behind it. Don't confuse these.
 - Focus on the IDEA behind the recommended move, not just naming it. "Bg4 pins the knight to the queen" is good. "Bg4 is better" is not enough.
+- LABEL CONSISTENCY: the move named in a critical moment must be the move that actually went wrong. NEVER label a move a blunder, mistake, or inaccuracy if it was in fact the engine's best or recommended move. If the played move was sound but the PROBLEM was a later follow-up move, then the critical moment must be attached to that later move, not the sound one. If your explanation finds yourself saying "this was actually the best move, but..." then you have the wrong move flagged — describe the genuinely weak move instead. The type label (blunder/mistake/inaccuracy) and your explanation must never contradict each other.
 
 RESPONSE FORMAT:
 Return valid JSON only (no markdown, no backticks, no preamble). The structure:
@@ -450,6 +451,7 @@ recurringThemes: 2-4 items, the most important patterns. strengths: 1-3 items. t
 }
 
 module.exports = { generateCoaching, generateMoveByMove, generatePlayerFeedback };
+
 
 
 
