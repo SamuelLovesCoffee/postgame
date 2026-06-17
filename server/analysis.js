@@ -207,8 +207,13 @@ function moveAccuracy(wpLoss) {
   return Math.max(0, Math.min(100, acc));
 }
 
-// Classify a move's severity from win% loss
-function classifyError(wpLoss) {
+// Classify a move's severity from win% loss.
+// A move that IS the engine's top choice can never be an error, regardless of
+// how the evaluation shifted (the position itself may simply be getting worse,
+// or the opponent had a strong reply available against any move). Labelling the
+// best available move as a "blunder" is logically wrong and confuses the player.
+function classifyError(wpLoss, isEngineTop) {
+  if (isEngineTop) return null;
   if (wpLoss >= 20) return 'blunder';
   if (wpLoss >= 10) return 'mistake';
   if (wpLoss >= 5) return 'inaccuracy';
@@ -423,7 +428,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
       isBrilliant,
       phase,
       accuracy: Math.round(moveAccuracy(wpLoss) * 10) / 10,
-      errorClass: classifyError(wpLoss),
+      errorClass: classifyError(wpLoss, isEngineTop),
       clockSeconds: clocks[i - 1] != null ? clocks[i - 1] : null,
     });
   }
@@ -531,6 +536,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
 
 
