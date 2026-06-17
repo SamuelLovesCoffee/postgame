@@ -433,9 +433,11 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
     });
   }
 
-  // Critical moments (mistakes/blunders)
+  // Critical moments (mistakes/blunders).
+  // Must be the player's own move, not from the book, a real win% loss, AND not
+  // the engine's top choice — the best available move is never a critical error.
   const criticalMoments = annotatedMoves
-    .filter((m) => m.color === playerColor && !m.isBook && m.wpLoss > 5)
+    .filter((m) => m.color === playerColor && !m.isBook && !m.isEngineTop && m.wpLoss > 5 && m.errorClass)
     .sort((a, b) => b.wpLoss - a.wpLoss)
     .slice(0, 6);
 
@@ -536,6 +538,7 @@ async function analysePGN(pgn, playerColor, engine, onProgress = () => {}, depth
 }
 
 module.exports = { analysePGN, formatEval, cpToWinPct, evalToWinPct };
+
 
 
 
