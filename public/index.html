@@ -17,7 +17,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>postgame — Understand why you lost, and how to win</title>
-<meta name="description" content="AI-powered chess coaching. An AI coach explains your chess games: what went wrong, why, and what to study next.">
+<meta name="description" content="Personalised chess coaching. A personal coach explains your chess games: what went wrong, why, and what to study next.">
 
   <!-- Favicons -->
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -32,7 +32,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.post-game.net">
   <meta property="og:title" content="postgame — Understand why you lost, and how to win">
-  <meta property="og:description" content="An AI coach reviews your games, explains why you lost in plain language, and learns the mistakes you keep making. Import from Chess.com and Lichess.">
+  <meta property="og:description" content="A personal coach reviews your games, explains why you lost in plain language, and learns the mistakes you keep making. Import from Chess.com and Lichess.">
   <meta property="og:image" content="https://www.post-game.net/social-share.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -40,7 +40,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="postgame — Understand why you lost, and how to win">
-  <meta name="twitter:description" content="An AI coach reviews your games, explains why you lost in plain language, and learns the mistakes you keep making. Import from Chess.com and Lichess.">
+  <meta name="twitter:description" content="A personal coach reviews your games, explains why you lost in plain language, and learns the mistakes you keep making. Import from Chess.com and Lichess.">
   <meta name="twitter:image" content="https://www.post-game.net/social-share.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
@@ -317,7 +317,7 @@
     <section class="lp-hero">
       <div class="lp-hero-bg" role="img" aria-label="Chess pieces"></div>
       <div class="lp-hero-text">
-        <span class="lp-eyebrow">AI chess coaching</span>
+        <span class="lp-eyebrow">Personalised chess coaching</span>
         <h1 class="lp-display">Understand why you lost, <span class="lp-win">and how to win.</span></h1>
         <p class="lp-lede">Engines tell you a move was bad. postgame explains why, names the idea you missed, and learns the mistakes you keep making — like a coach who actually remembers you.</p>
         <div class="lp-cta-row">
@@ -337,7 +337,7 @@
       <div class="lp-loop">
         <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">01</span></div><div class="lp-loop-h">Import your game</div><div class="lp-loop-p">Connect your Chess.com or Lichess username and pick a game, or paste any PGN. No setup.</div></div>
         <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">02</span></div><div class="lp-loop-h">The engine finds the truth</div><div class="lp-loop-p">Stockfish evaluates every position — the exact moments your game turned, with no guesswork.</div></div>
-        <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">03</span></div><div class="lp-loop-h">Your coach explains why</div><div class="lp-loop-p">An AI coach turns that into plain-language coaching: what you missed, why it mattered, what to do next.</div></div>
+        <div class="lp-loop-step"><div class="lp-loop-num"><span class="lp-num-box">03</span></div><div class="lp-loop-h">Your coach explains why</div><div class="lp-loop-p">Your coach turns that into plain-language coaching: what you missed, why it mattered, what to do next.</div></div>
       </div>
     </section>
 
@@ -419,12 +419,27 @@
 
     <!-- PRICING -->
     <section class="lp-block" id="lp-pricing">
-      <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Pricing</span><h2 class="lp-block-title">Start free. Pay only for what you analyse.</h2><p class="lp-block-sub">Three free credits when you sign up. 1 credit for a quick analysis. No expiry.</p><p class="lp-price-currency-note" id="currencyNote">Prices in USD. You'll see your local currency at checkout.</p></div>
+      <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Pricing</span><h2 class="lp-block-title">Start free. Pay only for what you analyse.</h2><p class="lp-block-sub">Three free credits when you sign up. 1 credit for a quick analysis. No expiry.</p><p class="lp-price-currency-note" id="currencyNote">Prices in USD.</p></div>
       <div class="lp-price-grid">
         <div class="lp-price"><div class="lp-price-name">Try</div><div class="lp-price-amt">Free</div><div class="lp-price-det">3 credits with signup</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Start free</button></div>
-        <div class="lp-price"><div class="lp-price-name">Starter</div><div class="lp-price-amt">$4.99</div><div class="lp-price-det">10 credits</div><div class="lp-price-per">$0.50 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
-        <div class="lp-price lp-price-feat"><div class="lp-price-name">Club</div><div class="lp-price-amt">$11.99</div><div class="lp-price-det">30 credits</div><div class="lp-price-per">$0.40 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
-        <div class="lp-price"><div class="lp-price-name">Serious</div><div class="lp-price-amt">$24.99</div><div class="lp-price-det">75 credits</div><div class="lp-price-per">$0.33 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+        <div class="lp-price"><div class="lp-price-name">Starter</div><div class="lp-price-amt" data-usd="4.99">$4.99</div><div class="lp-price-det">10 credits</div><div class="lp-price-per" data-usd="0.50" data-usd-per="1">$0.50 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+        <div class="lp-price lp-price-feat"><div class="lp-price-name">Club</div><div class="lp-price-amt" data-usd="11.99">$11.99</div><div class="lp-price-det">30 credits</div><div class="lp-price-per" data-usd="0.40" data-usd-per="1">$0.40 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+        <div class="lp-price"><div class="lp-price-name">Serious</div><div class="lp-price-amt" data-usd="24.99">$24.99</div><div class="lp-price-det">75 credits</div><div class="lp-price-per" data-usd="0.33" data-usd-per="1">$0.33 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+      </div>
+      <style>
+        .lp-pay{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:24px}
+        .lp-pay-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
+        .lp-pay-icons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+        .lp-pay-icons svg{height:26px;width:auto;border-radius:5px;box-shadow:0 0 0 1px rgba(0,0,0,.07)}
+      </style>
+      <div class="lp-pay">
+        <span class="lp-pay-label">Secure checkout with</span>
+        <div class="lp-pay-icons">
+          <svg viewBox="0 0 48 30" role="img" aria-label="Visa"><rect width="48" height="30" rx="4" fill="#fff"/><text x="24" y="20" font-family="Arial,sans-serif" font-size="13" font-weight="700" font-style="italic" fill="#1a1f71" text-anchor="middle">VISA</text></svg>
+          <svg viewBox="0 0 48 30" role="img" aria-label="Mastercard"><rect width="48" height="30" rx="4" fill="#fff"/><circle cx="20" cy="15" r="8" fill="#eb001b"/><circle cx="28" cy="15" r="8" fill="#f79e1b" fill-opacity=".9"/></svg>
+          <svg viewBox="0 0 48 30" role="img" aria-label="American Express"><rect width="48" height="30" rx="4" fill="#1f72cd"/><text x="24" y="19" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">AMEX</text></svg>
+          <svg viewBox="0 0 48 30" role="img" aria-label="PayPal"><rect width="48" height="30" rx="4" fill="#fff"/><text x="24" y="20" font-family="Arial,sans-serif" font-size="11" font-weight="700" font-style="italic" text-anchor="middle"><tspan fill="#003087">Pay</tspan><tspan fill="#009cde">Pal</tspan></text></svg>
+        </div>
       </div>
     </section>
 
@@ -443,6 +458,7 @@
           <a href="/about.html">About</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/terms.html">Terms</a>
+          <a href="/cookies.html">Cookies</a>
           <a href="/faq.html">FAQ</a>
           <a href="mailto:info@post-game.net">info@post-game.net</a>
         </div>
