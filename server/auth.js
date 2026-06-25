@@ -390,6 +390,17 @@ async function handleStripeWebhook(body, signature) {
         stripe_session_id: session.id,
       });
       console.log(`[WEBHOOK] ✓ Credits added: ${credits} for user ${userId}`);
+
+      // Notify admin of the payment (fire-and-forget — never blocks the webhook).
+      // Sits after the idempotency check, so duplicate webhook deliveries don't re-notify.
+      const payerEmail = session.customer_email || session.customer_details?.email || 'unknown';
+      const amount = typeof session.amount_total === 'number'
+        ? `$${(session.amount_total / 100).toFixed(2)}`
+        : (pkg ? `$${(pkg.price_cents / 100).toFixed(2)}` : 'unknown');
+      sendAdminNotification(
+        `Payment: ${amount} — ${payerEmail}`,
+        `New payment on postgame\n\nEmail: ${payerEmail}\nPackage: ${pkg ? pkg.label : (packageId || 'unknown')}\nAmount: ${amount}\nCredits added: ${credits}\nUser ID: ${userId}\nSession: ${session.id}\nTime: ${new Date().toUTCString()}`
+      );
     } else {
       console.log(`[WEBHOOK] Invalid session data: userId=${userId}, credits=${credits}`);
     }
