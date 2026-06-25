@@ -1,14 +1,41 @@
-// Hide the "local currency at checkout" note for US users (USD is their currency)
+// ── Local-currency display (approximate; the charge is ALWAYS in USD via Stripe) ──
+// Static, approximate USD->X rates. Exact total is shown in USD at Stripe checkout.
+// Refresh these occasionally; precision is not important (a disclaimer is shown).
 (function(){
-  try {
-    const loc = (navigator.language || '').toUpperCase();
-    if (loc.endsWith('-US') || loc === 'EN'){
-      document.addEventListener('DOMContentLoaded', function(){
-        const n = document.getElementById('currencyNote');
-        if (n) n.style.display = 'none';
-      });
+  var RATES = { USD:1, EUR:0.92, GBP:0.79, CHF:0.88, CAD:1.37, AUD:1.52, NZD:1.65,
+    JPY:157, INR:83, BRL:5.4, MXN:18, SEK:10.6, NOK:10.7, DKK:6.9, PLN:4.0,
+    ZAR:18.5, SGD:1.35, HKD:7.8, CNY:7.2, AED:3.67, TRY:32, CZK:23 };
+  var REGION_CCY = { US:'USD', GB:'GBP', IE:'EUR', DE:'EUR', FR:'EUR', IT:'EUR',
+    ES:'EUR', NL:'EUR', BE:'EUR', AT:'EUR', PT:'EUR', FI:'EUR', GR:'EUR', LU:'EUR',
+    CH:'CHF', CA:'CAD', AU:'AUD', NZ:'NZD', JP:'JPY', IN:'INR', BR:'BRL', MX:'MXN',
+    SE:'SEK', NO:'NOK', DK:'DKK', PL:'PLN', ZA:'ZAR', SG:'SGD', HK:'HKD', CN:'CNY',
+    AE:'AED', TR:'TRY', CZ:'CZK' };
+  function detectCurrency(){
+    try {
+      var region = ((navigator.language || 'en-US').split('-')[1] || '').toUpperCase();
+      return REGION_CCY[region] || 'USD';
+    } catch(e){ return 'USD'; }
+  }
+  function fmt(ccy, usd){
+    var amt = usd * (RATES[ccy] || 1);
+    try {
+      return new Intl.NumberFormat(navigator.language || 'en-US',
+        { style:'currency', currency:ccy, maximumFractionDigits:(ccy==='JPY'?0:2) }).format(amt);
+    } catch(e){ return '$' + usd.toFixed(2); }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var ccy = detectCurrency();
+    document.querySelectorAll('[data-usd]').forEach(function(el){
+      var usd = parseFloat(el.getAttribute('data-usd'));
+      if (isNaN(usd)) return;
+      el.textContent = el.hasAttribute('data-usd-per') ? (fmt(ccy, usd) + ' / game') : fmt(ccy, usd);
+    });
+    var note = document.getElementById('currencyNote');
+    if (note){
+      if (ccy === 'USD'){ note.style.display = 'none'; }
+      else { note.textContent = '* Local prices are approximate. Payment is processed in USD; your final total may vary slightly with the exchange rate applied by your bank.'; }
     }
-  } catch(e){}
+  });
 })();
 
 // Mobile burger menu
