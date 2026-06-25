@@ -1200,3 +1200,42 @@ if(window.location.search.includes('payment=cancelled')){
 
 
 
+
+
+// ── Landing-page live "games analysed" stat ──
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var el = document.getElementById('lpGamesNum');
+    var box = document.getElementById('lpTrustGames');
+    if (!el || !box) return;
+    fetch('/api/stats/public').then(function(r){ return r.json(); }).then(function(d){
+      var n = (d && d.gamesAnalysed) || 0;
+      // Only surface the count once it reads as credible; below this it stays hidden.
+      if (n < 50) return;
+      el.textContent = (n >= 1000) ? (Math.floor(n/100)*100).toLocaleString('en-US') + '+'
+                                   : (Math.floor(n/50)*50) + '+';
+      box.style.display = '';
+    }).catch(function(){});
+  });
+})();
+
+// ── Landing-page testimonials. Add entries to TESTIMONIALS and the section
+//    appears automatically; leave it empty and the section stays hidden. ──
+(function(){
+  var TESTIMONIALS = [
+    // { quote: "Finally understood why I keep losing the same way.", name: "Alex R.", detail: "1500 rapid · Chess.com" },
+  ];
+  document.addEventListener('DOMContentLoaded', function(){
+    var wrap = document.getElementById('lpQuotes');
+    var sec = document.getElementById('lp-testimonials');
+    if (!wrap || !sec || !TESTIMONIALS.length) return;
+    function esc(s){ var d = document.createElement('div'); d.textContent = (s == null ? '' : String(s)); return d.innerHTML; }
+    wrap.innerHTML = TESTIMONIALS.map(function(t){
+      return '<figure class="lp-quote"><blockquote>“' + esc(t.quote) + '”</blockquote>' +
+             '<figcaption><span class="lp-quote-name">' + esc(t.name) + '</span>' +
+             (t.detail ? '<span class="lp-quote-detail">' + esc(t.detail) + '</span>' : '') +
+             '</figcaption></figure>';
+    }).join('');
+    sec.style.display = '';
+  });
+})();
