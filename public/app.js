@@ -4,17 +4,45 @@
 (function(){
   var RATES = { USD:1, EUR:0.92, GBP:0.79, CHF:0.88, CAD:1.37, AUD:1.52, NZD:1.65,
     JPY:157, INR:83, BRL:5.4, MXN:18, SEK:10.6, NOK:10.7, DKK:6.9, PLN:4.0,
-    ZAR:18.5, SGD:1.35, HKD:7.8, CNY:7.2, AED:3.67, TRY:32, CZK:23 };
+    ZAR:18.5, SGD:1.35, HKD:7.8, CNY:7.2, AED:3.67, TRY:32, CZK:23, RUB:90 };
   var REGION_CCY = { US:'USD', GB:'GBP', IE:'EUR', DE:'EUR', FR:'EUR', IT:'EUR',
     ES:'EUR', NL:'EUR', BE:'EUR', AT:'EUR', PT:'EUR', FI:'EUR', GR:'EUR', LU:'EUR',
     CH:'CHF', CA:'CAD', AU:'AUD', NZ:'NZD', JP:'JPY', IN:'INR', BR:'BRL', MX:'MXN',
     SE:'SEK', NO:'NOK', DK:'DKK', PL:'PLN', ZA:'ZAR', SG:'SGD', HK:'HKD', CN:'CNY',
     AE:'AED', TR:'TRY', CZ:'CZK' };
-  function detectCurrency(){
+  // Timezone reflects the user's actual location (e.g. Europe/Zurich), unlike
+  // navigator.language which only reflects their chosen browser language.
+  var TZ_CCY = {
+    'Europe/London':'GBP','Europe/Zurich':'CHF','Europe/Vaduz':'CHF',
+    'Europe/Oslo':'NOK','Europe/Stockholm':'SEK','Europe/Copenhagen':'DKK',
+    'Europe/Warsaw':'PLN','Europe/Prague':'CZK','Europe/Istanbul':'TRY','Europe/Moscow':'RUB',
+    'America/Toronto':'CAD','America/Vancouver':'CAD','America/Edmonton':'CAD',
+    'America/Winnipeg':'CAD','America/Halifax':'CAD',
+    'America/Sao_Paulo':'BRL','America/Mexico_City':'MXN',
+    'Asia/Tokyo':'JPY','Asia/Kolkata':'INR','Asia/Calcutta':'INR','Asia/Shanghai':'CNY',
+    'Asia/Singapore':'SGD','Asia/Hong_Kong':'HKD','Asia/Dubai':'AED',
+    'Australia/Sydney':'AUD','Australia/Melbourne':'AUD','Australia/Brisbane':'AUD',
+    'Australia/Perth':'AUD','Australia/Adelaide':'AUD',
+    'Pacific/Auckland':'NZD','Africa/Johannesburg':'ZAR'
+  };
+  function fromTimezone(){
     try {
-      var region = ((navigator.language || 'en-US').split('-')[1] || '').toUpperCase();
-      return REGION_CCY[region] || 'USD';
-    } catch(e){ return 'USD'; }
+      var tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || '';
+      if (TZ_CCY[tz]) return TZ_CCY[tz];
+      if (tz.indexOf('Europe/') === 0) return 'EUR';   // most of the eurozone
+      if (tz.indexOf('Australia/') === 0) return 'AUD';
+      return null;
+    } catch(e){ return null; }
+  }
+  function fromLanguage(){
+    try {
+      var region = ((navigator.language || '').split('-')[1] || '').toUpperCase();
+      return REGION_CCY[region] || null;
+    } catch(e){ return null; }
+  }
+  function detectCurrency(){
+    // Prefer location (timezone); fall back to browser-language region; then USD.
+    return fromTimezone() || fromLanguage() || 'USD';
   }
   function fmt(ccy, usd){
     var amt = usd * (RATES[ccy] || 1);
