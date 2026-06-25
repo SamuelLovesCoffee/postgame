@@ -330,8 +330,8 @@
 
     <!-- TRUST STRIP -->
     <style>
-      .lp-trust{padding:22px 24px;border-top:1px solid var(--border,rgba(255,255,255,.08));border-bottom:1px solid var(--border,rgba(255,255,255,.08))}
-      .lp-trust-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:14px 40px;flex-wrap:wrap}
+      .lp-trust{background:var(--bg-raised);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+      .lp-trust-inner{max-width:1100px;margin:0 auto;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px 40px;flex-wrap:wrap}
       .lp-trust-stat{display:flex;align-items:baseline;gap:8px}
       .lp-trust-num{font-family:'Geist',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--text-1,#fff)}
       .lp-trust-cap{font-size:13px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
@@ -340,6 +340,7 @@
       .lp-trust-badge{display:inline-flex;align-items:center;gap:7px;font-family:'Geist',sans-serif;font-size:15px;font-weight:600;color:var(--text-2)}
       .lp-trust-badge img,.lp-trust-badge svg{display:block}
       .lp-trust-dot{color:var(--text-3)}
+      @media (max-width:768px){.lp-trust-inner{justify-content:center;text-align:center}}
     </style>
     <section class="lp-trust" aria-label="What postgame runs on">
       <div class="lp-trust-inner">
