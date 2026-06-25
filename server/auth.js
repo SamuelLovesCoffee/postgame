@@ -536,6 +536,18 @@ async function logAnalysisFailure(userId, tier, errorMessage) {
   }
 }
 
+// Public, non-sensitive aggregate for the landing page (5-min in-memory cache
+// so the homepage doesn't hit the DB on every visit).
+let _publicStatsCache = { t: 0, v: null };
+async function getPublicStats() {
+  const now = Date.now();
+  if (_publicStatsCache.v && (now - _publicStatsCache.t) < 5 * 60 * 1000) return _publicStatsCache.v;
+  const { count } = await supabase
+    .from('analyses').select('id', { count: 'exact', head: true });
+  _publicStatsCache = { t: now, v: { gamesAnalysed: count || 0 } };
+  return _publicStatsCache.v;
+}
+
 async function getAdminStats() {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -682,7 +694,7 @@ async function getRecentAnalysesAdmin(limit = 100) {
 
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
-  isAdmin, getAdminStats, getRecentAnalysesAdmin, logAnalysisFailure,
+  isAdmin, getAdminStats, getPublicStats, getRecentAnalysesAdmin, logAnalysisFailure,
   buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   requestPasswordReset, applyPasswordReset,
