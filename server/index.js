@@ -15,7 +15,7 @@ const {
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
-  isAdmin, getAdminStats, getRecentAnalysesAdmin, logAnalysisFailure,
+  isAdmin, getAdminStats, getPublicStats, getRecentAnalysesAdmin, logAnalysisFailure,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
@@ -160,6 +160,14 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 
 app.get('/api/packages', (req, res) => {
   res.json(PACKAGES);
+});
+
+app.get('/api/stats/public', async (req, res) => {
+  try {
+    res.json(await getPublicStats());
+  } catch (e) {
+    res.json({ gamesAnalysed: 0 });
+  }
 });
 
 app.post('/api/checkout', authMiddleware, async (req, res) => {
