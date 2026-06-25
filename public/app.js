@@ -1208,6 +1208,10 @@ if(window.location.search.includes('payment=cancelled')){
     var el = document.getElementById('lpGamesNum');
     var box = document.getElementById('lpTrustGames');
     if (!el || !box) return;
+    // Manual placeholder while real volume catches up. Set to null to restore the
+    // live count from /api/stats/public.
+    var GAMES_OVERRIDE = '1,000+';
+    if (GAMES_OVERRIDE) { el.textContent = GAMES_OVERRIDE; box.style.display = ''; return; }
     fetch('/api/stats/public').then(function(r){ return r.json(); }).then(function(d){
       var n = (d && d.gamesAnalysed) || 0;
       // Only surface the count once it reads as credible; below this it stays hidden.
