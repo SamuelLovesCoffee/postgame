@@ -8,6 +8,7 @@ const StockfishEngine = require('./stockfish');
 const { analysePGN } = require('./analysis');
 const { Chess } = require('chess.js');
 const { generateCoaching, generateMoveByMove, generatePlayerFeedback } = require('./coach');
+const { renderShareCard } = require('./shareCard');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
@@ -15,7 +16,7 @@ const {
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   createCheckoutSession, handleStripeWebhook,
   requestPasswordReset, applyPasswordReset,
-  isAdmin, getAdminStats, getPublicStats, getRecentAnalysesAdmin, logAnalysisFailure,
+  isAdmin, getAdminStats, getPublicStats, getPublicAnalysis, getRecentAnalysesAdmin, logAnalysisFailure,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
   PACKAGES,
 } = require('./auth');
@@ -167,6 +168,87 @@ app.get('/api/stats/public', async (req, res) => {
     res.json(await getPublicStats());
   } catch (e) {
     res.json({ gamesAnalysed: 0 });
+  }
+});
+
+// ── Share cards (Open Graph) ──────────────────────────────────────────────
+// Public by UUID, opt-in via the in-app Share button. NOT behind authMiddleware,
+// and never touch the Stockfish concurrency gate.
+const SITE = 'https://www.post-game.net';
+const _ogCache = new Map();           // analysisId -> PNG Buffer (immutable per game)
+const OG_CACHE_MAX = 500;
+
+function ogResultText(result, color) {
+  if (!result || !color || result === '*') return null;
+  const sideTitle = color === 'w' ? 'White' : 'Black';
+  if (result === '1/2-1/2') return `Drew as ${sideTitle}`;
+  if (result !== '1-0' && result !== '0-1') return null;
+  const won = (result === '1-0' && color === 'w') || (result === '0-1' && color === 'b');
+  return `${won ? 'Won' : 'Lost'} as ${sideTitle}`;
+}
+function ogEyebrow(a) {
+  const op = a.openingName ? a.openingName.split(',')[0].trim() : null;
+  const parts = [op, ogResultText(a.result, a.playerColor)].filter(Boolean);
+  let eb = parts.join(' \u00B7 ');
+  if (eb.length > 52 && parts.length === 2) eb = parts[0];
+  if (eb.length > 52) eb = eb.slice(0, 51).trim() + '\u2026';
+  return eb || 'Game analysis';
+}
+function ogEsc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+app.get('/og/:id.png', async (req, res) => {
+  const id = req.params.id;
+  try {
+    if (!_ogCache.has(id)) {
+      const a = await getPublicAnalysis(id);
+      if (!a) return res.status(404).send('Not found');
+      const png = await renderShareCard({ summary: a.summary, eyebrow: ogEyebrow(a) });
+      if (_ogCache.size >= OG_CACHE_MAX) _ogCache.delete(_ogCache.keys().next().value);
+      _ogCache.set(id, png);
+    }
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.send(_ogCache.get(id));
+  } catch (err) {
+    Sentry.captureException(err);
+    res.status(500).send('Could not render card');
+  }
+});
+
+app.get('/g/:id', async (req, res) => {
+  try {
+    const a = await getPublicAnalysis(req.params.id);
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    if (!a) return res.status(404).send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Not found \u00B7 postgame</title><style>body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px}a{color:#e94560}</style></head><body><div>This analysis link isn't available.<br><br><a href="${SITE}">Go to postgame \u2192</a></div></body></html>`);
+    const sum = ogEsc(a.summary || 'A game reviewed on postgame.');
+    const eye = ogEsc(ogEyebrow(a));
+    const img = `${SITE}/og/${req.params.id}.png`;
+    const url = `${SITE}/g/${req.params.id}`;
+    const title = 'Game analysis \u00B7 postgame';
+    res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
+<meta name="description" content="${sum}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${sum}">
+<meta property="og:url" content="${url}">
+<meta property="og:image" content="${img}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${sum}">
+<meta name="twitter:image" content="${img}">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<style>body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}.card{max-width:680px;width:100%}.eye{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#e94560;font-weight:600;margin-bottom:18px}.sum{font-size:24px;line-height:1.45;font-weight:600;letter-spacing:-.01em;margin-bottom:28px}.cta{display:inline-block;background:#e94560;color:#fff;text-decoration:none;font-weight:600;padding:13px 22px;border-radius:10px}.foot{margin-top:34px;color:#6e6e7e;font-size:14px}.foot b{color:#e8e8ed}.foot .a{color:#e94560}</style></head>
+<body><div class="card"><div class="eye">${eye}</div><div class="sum">${sum}</div><a class="cta" href="${SITE}/?utm_source=share">Analyse your own games free \u2192</a><div class="foot">From <b>post<span class="a">game</span></b> \u00B7 personalised chess coaching</div></div></body></html>`);
+  } catch (err) {
+    Sentry.captureException(err);
+    res.status(500).send('Something went wrong');
   }
 });
 
