@@ -223,11 +223,52 @@ app.get('/g/:id', async (req, res) => {
     const a = await getPublicAnalysis(req.params.id);
     res.set('Content-Type', 'text/html; charset=utf-8');
     if (!a) return res.status(404).send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Not found \u00B7 postgame</title><style>body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px}a{color:#e94560}</style></head><body><div>This analysis link isn't available.<br><br><a href="${SITE}">Go to postgame \u2192</a></div></body></html>`);
+
+    // Position-by-position playthrough from the stored PGN (server-side; only SAN+FEN
+    // reach the client, never the PGN headers / player usernames).
+    let plies = null;
+    if (a.pgn) {
+      try {
+        const c = new Chess();
+        if (c.load_pgn(a.pgn)) {
+          const verbose = c.history({ verbose: true });
+          const replay = new Chess();
+          plies = [{ s: null, f: replay.fen(), m: null }];
+          for (const mv of verbose) { replay.move(mv); plies.push({ s: mv.san, f: replay.fen(), m: mv.from + mv.to }); }
+        }
+      } catch (e) { plies = null; }
+    }
+
     const sum = ogEsc(a.summary || 'A game reviewed on postgame.');
     const eye = ogEsc(ogEyebrow(a));
     const img = `${SITE}/og/${req.params.id}.png`;
     const url = `${SITE}/g/${req.params.id}`;
     const title = 'Game analysis \u00B7 postgame';
+    const pliesJson = plies ? JSON.stringify(plies) : 'null';
+    const flip = a.playerColor === 'b' ? 'true' : 'false';
+
+    const boardBlock = (plies && plies.length > 1) ? `
+    <div class="bwrap">
+      <div class="bd" id="bd"></div>
+      <div class="ctrls">
+        <button onclick="go(0)" aria-label="First move">\u23EE</button>
+        <button onclick="go(i-1)" aria-label="Previous move">\u25C0</button>
+        <button onclick="go(i+1)" aria-label="Next move">\u25B6</button>
+        <button onclick="go(P.length-1)" aria-label="Last move">\u23ED</button>
+      </div>
+      <div class="ml" id="ml"></div>
+    </div>
+    <script>
+      var P=${pliesJson};var FLIP=${flip};var i=0;
+      var bd=document.getElementById("bd");var FILES=["a","b","c","d","e","f","g","h"];
+      function expand(r){var o=[];for(var x=0;x<r.length;x++){var ch=r[x];if(ch>="1"&&ch<="8"){for(var k=0;k<+ch;k++)o.push("");}else o.push(ch);}return o;}
+      function draw(){var p=P[i];var ranks=p.f.split(" ")[0].split("/");var mv=p.m;var fr=mv?mv.slice(0,2):null,to=mv?mv.slice(2,4):null;var cells=[];for(var r=0;r<8;r++){var row=expand(ranks[r]);for(var f=0;f<8;f++){cells.push({r:r,f:f,p:row[f]});}}if(FLIP)cells.reverse();bd.innerHTML="";for(var n=0;n<cells.length;n++){var c=cells[n];var sq=FILES[c.f]+(8-c.r);var dark=(c.r+c.f)%2===1;var el=document.createElement("div");el.className="sq "+(dark?"d":"l")+((sq===fr||sq===to)?" hl":"");if(c.p){var im=document.createElement("img");im.src="/pieces/"+(c.p===c.p.toUpperCase()?"w":"b")+c.p.toUpperCase()+".svg";im.alt="";el.appendChild(im);}bd.appendChild(el);}var ms=document.querySelectorAll(".mv");for(var j=0;j<ms.length;j++){ms[j].classList.toggle("on",(+ms[j].getAttribute("data-i"))===i);}var cur=document.querySelector(".mv.on");if(cur)cur.scrollIntoView({block:"nearest",inline:"center"});}
+      function go(n){i=Math.max(0,Math.min(P.length-1,n));draw();}
+      var ml=document.getElementById("ml");var h="";for(var k=1;k<P.length;k++){if(k%2===1)h+='<span class="mn">'+Math.ceil(k/2)+'.</span>';h+='<span class="mv" data-i="'+k+'" onclick="go('+k+')">'+P[k].s+'</span>';}ml.innerHTML=h;
+      document.addEventListener("keydown",function(e){if(e.key==="ArrowLeft"){go(i-1);}else if(e.key==="ArrowRight"){go(i+1);}else if(e.key==="Home"){go(0);}else if(e.key==="End"){go(P.length-1);}});
+      draw();
+    </script>` : '';
+
     res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
@@ -244,8 +285,34 @@ app.get('/g/:id', async (req, res) => {
 <meta name="twitter:description" content="${sum}">
 <meta name="twitter:image" content="${img}">
 <link rel="icon" href="/favicon.ico" sizes="any">
-<style>body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px}.card{max-width:680px;width:100%}.eye{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#e94560;font-weight:600;margin-bottom:18px}.sum{font-size:24px;line-height:1.45;font-weight:600;letter-spacing:-.01em;margin-bottom:28px}.cta{display:inline-block;background:#e94560;color:#fff;text-decoration:none;font-weight:600;padding:13px 22px;border-radius:10px}.foot{margin-top:34px;color:#6e6e7e;font-size:14px}.foot b{color:#e8e8ed}.foot .a{color:#e94560}</style></head>
-<body><div class="card"><div class="eye">${eye}</div><div class="sum">${sum}</div><a class="cta" href="${SITE}/?utm_source=share">Analyse your own games free \u2192</a><div class="foot">From <b>post<span class="a">game</span></b> \u00B7 personalised chess coaching</div></div></body></html>`);
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;padding:28px 18px 60px}
+.wrap{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center}
+.cardimg{width:100%;border-radius:14px;border:1px solid #2e2e38;display:block}
+.bwrap{width:100%;display:flex;flex-direction:column;align-items:center;margin-top:30px}
+.bd{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(94vw,440px);aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1px solid #2e2e38}
+.sq{position:relative;display:flex;align-items:center;justify-content:center}
+.sq.l{background:#ebecd0}.sq.d{background:#7a945a}
+.sq.hl::after{content:"";position:absolute;inset:0;background:rgba(233,69,96,.40)}
+.sq img{position:relative;width:88%;height:88%}
+.ctrls{display:flex;gap:8px;margin-top:14px}
+.ctrls button{background:#212127;color:#e8e8ed;border:1px solid #2e2e38;border-radius:9px;font-size:17px;line-height:1;padding:10px 16px;cursor:pointer}
+.ctrls button:hover{border-color:#e94560}
+.ml{margin-top:16px;max-height:120px;overflow-y:auto;font-size:14px;line-height:1.9;color:#a0a0ae;text-align:left;width:100%;max-width:440px}
+.ml .mn{color:#6e6e7e;margin:0 4px 0 10px}
+.ml .mv{cursor:pointer;padding:1px 4px;border-radius:4px}
+.ml .mv:hover{color:#e8e8ed}
+.ml .mv.on{background:#e94560;color:#fff}
+.cta{display:inline-block;margin-top:34px;background:#e94560;color:#fff;text-decoration:none;font-weight:600;padding:14px 24px;border-radius:10px}
+.foot{margin-top:26px;color:#6e6e7e;font-size:13px}.foot b{color:#e8e8ed}.foot .a{color:#e94560}
+</style></head>
+<body><div class="wrap">
+<img class="cardimg" src="/og/${req.params.id}.png" alt="${sum}" width="1200" height="630">
+${boardBlock}
+<a class="cta" href="${SITE}/?utm_source=share">Analyse your own games free \u2192</a>
+<div class="foot">From <b>post<span class="a">game</span></b> \u00B7 personalised chess coaching</div>
+</div></body></html>`);
   } catch (err) {
     Sentry.captureException(err);
     res.status(500).send('Something went wrong');
