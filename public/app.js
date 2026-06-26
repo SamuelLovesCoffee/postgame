@@ -384,7 +384,7 @@ async function loadAnalysis(id) {
 
 
     document.getElementById('bestToggle').style.display = 'none';
-    renderCoaching(analysisResult.analysis, data.coaching);
+    renderCoaching(analysisResult.analysis, data.coaching, id);
     document.getElementById('landingView').style.display = 'none';
     document.getElementById('inputView').style.display = 'none';
     document.getElementById('analysisView').style.display = 'block';
@@ -684,7 +684,7 @@ async function startAnalysis() {
 
 
     document.getElementById('bestToggle').style.display = '';
-    renderCoaching(finalData.analysis, finalData.coaching);
+    renderCoaching(finalData.analysis, finalData.coaching, finalData.analysisId);
     document.getElementById('loadingView').style.display = 'none';
     document.getElementById('analysisView').style.display = 'block';
     document.getElementById('bestToggle').classList.toggle('active', showBest);
@@ -992,13 +992,14 @@ function findStudyResources(text, max){
 // ═══════════════════════════════════════
 // COACHING RENDERER
 // ═══════════════════════════════════════
-function renderCoaching(analysis,coach){
+function renderCoaching(analysis,coach,shareId){
   const col=document.getElementById('coachCol');col.innerHTML='';
   const summary=document.createElement('div');summary.className='coach-summary';
   summary.innerHTML=`<h2>${(analysis.headers||{}).White||'?'} vs ${(analysis.headers||{}).Black||'?'}</h2>
     <div class="summary-text">${coach.summary||''}</div>
     ${analysis.openingName?`<span class="opening-tag">${analysis.openingName}</span>`:''}
-    ${coach.opening?`<div class="summary-text" style="margin-top:8px">${coach.opening}</div>`:''}`;
+    ${coach.opening?`<div class="summary-text" style="margin-top:8px">${coach.opening}</div>`:''}
+    ${shareId?`<button onclick="sharePostgame('${shareId}',this)" style="margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;font:inherit;font-weight:600;font-size:14px;padding:10px 16px;border-radius:9px;cursor:pointer">Share analysis</button>`:''}`;
   col.appendChild(summary);
   const critByPly={},missedByPly={};
   (coach.criticalMoments||[]).forEach(cm=>{critByPly[cm.ply]=cm;});
@@ -1243,3 +1244,16 @@ if(window.location.search.includes('payment=cancelled')){
     sec.style.display = '';
   });
 })();
+
+
+// Share an analysis: native share sheet on mobile, clipboard fallback elsewhere.
+async function sharePostgame(id, btn){
+  const url = 'https://www.post-game.net/g/' + id;
+  if (navigator.share){
+    try { await navigator.share({ title: 'My game analysis on postgame', url }); return; }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); }
+  catch(e){ window.prompt('Copy your share link:', url); return; }
+  if (btn){ const t = btn.textContent; btn.textContent = 'Link copied!'; setTimeout(function(){ btn.textContent = t; }, 1800); }
+}
