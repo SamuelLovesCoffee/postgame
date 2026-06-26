@@ -553,7 +553,7 @@ async function getPublicStats() {
 async function getPublicAnalysis(analysisId) {
   const { data, error } = await supabase
     .from('analyses')
-    .select('id, opening_name, player_color, headers, coaching')
+    .select('id, opening_name, player_color, headers, coaching, pgn')
     .eq('id', analysisId)
     .single();
   if (error || !data) return null;
@@ -562,6 +562,7 @@ async function getPublicAnalysis(analysisId) {
   return {
     id: data.id,
     summary: c.summary || '',
+    pgn: data.pgn || null,
     openingName: data.opening_name || null,
     playerColor: data.player_color || null,
     result: h.Result || null,
