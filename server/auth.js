@@ -548,6 +548,26 @@ async function getPublicStats() {
   return _publicStatsCache.v;
 }
 
+// Public-safe lookup for share cards / share pages. Exposes ONLY the fields a user
+// chose to broadcast (summary, opening, result) — never pgn, user_id, or metrics.
+async function getPublicAnalysis(analysisId) {
+  const { data, error } = await supabase
+    .from('analyses')
+    .select('id, opening_name, player_color, headers, coaching')
+    .eq('id', analysisId)
+    .single();
+  if (error || !data) return null;
+  const c = data.coaching || {};
+  const h = data.headers || {};
+  return {
+    id: data.id,
+    summary: c.summary || '',
+    openingName: data.opening_name || null,
+    playerColor: data.player_color || null,
+    result: h.Result || null,
+  };
+}
+
 async function getAdminStats() {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -694,7 +714,7 @@ async function getRecentAnalysesAdmin(limit = 100) {
 
 module.exports = {
   signUp, signIn, authMiddleware, optionalAuth,
-  isAdmin, getAdminStats, getPublicStats, getRecentAnalysesAdmin, logAnalysisFailure,
+  isAdmin, getAdminStats, getPublicStats, getPublicAnalysis, getRecentAnalysesAdmin, logAnalysisFailure,
   buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   requestPasswordReset, applyPasswordReset,
