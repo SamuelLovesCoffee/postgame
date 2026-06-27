@@ -247,6 +247,8 @@ app.get('/g/:id', async (req, res) => {
     const segs = (a.segments || []).map(function (s) { return { a: s.startPly || 1, b: s.endPly || 0, t: s.title || '', n: s.narrative || '' }; });
 
     const sum = ogEsc(a.summary || 'A game reviewed on postgame.');
+    const op = ogEsc(a.opening || '');
+    const otag = a.openingName ? ogEsc(a.openingName) : '';
     const img = `${SITE}/og/${req.params.id}.png`;
     const url = `${SITE}/g/${req.params.id}`;
     const title = 'Game analysis \u00B7 postgame';
@@ -304,6 +306,10 @@ app.get('/g/:id', async (req, res) => {
 body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;padding:28px 18px 60px;touch-action:manipulation}
 .wrap{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center}
 .cardimg{width:100%;height:auto;border-radius:14px;border:1px solid #2e2e38;display:block}
+.sumtext{width:100%;margin-top:26px;text-align:left}
+.otag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#e94560;background:rgba(233,69,96,.12);border:1px solid rgba(233,69,96,.30);padding:5px 11px;border-radius:999px;margin-bottom:14px}
+.stext{font-size:18px;line-height:1.6;color:#e8e8ed;margin:0 0 10px;font-weight:500}
+.stext.op{font-size:15px;color:#a0a0ae;font-weight:400}
 .bwrap{width:100%;display:flex;flex-direction:column;align-items:center;margin-top:30px}
 .bd{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:min(94vw,440px);aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1px solid #2e2e38}
 .sq{position:relative;display:flex;align-items:center;justify-content:center}
@@ -334,6 +340,7 @@ body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMa
 </style></head>
 <body><div class="wrap">
 <img class="cardimg" src="/og/${req.params.id}.png" alt="${sum}" width="1200" height="630">
+<div class="sumtext">${otag ? `<span class="otag">${otag}</span>` : ''}<p class="stext">${sum}</p>${op ? `<p class="stext op">${op}</p>` : ''}</div>
 ${boardBlock}
 <a class="cta" href="${SITE}/?utm_source=share">Analyse your own games free \u2192</a>
 <div class="foot">From <b>post<span class="a">game</span></b> \u00B7 personalised chess coaching</div>
