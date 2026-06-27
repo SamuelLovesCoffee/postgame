@@ -305,7 +305,8 @@ app.get('/g/:id', async (req, res) => {
 *{box-sizing:border-box}
 body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;padding:28px 18px 60px;touch-action:manipulation}
 .wrap{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center}
-.cardimg{width:100%;height:auto;border-radius:14px;border:1px solid #2e2e38;display:block}
+.brand{align-self:flex-start;font-size:24px;font-weight:700;letter-spacing:-.01em;color:#e8e8ed;text-decoration:none}
+.brand .ba{color:#e94560}
 .sumtext{width:100%;margin-top:26px;text-align:left}
 .otag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#e94560;background:rgba(233,69,96,.12);border:1px solid rgba(233,69,96,.30);padding:5px 11px;border-radius:999px;margin-bottom:14px}
 .stext{font-size:18px;line-height:1.6;color:#e8e8ed;margin:0 0 10px;font-weight:500}
@@ -339,7 +340,7 @@ body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMa
 .foot{margin-top:26px;color:#6e6e7e;font-size:13px}.foot b{color:#e8e8ed}.foot .a{color:#e94560}
 </style></head>
 <body><div class="wrap">
-<img class="cardimg" src="/og/${req.params.id}.png" alt="${sum}" width="1200" height="630">
+<a class="brand" href="${SITE}/?utm_source=share">post<span class="ba">game</span></a>
 <div class="sumtext">${otag ? `<span class="otag">${otag}</span>` : ''}<p class="stext">${sum}</p>${op ? `<p class="stext op">${op}</p>` : ''}</div>
 ${boardBlock}
 <a class="cta" href="${SITE}/?utm_source=share">Analyse your own games free \u2192</a>
