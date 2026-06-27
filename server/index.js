@@ -262,10 +262,10 @@ app.get('/g/:id', async (req, res) => {
     <div class="bwrap">
       <div class="bd" id="bd"></div>
       <div class="ctrls">
-        <button onclick="go(0)" aria-label="First move">\u23EE</button>
-        <button onclick="go(i-1)" aria-label="Previous move">\u25C0</button>
-        <button onclick="go(i+1)" aria-label="Next move">\u25B6</button>
-        <button onclick="go(P.length-1)" aria-label="Last move">\u23ED</button>
+        <button onclick="go(0)" aria-label="First move"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M5 5h2.4v14H5zM19 5v14l-10-7z"/></svg></button>
+        <button onclick="go(i-1)" aria-label="Previous move"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M17 5v14l-10-7z"/></svg></button>
+        <button onclick="go(i+1)" aria-label="Next move"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M7 5v14l10-7z"/></svg></button>
+        <button onclick="go(P.length-1)" aria-label="Last move"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M5 5v14l10-7zM16.6 5H19v14h-2.4z"/></svg></button>
       </div>
       <div class="cmt" id="cmt"></div>
       <div class="ml" id="ml"></div>
@@ -318,7 +318,8 @@ body{margin:0;background:#09080d;color:#e8e8ed;font-family:-apple-system,BlinkMa
 .sq.hl::after{content:"";position:absolute;inset:0;background:rgba(233,69,96,.40)}
 .sq img{position:relative;width:88%;height:88%}
 .ctrls{display:flex;gap:8px;margin-top:14px}
-.ctrls button{background:#212127;color:#e8e8ed;border:1px solid #2e2e38;border-radius:9px;font-size:17px;line-height:1;padding:10px 16px;cursor:pointer}
+.ctrls button{display:inline-flex;align-items:center;justify-content:center;background:#212127;color:#e8e8ed;border:1px solid #2e2e38;border-radius:9px;padding:11px 18px;cursor:pointer}
+.ctrls button svg{display:block}
 .ctrls button:hover{border-color:#e94560}
 .cmt{width:100%;max-width:440px;margin-top:18px;text-align:left}
 .nt{background:#17171c;border:1px solid #2e2e38;border-left:3px solid #e94560;border-radius:10px;padding:14px 16px}
