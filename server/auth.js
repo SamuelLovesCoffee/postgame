@@ -566,6 +566,10 @@ async function getPublicAnalysis(analysisId) {
     openingName: data.opening_name || null,
     playerColor: data.player_color || null,
     result: h.Result || null,
+    segments: c.segments || [],
+    critical: c.criticalMoments || [],
+    missed: c.missedIdeas || [],
+    brilliant: c.brilliantMoves || [],
   };
 }
 
