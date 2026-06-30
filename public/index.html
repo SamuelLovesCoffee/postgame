@@ -328,6 +328,86 @@
       </div>
     </section>
 
+    <!-- TRY IT — interactive import demo. Mirrors #inputView; only logged-out visitors
+         ever see the landing, so Fetch/Analyse here always route to the signup modal. -->
+    <style>
+      .lp-try{max-width:1100px;margin:0 auto;padding:60px 28px 8px}
+      .lp-try-inner{display:flex;flex-direction:column;align-items:center;text-align:center}
+      .lp-try .lp-section-eyebrow{margin-bottom:14px}
+      .lp-try-title{margin-bottom:10px}
+      .lp-try-sub{color:var(--text-2);font-size:17px;line-height:1.6;max-width:600px;margin:0 auto 30px}
+      .lp-try-card{text-align:left;background:var(--bg-card);border:1px solid var(--border);
+        border-radius:16px;padding:28px 26px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+      .lp-try-card .ic-title{font-family:var(--font-display);font-size:30px;font-weight:500;
+        line-height:1.15;letter-spacing:-.5px;margin-bottom:6px;color:var(--text)}
+      .lp-try-fine{font-family:var(--font-mono);font-size:12px;color:var(--text-3);
+        letter-spacing:.02em;margin:16px 0 0;text-align:center}
+      @media (max-width:560px){.lp-try{padding-top:40px}.lp-try-card{padding:22px 18px}
+        .lp-try-card .ic-title{font-size:26px}}
+    </style>
+    <section class="lp-try" id="lp-try" aria-label="Try postgame">
+      <div class="lp-try-inner">
+        <span class="lp-eyebrow lp-section-eyebrow">Try it now</span>
+        <h2 class="lp-block-title lp-try-title">Import a game in seconds.</h2>
+        <p class="lp-try-sub">Pull a game straight from Chess.com or Lichess, or paste a PGN. Choose your colour, hit analyse, and see where the game really turned.</p>
+        <div class="input-card lp-try-card">
+          <div class="ic-title">Analyse a game</div>
+          <p class="subtitle">Paste your PGN and select your colour.</p>
+          <div class="import-tabs">
+            <button class="import-tab active" id="lpTabChesscom" onclick="lpDemoTab('chesscom')">Chess.com</button>
+            <button class="import-tab" id="lpTabLichess" onclick="lpDemoTab('lichess')">Lichess</button>
+            <button class="import-tab" id="lpTabPaste" onclick="lpDemoTab('paste')">Paste PGN</button>
+          </div>
+          <div id="lpImportChesscom">
+            <div class="lichess-row">
+              <input type="text" id="lpChesscomUsername" class="modal-input" placeholder="Your Chess.com username" style="margin-bottom:0">
+              <button class="lichess-fetch-btn" onclick="showAuthModal('signup')">Fetch games</button>
+            </div>
+          </div>
+          <div id="lpImportLichess" style="display:none">
+            <div class="lichess-row">
+              <input type="text" id="lpLichessUsername" class="modal-input" placeholder="Your Lichess username" style="margin-bottom:0">
+              <button class="lichess-fetch-btn" onclick="showAuthModal('signup')">Fetch games</button>
+            </div>
+          </div>
+          <div id="lpImportPaste" style="display:none">
+            <textarea class="pgn-input" id="lpPgnInput" placeholder="Paste your PGN here..."></textarea>
+          </div>
+          <div class="tier-select">
+            <label class="tier-option selected" id="lpTierQuick" onclick="lpDemoTier('quick')">
+              <div class="tier-head"><span class="tier-name">Quick</span><span class="tier-cost">1 credit</span></div>
+              <div class="tier-detail">Faster analysis, great for casual games</div>
+            </label>
+            <label class="tier-option" id="lpTierDeep" onclick="lpDemoTier('deep')">
+              <div class="tier-head"><span class="tier-name">Deep</span><span class="tier-cost">2 credits</span></div>
+              <div class="tier-detail">Deeper engine analysis + move-by-move commentary</div>
+            </label>
+          </div>
+          <div class="input-row">
+            <div class="select-wrap"><select id="lpPlayerColor"><option value="w">I played White</option><option value="b">I played Black</option></select></div>
+            <button class="analyse-btn" onclick="showAuthModal('signup')"><span class="btn-text">Analyse</span></button>
+          </div>
+          <p class="lp-try-fine">Free to start · 3 analyses on the house · No card needed</p>
+        </div>
+      </div>
+    </section>
+    <script>
+      function lpDemoTab(which){
+        ['Chesscom','Lichess','Paste'].forEach(function(k){
+          var key=k.toLowerCase();
+          var tab=document.getElementById('lpTab'+k);
+          var pane=document.getElementById('lpImport'+k);
+          if(tab) tab.classList.toggle('active', key===which);
+          if(pane) pane.style.display=(key===which)?'':'none';
+        });
+      }
+      function lpDemoTier(which){
+        var q=document.getElementById('lpTierQuick'), d=document.getElementById('lpTierDeep');
+        if(q) q.classList.toggle('selected', which==='quick');
+        if(d) d.classList.toggle('selected', which==='deep');
+      }
+    </script>
+
     <!-- TRUST STRIP -->
     <style>
       .lp-trust{background:var(--bg-raised);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
