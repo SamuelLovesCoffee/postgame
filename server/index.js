@@ -740,7 +740,7 @@ app.get('/api/history/:id', authMiddleware, async (req, res) => {
 // ═══ LICHESS IMPORT ═══
 
 // Fetch a user's recent games from Lichess (public, no auth needed)
-app.get('/api/lichess/:username', authMiddleware, async (req, res) => {
+app.get('/api/lichess/:username', optionalAuth, async (req, res) => {
   const username = req.params.username.trim();
   if (!username || !/^[a-zA-Z0-9_-]{2,30}$/.test(username)) {
     return res.status(400).json({ error: 'Invalid Lichess username' });
@@ -797,7 +797,7 @@ function pgnTag(pgn, tag) {
 
 // Fetch a user's recent games from Chess.com (public Published-Data API, no auth).
 // Chess.com organises games into monthly archives, so we pull the latest month(s).
-app.get('/api/chesscom/:username', authMiddleware, async (req, res) => {
+app.get('/api/chesscom/:username', optionalAuth, async (req, res) => {
   const username = req.params.username.trim().toLowerCase();
   if (!username || !/^[a-zA-Z0-9_-]{2,30}$/.test(username)) {
     return res.status(400).json({ error: 'Invalid Chess.com username' });
