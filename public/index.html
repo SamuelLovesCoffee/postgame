@@ -53,20 +53,35 @@
     "applicationSubCategory": "Chess coaching",
     "operatingSystem": "Web",
     "url": "https://www.post-game.net",
-    "description": "AI chess coaching. postgame reviews your chess games, explains why your moves were mistakes in plain language, names the concepts you missed, and learns the patterns you keep repeating across games.",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD",
-      "description": "Three free credits on signup, then pay per analysis. No subscription."
-    },
+    "inLanguage": "en",
+    "image": "https://www.post-game.net/social-share.jpg",
+    "screenshot": "https://www.post-game.net/social-share.jpg",
+    "browserRequirements": "Requires a modern web browser with JavaScript. Nothing to download or install.",
+    "description": "AI chess coaching. postgame reviews your chess games with Stockfish, explains why your moves were mistakes in plain language, names the concepts you missed, and learns the patterns you keep repeating across games.",
     "featureList": [
       "Import games from Chess.com and Lichess",
       "Stockfish engine analysis of every position",
       "Plain-language coaching that explains why moves were mistakes",
       "Cross-game coaching that learns your recurring patterns",
       "Personalised training plan with linked study resources"
-    ]
+    ],
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "USD",
+      "lowPrice": "0",
+      "highPrice": "24.99",
+      "offerCount": 4,
+      "description": "Three free analyses on signup (no card). After that, pay per game with credit packs from $4.99 — as low as $0.33 per analysis. Credits never expire; no subscription."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "postgame",
+      "url": "https://www.post-game.net",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.post-game.net/social-share.jpg"
+      }
+    }
   }
   </script>
   <script type="application/ld+json">
@@ -104,6 +119,38 @@
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "You get three free credits when you sign up. After that, one credit covers a Quick analysis and two cover a Deep analysis. Credits never expire and there is no subscription."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is postgame free to try?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. You get three free analyses when you sign up, with no credit card required. After that you pay per game with credit packs that never expire — there is no subscription."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which chess engine does postgame use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Every position is evaluated by Stockfish, one of the strongest chess engines in the world. postgame then turns Stockfish's findings into plain-language coaching, so you get engine-grade accuracy with an explanation you can actually learn from."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to install anything?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. postgame runs entirely in your web browser on desktop or mobile — there is nothing to download or install."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can postgame find the mistakes I keep making?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Because it remembers the games you analyse, postgame surfaces the errors that repeat across them and gives you one clear priority to train, instead of a different tip every game."
         }
       }
     ]
