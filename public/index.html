@@ -361,14 +361,16 @@
           <div id="lpImportChesscom">
             <div class="lichess-row">
               <input type="text" id="lpChesscomUsername" class="modal-input" placeholder="Your Chess.com username" style="margin-bottom:0">
-              <button class="lichess-fetch-btn" onclick="showAuthModal('signup')">Fetch games</button>
+              <button class="lichess-fetch-btn" onclick="lpFetchChesscom()">Fetch games</button>
             </div>
+            <div id="lpChesscomGames" class="lichess-games"></div>
           </div>
           <div id="lpImportLichess" style="display:none">
             <div class="lichess-row">
               <input type="text" id="lpLichessUsername" class="modal-input" placeholder="Your Lichess username" style="margin-bottom:0">
-              <button class="lichess-fetch-btn" onclick="showAuthModal('signup')">Fetch games</button>
+              <button class="lichess-fetch-btn" onclick="lpFetchLichess()">Fetch games</button>
             </div>
+            <div id="lpLichessGames" class="lichess-games"></div>
           </div>
           <div id="lpImportPaste" style="display:none">
             <textarea class="pgn-input" id="lpPgnInput" placeholder="Paste your PGN here..."></textarea>
@@ -405,6 +407,32 @@
         var q=document.getElementById('lpTierQuick'), d=document.getElementById('lpTierDeep');
         if(q) q.classList.toggle('selected', which==='quick');
         if(d) d.classList.toggle('selected', which==='deep');
+      }
+      function lpFetchChesscom(){ return lpFetch('chesscom','lpChesscomUsername','lpChesscomGames','Chess.com',false); }
+      function lpFetchLichess(){ return lpFetch('lichess','lpLichessUsername','lpLichessGames','Lichess',true); }
+      async function lpFetch(source, userId, listId, label, useOpening){
+        var username=(document.getElementById(userId).value||'').trim();
+        var c=document.getElementById(listId);
+        if(!username){ c.innerHTML='<p class="lichess-msg">Enter your '+label+' username.</p>'; return; }
+        c.innerHTML='<p class="lichess-msg">Fetching games...</p>';
+        try{
+          var r=await fetch('/api/'+source+'/'+encodeURIComponent(username));
+          var data=await r.json();
+          if(!r.ok) throw new Error(data.error||'Could not fetch games');
+          if(!data.games||!data.games.length){ c.innerHTML='<p class="lichess-msg">No games found for that user.</p>'; return; }
+          c.innerHTML=data.games.map(function(g){
+            var rc=g.result==='win'?'win':g.result==='loss'?'loss':'draw';
+            var rl=g.result==='win'?'Won':g.result==='loss'?'Lost':'Draw';
+            var date=g.createdAt?new Date(g.createdAt).toLocaleDateString():'';
+            var opp=g.playerColor==='w'?g.black:g.white;
+            var first=useOpening?(g.opening||g.speed||''):(g.speed||'');
+            var meta=[first,date,'played '+(g.playerColor==='w'?'White':'Black')].filter(Boolean).join(' \u00b7 ');
+            return '<div class="lichess-game" onclick="showAuthModal(\'signup\')">'
+              +'<div class="lg-main"><span class="lg-result '+rc+'">'+rl+'</span>'
+              +'<span class="lg-opp">vs '+(opp||'Unknown')+'</span></div>'
+              +'<div class="lg-meta">'+meta+'</div></div>';
+          }).join('');
+        }catch(e){ c.innerHTML='<p class="lichess-msg">'+(e.message||'Could not fetch games')+'</p>'; }
       }
     </script>
 
