@@ -12,7 +12,16 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
-// Credit packages
+// Subscription: postgame Unlimited (CHF 5/month).
+// "Unlimited" carries a disclosed fair-use ceiling so a single heavy user can't
+// run up an unbounded Claude/Stockfish bill. Override via env if needed.
+const SUB_PRICE_CENTS = parseInt(process.env.SUB_PRICE_CENTS || '500', 10);
+const SUB_CURRENCY = (process.env.SUB_CURRENCY || 'chf').toLowerCase();
+const FAIR_USE_MONTHLY = parseInt(process.env.FAIR_USE_MONTHLY || '100', 10);
+const ACTIVE_SUB_STATUSES = ['active', 'trialing', 'past_due'];
+
+// Legacy credit packages. No longer sold (we moved to a subscription), but kept
+// so historic transactions and any remaining balances still resolve correctly.
 const PACKAGES = [
   { id: 'starter', credits: 10, price_cents: 499, label: '10 credits — $4.99' },
   { id: 'club', credits: 30, price_cents: 1199, label: '30 credits — $11.99' },
@@ -144,6 +153,82 @@ async function addCredits(userId, amount) {
     .update({ balance: balance + amount, updated_at: new Date().toISOString() })
     .eq('user_id', userId);
   return !error;
+}
+
+// ── Subscriptions ──
+
+// Returns the raw subscription row for a user, or null.
+async function getSubscription(userId) {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
+// Counts analyses run in the current calendar month (used for fair-use).
+// Counting from the analyses table means there's no separate counter to drift.
+async function countAnalysesThisMonth(userId) {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const { count, error } = await supabase
+    .from('analyses')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('created_at', start);
+  if (error) return 0;
+  return count || 0;
+}
+
+// Single source of truth for "may this user run an analysis?".
+// Subscribers get unlimited use up to the fair-use ceiling; everyone else
+// falls back to credits (which is how the 3 free analyses still work).
+async function getEntitlement(userId) {
+  const sub = await getSubscription(userId);
+  const active = !!(sub && ACTIVE_SUB_STATUSES.includes(sub.status) &&
+    (!sub.current_period_end || new Date(sub.current_period_end) > new Date()));
+
+  const credits = await getCredits(userId);
+  let used = 0;
+  if (active) used = await countAnalysesThisMonth(userId);
+
+  return {
+    subscribed: active,
+    status: sub ? sub.status : null,
+    currentPeriodEnd: sub ? sub.current_period_end : null,
+    cancelAtPeriodEnd: sub ? !!sub.cancel_at_period_end : false,
+    hasStripeCustomer: !!(sub && sub.stripe_customer_id),
+    credits,
+    usedThisMonth: used,
+    fairUseCap: FAIR_USE_MONTHLY,
+    fairUseRemaining: active ? Math.max(0, FAIR_USE_MONTHLY - used) : null,
+    fairUseExceeded: active && used >= FAIR_USE_MONTHLY,
+  };
+}
+
+// Create/update a user's subscription row.
+async function upsertSubscription(userId, fields) {
+  const payload = { user_id: userId, ...fields, updated_at: new Date().toISOString() };
+  const { error } = await supabase
+    .from('subscriptions')
+    .upsert(payload, { onConflict: 'user_id' });
+  if (error) console.error('[SUB] upsert failed:', error.message);
+  return !error;
+}
+
+// Grant a subscription manually (no Stripe) — used to honour legacy credit
+// holders and for comps. Example: grantSubscription(userId, 2).
+async function grantSubscription(userId, months = 1) {
+  const end = new Date();
+  end.setMonth(end.getMonth() + months);
+  return upsertSubscription(userId, {
+    status: 'active',
+    source: 'manual',
+    current_period_end: end.toISOString(),
+    cancel_at_period_end: true,
+  });
 }
 
 // ── Analyses storage ──
@@ -338,6 +423,82 @@ async function createCheckoutSession(userId, email, packageId, baseUrl) {
   return { url: session.url, sessionId: session.id };
 }
 
+// Start a CHF 5/month subscription checkout.
+// Uses STRIPE_PRICE_UNLIMITED if set; otherwise builds the recurring price
+// inline so this works with no Stripe dashboard setup at all.
+async function createSubscriptionCheckout(userId, email, baseUrl) {
+  if (!stripe) throw new Error('Stripe not configured');
+
+  const existing = await getSubscription(userId);
+  const lineItem = process.env.STRIPE_PRICE_UNLIMITED
+    ? { price: process.env.STRIPE_PRICE_UNLIMITED, quantity: 1 }
+    : {
+        price_data: {
+          currency: SUB_CURRENCY,
+          product_data: { name: 'postgame Unlimited' },
+          unit_amount: SUB_PRICE_CENTS,
+          recurring: { interval: 'month' },
+        },
+        quantity: 1,
+      };
+
+  const params = {
+    mode: 'subscription',
+    line_items: [lineItem],
+    client_reference_id: userId,
+    metadata: { user_id: userId },
+    // Mirrored onto the subscription so later subscription.* events map back to the user
+    subscription_data: { metadata: { user_id: userId } },
+    success_url: `${baseUrl}/?subscription=success`,
+    cancel_url: `${baseUrl}/?subscription=cancelled`,
+  };
+  if (existing && existing.stripe_customer_id) params.customer = existing.stripe_customer_id;
+  else params.customer_email = email;
+
+  const session = await stripe.checkout.sessions.create(params);
+  return { url: session.url, sessionId: session.id };
+}
+
+// Stripe-hosted billing portal: card updates, invoices, cancellation.
+async function createBillingPortalSession(userId, returnUrl) {
+  if (!stripe) throw new Error('Stripe not configured');
+  const sub = await getSubscription(userId);
+  if (!sub || !sub.stripe_customer_id) throw new Error('No billing account found');
+  const session = await stripe.billingPortal.sessions.create({
+    customer: sub.stripe_customer_id,
+    return_url: returnUrl,
+  });
+  return { url: session.url };
+}
+
+// Map a Stripe subscription object onto our row.
+async function syncSubscriptionFromStripe(subscription) {
+  let userId = subscription.metadata && subscription.metadata.user_id;
+  if (!userId) {
+    // Fall back to looking the user up by Stripe customer id
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('user_id')
+      .eq('stripe_customer_id', subscription.customer)
+      .maybeSingle();
+    userId = data && data.user_id;
+  }
+  if (!userId) {
+    console.log('[WEBHOOK] Could not map subscription to a user:', subscription.id);
+    return false;
+  }
+  return upsertSubscription(userId, {
+    stripe_customer_id: subscription.customer,
+    stripe_subscription_id: subscription.id,
+    status: subscription.status,
+    source: 'stripe',
+    current_period_end: subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null,
+    cancel_at_period_end: !!subscription.cancel_at_period_end,
+  });
+}
+
 async function handleStripeWebhook(body, signature) {
   console.log('[WEBHOOK] Received Stripe event');
   if (!stripe) throw new Error('Stripe not configured');
@@ -360,9 +521,72 @@ async function handleStripeWebhook(body, signature) {
 
   console.log(`[WEBHOOK] Event type: ${event.type}`);
 
+  // ── Subscription lifecycle ──
+  if (event.type === 'customer.subscription.created' ||
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    // A deleted subscription arrives with status 'canceled'; syncing it is enough
+    // to revoke access, since getEntitlement only accepts active statuses.
+    await syncSubscriptionFromStripe(subscription);
+    console.log(`[WEBHOOK] \u2713 Subscription ${subscription.id} synced as ${subscription.status}`);
+    return;
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object;
+    if (invoice.subscription && stripe) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+        await syncSubscriptionFromStripe(subscription);
+      } catch (e) {
+        console.error('[WEBHOOK] Could not sync failed-payment subscription:', e.message);
+      }
+    }
+    const who = invoice.customer_email || invoice.customer || 'unknown';
+    sendAdminNotification(
+      `Subscription payment failed \u2014 ${who}`,
+      `A subscription payment failed on postgame\n\nCustomer: ${who}\nInvoice: ${invoice.id}\nAmount: ${typeof invoice.amount_due === 'number' ? (invoice.amount_due / 100).toFixed(2) : 'unknown'}\nTime: ${new Date().toUTCString()}`
+    );
+    return;
+  }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const userId = session.metadata?.user_id;
+    const userId = session.metadata?.user_id || session.client_reference_id;
+
+    // New subscription checkout. The subscription.* events do the real syncing;
+    // this just records the customer id early and notifies.
+    if (session.mode === 'subscription') {
+      console.log(`[WEBHOOK] Subscription checkout completed: session=${session.id}, userId=${userId}`);
+      if (userId) {
+        if (session.subscription && stripe) {
+          try {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription);
+            await syncSubscriptionFromStripe(subscription);
+          } catch (e) {
+            console.error('[WEBHOOK] Could not retrieve new subscription:', e.message);
+            await upsertSubscription(userId, {
+              stripe_customer_id: session.customer,
+              stripe_subscription_id: session.subscription,
+              status: 'active',
+              source: 'stripe',
+            });
+          }
+        }
+        const payerEmail = session.customer_email || session.customer_details?.email || 'unknown';
+        const amount = typeof session.amount_total === 'number'
+          ? `${(session.amount_total / 100).toFixed(2)} ${(session.currency || SUB_CURRENCY).toUpperCase()}`
+          : 'unknown';
+        sendAdminNotification(
+          `New subscriber: ${amount} \u2014 ${payerEmail}`,
+          `New postgame subscription\n\nEmail: ${payerEmail}\nAmount: ${amount}\nUser ID: ${userId}\nSession: ${session.id}\nTime: ${new Date().toUTCString()}`
+        );
+      }
+      return;
+    }
+
+    // ── Legacy one-time credit purchase (kept for historic/refund flows) ──
     const credits = parseInt(session.metadata?.credits);
     const packageId = session.metadata?.package_id;
     const pkg = PACKAGES.find(p => p.id === packageId);
@@ -725,6 +949,9 @@ module.exports = {
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   requestPasswordReset, applyPasswordReset,
   getCredits, deductCredit, addCredits,
+  getSubscription, getEntitlement, upsertSubscription, grantSubscription,
+  createSubscriptionCheckout, createBillingPortalSession,
+  FAIR_USE_MONTHLY, SUB_PRICE_CENTS, SUB_CURRENCY,
   saveAnalysis, getAnalyses, getAnalysis,
   createCheckoutSession, handleStripeWebhook,
   getProfile, updateProfile, changePassword, getTransactions, deleteAccount,
