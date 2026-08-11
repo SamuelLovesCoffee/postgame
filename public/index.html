@@ -57,7 +57,7 @@
     "image": "https://www.post-game.net/social-share.jpg",
     "screenshot": "https://www.post-game.net/social-share.jpg",
     "browserRequirements": "Requires a modern web browser with JavaScript. Nothing to download or install.",
-    "description": "AI chess coaching. postgame reviews your chess games with Stockfish, explains why your moves were mistakes in plain language, names the concepts you missed, and learns the patterns you keep repeating across games.",
+    "description": "AI chess coaching. postgame reviews your chess games with Stockfish, explains why your moves were mistakes in plain language, names the concepts you missed, and learns the patterns you keep repeating across games. Unlimited analysis for CHF 5 a month.",
     "featureList": [
       "Import games from Chess.com and Lichess",
       "Stockfish engine analysis of every position",
@@ -66,12 +66,19 @@
       "Personalised training plan with linked study resources"
     ],
     "offers": {
-      "@type": "AggregateOffer",
-      "priceCurrency": "USD",
-      "lowPrice": "0",
-      "highPrice": "24.99",
-      "offerCount": 4,
-      "description": "Three free analyses on signup (no card). After that, pay per game with credit packs from $4.99 — as low as $0.33 per analysis. Credits never expire; no subscription."
+      "@type": "Offer",
+      "price": "5.00",
+      "priceCurrency": "CHF",
+      "category": "subscription",
+      "description": "Three free analyses on signup, no card required. Then CHF 5 per month for unlimited game analysis. Cancel anytime. Fair use: 100 analyses per month.",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "5.00",
+        "priceCurrency": "CHF",
+        "billingDuration": 1,
+        "billingIncrement": 1,
+        "unitCode": "MON"
+      }
     },
     "publisher": {
       "@type": "Organization",
@@ -115,10 +122,10 @@
       },
       {
         "@type": "Question",
-        "name": "How do credits work?",
+        "name": "How much does postgame cost?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You get three free credits when you sign up. After that, one credit covers a Quick analysis and two cover a Deep analysis. Credits never expire and there is no subscription."
+          "text": "You get three free analyses when you sign up, with no credit card. After that it's a single CHF 5 per month subscription for unlimited game analysis, including both Quick and Deep reviews. You can cancel anytime, and fair use is 100 analyses per month."
         }
       },
       {
@@ -126,7 +133,7 @@
         "name": "Is postgame free to try?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. You get three free analyses when you sign up, with no credit card required. After that you pay per game with credit packs that never expire — there is no subscription."
+          "text": "Yes. You get three free analyses when you sign up, with no credit card required. After that, unlimited analysis is CHF 5 per month and you can cancel anytime."
         }
       },
       {
@@ -173,6 +180,16 @@
   });
 </script>
 
+<style>
+  /* Subscription UI */
+  .sub-benefits{list-style:none;padding:0;margin:18px 0 22px;text-align:left}
+  .sub-benefits li{position:relative;padding-left:26px;margin:10px 0;color:var(--text-2);font-size:15px;line-height:1.5}
+  .sub-benefits li::before{content:"";position:absolute;left:6px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .sub-fine{margin-top:12px;font-size:12px;color:var(--text-3);text-align:center}
+  .credit-badge.is-unlimited{font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px}
+  .credit-pill.is-unlimited{background:var(--accent-soft);color:var(--accent)}
+  .plan-note{color:var(--text-3);font-size:13px;margin-left:8px}
+</style>
 </head>
 <body>
   <header class="header">
@@ -186,7 +203,7 @@
         <div id="userInfo" class="user-info" style="display:none">
           <span class="credit-badge" id="creditBadge">0</span>
           <div class="nav-items" id="navItems">
-            <button class="hdr-btn" onclick="showCreditsModal()">Buy credits</button>
+            <button class="hdr-btn" onclick="showCreditsModal()">Go unlimited</button>
             <a class="hdr-btn" href="/stats" style="text-decoration:none">My coaching</a>
             <button class="hdr-btn" onclick="showHistory()">My games</button>
             <button class="hdr-btn" onclick="showAccount()">Account</button>
@@ -271,9 +288,15 @@
   <div class="modal-overlay" id="creditsModal" style="display:none">
     <div class="modal-card">
       <button class="modal-close" onclick="closeModal('creditsModal')">✕</button>
-      <h2>Buy credits</h2>
-      <p class="modal-sub">Each credit = one game analysis</p>
-      <div id="packageList" class="package-list"></div>
+      <h2>Go unlimited</h2>
+      <p class="modal-sub">CHF 5 / month · unlimited game analysis · cancel anytime</p>
+      <ul class="sub-benefits">
+        <li>Unlimited Quick and Deep reviews</li>
+        <li>Coaching that learns your patterns across every game</li>
+        <li>Cancel anytime from your account</li>
+      </ul>
+      <button class="modal-btn" id="subscribeBtn" onclick="startSubscription()">Subscribe — CHF 5/month</button>
+      <p class="sub-fine">Fair use: 100 analyses per month.</p>
     </div>
   </div>
   <div class="modal-overlay" id="historyModal" style="display:none">
@@ -325,7 +348,7 @@
       <!-- Billing tab -->
       <div class="acct-panel" id="panelBilling" style="display:none">
         <div class="acct-credits" id="acctCreditsBilling"></div>
-        <button class="modal-btn" onclick="closeModal('accountModal');showCreditsModal()" style="margin-bottom:20px">Buy more credits</button>
+        <button class="modal-btn" onclick="closeModal('accountModal');showCreditsModal()" style="margin-bottom:20px">Go unlimited</button>
         <label class="acct-label">Purchase history</label>
         <div id="txnList" class="txn-list"></div>
       </div>
@@ -346,7 +369,7 @@
       <p class="welcome-intro">Here's how to get the most out of your coach.</p>
       <div class="welcome-step">
         <div class="welcome-step-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-        <div><div class="welcome-step-h">Game analysis</div><div class="welcome-step-p">Import a game and your coach reviews it move by move — explaining why your mistakes were mistakes, not just that they were. Each analysis uses credits (you have 3 free to start).</div></div>
+        <div><div class="welcome-step-h">Game analysis</div><div class="welcome-step-p">Import a game and your coach reviews it move by move — explaining why your mistakes were mistakes, not just that they were. You have 3 free analyses to start, then it’s CHF 5/month for unlimited.</div></div>
       </div>
       <div class="welcome-step">
         <div class="welcome-step-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
@@ -424,11 +447,11 @@
           </div>
           <div class="tier-select">
             <label class="tier-option selected" id="lpTierQuick" onclick="lpDemoTier('quick')">
-              <div class="tier-head"><span class="tier-name">Quick</span><span class="tier-cost">1 credit</span></div>
+              <div class="tier-head"><span class="tier-name">Quick</span><span class="tier-cost">Faster</span></div>
               <div class="tier-detail">Faster analysis, great for casual games</div>
             </label>
             <label class="tier-option" id="lpTierDeep" onclick="lpDemoTier('deep')">
-              <div class="tier-head"><span class="tier-name">Deep</span><span class="tier-cost">2 credits</span></div>
+              <div class="tier-head"><span class="tier-name">Deep</span><span class="tier-cost">In depth</span></div>
               <div class="tier-detail">Deeper engine analysis + move-by-move commentary</div>
             </label>
           </div>
@@ -617,14 +640,26 @@
 
     <!-- PRICING -->
     <section class="lp-block" id="lp-pricing">
-      <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Pricing</span><h2 class="lp-block-title">Start free. Pay only for what you analyse.</h2><p class="lp-block-sub">Three free credits when you sign up. 1 credit for a quick analysis. No expiry.</p><p class="lp-price-currency-note" id="currencyNote">Prices in USD.</p></div>
-      <div class="lp-price-grid">
-        <div class="lp-price"><div class="lp-price-name">Try</div><div class="lp-price-amt">Free</div><div class="lp-price-det">3 credits with signup</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Start free</button></div>
-        <div class="lp-price"><div class="lp-price-name">Starter</div><div class="lp-price-amt" data-usd="4.99">$4.99</div><div class="lp-price-det">10 credits</div><div class="lp-price-per" data-usd="0.50" data-usd-per="1">$0.50 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
-        <div class="lp-price lp-price-feat"><div class="lp-price-name">Club</div><div class="lp-price-amt" data-usd="11.99">$11.99</div><div class="lp-price-det">30 credits</div><div class="lp-price-per" data-usd="0.40" data-usd-per="1">$0.40 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
-        <div class="lp-price"><div class="lp-price-name">Serious</div><div class="lp-price-amt" data-usd="24.99">$24.99</div><div class="lp-price-det">75 credits</div><div class="lp-price-per" data-usd="0.33" data-usd-per="1">$0.33 / game</div><button class="lp-price-btn" onclick="showAuthModal('signup')">Get started</button></div>
+      <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Pricing</span><h2 class="lp-block-title">One plan. Unlimited coaching.</h2><p class="lp-block-sub">Start with three free analyses, no card needed. Then CHF 5 a month for as many as you like.</p></div>
+      <div class="lp-price-grid lp-price-grid-2">
+        <div class="lp-price">
+          <div class="lp-price-name">Free</div>
+          <div class="lp-price-amt">Free</div>
+          <div class="lp-price-det">3 analyses to start</div>
+          <div class="lp-price-per">No card needed</div>
+          <button class="lp-price-btn" onclick="showAuthModal('signup')">Start free</button>
+        </div>
+        <div class="lp-price lp-price-feat">
+          <div class="lp-price-name">Unlimited</div>
+          <div class="lp-price-amt">CHF 5<span class="lp-price-cycle">/month</span></div>
+          <div class="lp-price-det">Unlimited game analysis</div>
+          <div class="lp-price-per">Quick &amp; Deep reviews · Cancel anytime</div>
+          <button class="lp-price-btn" onclick="showAuthModal('signup')">Get unlimited</button>
+        </div>
       </div>
       <style>
+        .lp-price-grid-2{max-width:720px;margin-left:auto;margin-right:auto}
+        .lp-price-cycle{font-size:16px;font-weight:400;color:var(--text-2);letter-spacing:0}
         .lp-pay{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:24px}
         .lp-pay-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
         .lp-pay-icons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
@@ -699,11 +734,11 @@
 
       <div class="tier-select">
         <label class="tier-option selected" id="tierQuick" onclick="selectTier('quick')">
-          <div class="tier-head"><span class="tier-name">Quick</span><span class="tier-cost">1 credit</span></div>
+          <div class="tier-head"><span class="tier-name">Quick</span><span class="tier-cost">Faster</span></div>
           <div class="tier-detail">Faster analysis, great for casual games</div>
         </label>
         <label class="tier-option" id="tierDeep" onclick="selectTier('deep')">
-          <div class="tier-head"><span class="tier-name">Deep</span><span class="tier-cost">2 credits</span></div>
+          <div class="tier-head"><span class="tier-name">Deep</span><span class="tier-cost">In depth</span></div>
           <div class="tier-detail">Deeper engine analysis + move-by-move commentary</div>
         </label>
       </div>
