@@ -641,26 +641,70 @@
     <!-- PRICING -->
     <section class="lp-block" id="lp-pricing">
       <div class="lp-block-head"><span class="lp-eyebrow lp-section-eyebrow">Pricing</span><h2 class="lp-block-title">One plan. Unlimited coaching.</h2><p class="lp-block-sub">Start with three free analyses, no card needed. Then CHF 5 a month for as many as you like.</p></div>
-      <div class="lp-price-grid lp-price-grid-2">
-        <div class="lp-price">
-          <div class="lp-price-name">Free</div>
-          <div class="lp-price-amt">Free</div>
-          <div class="lp-price-det">3 analyses to start</div>
-          <div class="lp-price-per">No card needed</div>
-          <button class="lp-price-btn" onclick="showAuthModal('signup')">Start free</button>
+      <div class="pp-grid">
+        <div class="pp-card">
+          <div class="pp-name">Free</div>
+          <div class="pp-price"><span class="pp-amt">Free</span></div>
+          <p class="pp-lede">Try it on three of your own games.</p>
+          <div class="pp-rule"></div>
+          <ul class="pp-feats">
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>3 game analyses</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Full coaching narrative</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Import from Chess.com &amp; Lichess</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>No card needed</span></li>
+          </ul>
+          <button class="pp-btn" onclick="showAuthModal('signup')">Start free</button>
         </div>
-        <div class="lp-price lp-price-feat">
-          <div class="lp-price-name">Unlimited</div>
-          <div class="lp-price-amt">CHF 5<span class="lp-price-cycle">/month</span></div>
-          <div class="lp-price-det">Unlimited game analysis</div>
-          <div class="lp-price-per">Quick &amp; Deep reviews · Cancel anytime</div>
-          <button class="lp-price-btn" onclick="showAuthModal('signup')">Get unlimited</button>
+        <div class="pp-card pp-card-feat">
+          <div class="pp-name">Unlimited</div>
+          <div class="pp-price"><span class="pp-amt">CHF&nbsp;5</span><span class="pp-cycle">/ month</span></div>
+          <p class="pp-lede">Every game you play, every month.</p>
+          <div class="pp-rule"></div>
+          <ul class="pp-feats">
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Unlimited game analyses</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Quick and Deep reviews</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Coaching that learns your patterns</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Personalised training plan</span></li>
+            <li><svg class="pp-tick" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cancel anytime</span></li>
+          </ul>
+          <button class="pp-btn pp-btn-feat" onclick="showAuthModal('signup')">Get unlimited</button>
         </div>
       </div>
+      <p class="pp-fine">Fair use: 100 analyses a month.</p>
       <style>
-        .lp-price-grid-2{max-width:720px;margin-left:auto;margin-right:auto}
-        .lp-price-cycle{font-size:16px;font-weight:400;color:var(--text-2);letter-spacing:0}
-        .lp-pay{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:24px}
+        /* Pricing plans — scoped .pp-* so the legacy .lp-price rules can't interfere */
+        .pp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:780px;align-items:stretch}
+        .pp-card{position:relative;display:flex;flex-direction:column;background:var(--bg-card);
+          border:1px solid var(--border);border-radius:16px;padding:30px 28px 28px;overflow:hidden}
+        .pp-card-feat{border-color:rgba(233,69,96,.34)}
+        /* Accent rail marks the recommended plan without fabricating a "most popular" claim */
+        .pp-card-feat::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--accent)}
+        .pp-card-feat::after{content:"";position:absolute;top:-70px;right:-70px;width:220px;height:220px;
+          background:radial-gradient(circle,rgba(233,69,96,.13),transparent 68%);pointer-events:none}
+        .pp-name{position:relative;font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;
+          letter-spacing:.14em;color:var(--text-3);margin-bottom:16px}
+        .pp-price{position:relative;display:flex;align-items:baseline;gap:7px;white-space:nowrap;margin-bottom:10px}
+        .pp-amt{font-size:clamp(32px,3.4vw,40px);font-weight:600;letter-spacing:-.035em;line-height:1;color:var(--text)}
+        .pp-cycle{font-size:15px;font-weight:400;color:var(--text-2);letter-spacing:-.01em}
+        .pp-lede{position:relative;font-size:14.5px;line-height:1.5;color:var(--text-2);margin:0}
+        .pp-rule{height:1px;background:var(--border);margin:22px 0}
+        .pp-feats{position:relative;list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:11px}
+        .pp-feats li{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;line-height:1.45;color:var(--text)}
+        .pp-tick{flex:none;margin-top:2px;color:var(--accent)}
+        .pp-btn{position:relative;margin-top:auto;width:100%;background:transparent;border:1px solid var(--border-light);
+          color:var(--text);font-family:inherit;font-size:14.5px;font-weight:500;padding:12px;border-radius:10px;
+          cursor:pointer;transition:border-color .15s,color .15s,background .15s,opacity .15s}
+        .pp-btn:hover{border-color:var(--accent);color:var(--accent)}
+        .pp-btn-feat{background:var(--accent);border-color:var(--accent);color:#fff}
+        .pp-btn-feat:hover{background:var(--accent);color:#fff;opacity:.9}
+        .pp-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+        .pp-fine{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.02em;color:var(--text-3);margin:16px 0 0}
+        @media (max-width:700px){
+          .pp-grid{grid-template-columns:1fr;gap:14px;max-width:420px}
+          .pp-card{padding:26px 22px 24px}
+        }
+        @media (prefers-reduced-motion:reduce){.pp-btn{transition:none}}
+        .lp-pay{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:30px}
         .lp-pay-label{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
         .lp-pay-icons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
         .lp-pay-icons svg{height:26px;width:auto;border-radius:5px;box-shadow:0 0 0 1px rgba(0,0,0,.07)}
