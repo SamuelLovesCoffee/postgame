@@ -99,7 +99,8 @@ async function checkAuth() {
     if (!r.ok) throw new Error();
     const data = await r.json();
     currentUser = data.user;
-    document.getElementById('creditBadge').textContent = data.credits;
+    subscription = data.subscription || null;
+    renderPlanBadge();
     showLoggedIn();
     // Show input view if not already in analysis
     if (document.getElementById('analysisView').style.display === 'none'
@@ -273,34 +274,57 @@ function logout() {
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 // ═══════════════════════════════════════
-// CREDITS
+// SUBSCRIPTION
 // ═══════════════════════════════════════
-async function showCreditsModal() {
-  const list = document.getElementById('packageList');
-  list.innerHTML = '<p style="color:var(--text-3)">Loading...</p>';
-  document.getElementById('creditsModal').style.display = 'flex';
-  try {
-    const r = await fetch('/api/packages');
-    const packages = await r.json();
-    list.innerHTML = packages.map(p => `
-      <button class="package-card" onclick="buyPackage('${p.id}')">
-        <span class="pkg-credits">${p.credits}</span>
-        <span class="pkg-label">${p.label}</span>
-      </button>
-    `).join('');
-  } catch { list.innerHTML = '<p>Failed to load packages</p>'; }
+let subscription = null;
+
+// Header badge: "Unlimited" for subscribers, remaining free analyses otherwise.
+function renderPlanBadge() {
+  const el = document.getElementById('creditBadge');
+  if (!el) return;
+  if (subscription && subscription.subscribed) {
+    el.textContent = 'Unlimited';
+    el.classList.add('is-unlimited');
+  } else {
+    el.textContent = subscription ? subscription.credits : '0';
+    el.classList.remove('is-unlimited');
+  }
 }
 
-async function buyPackage(packageId) {
+// Opens the subscribe modal (or the billing portal if already subscribed).
+async function showCreditsModal() {
+  if (subscription && subscription.subscribed) return openBillingPortal();
+  const modal = document.getElementById('creditsModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+async function startSubscription() {
+  const btn = document.getElementById('subscribeBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting...'; }
   try {
-    const r = await fetch('/api/checkout', {
+    const r = await fetch('/api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
-      body: JSON.stringify({ packageId }),
     });
     const data = await r.json();
-    if (data.url) window.location.href = data.url;
-  } catch (err) { alert('Checkout failed: ' + err.message); }
+    if (data.url) { window.location.href = data.url; return; }
+    throw new Error(data.error || 'Could not start checkout');
+  } catch (err) {
+    alert('Checkout failed: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Subscribe \u2014 CHF 5/month'; }
+  }
+}
+
+async function openBillingPortal() {
+  try {
+    const r = await fetch('/api/billing-portal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+    });
+    const data = await r.json();
+    if (data.url) { window.location.href = data.url; return; }
+    throw new Error(data.error || 'Could not open billing portal');
+  } catch (err) { alert(err.message); }
 }
 
 // ═══════════════════════════════════════
@@ -409,9 +433,26 @@ async function showAccount() {
     document.getElementById('acctEmail').value = p.email || '';
     document.getElementById('acctRating').value = p.chessRating || '';
     document.getElementById('acctChessUsername').value = p.chessUsername || '';
-    const creditsHtml = `<span class="credit-pill">${p.credits} credit${p.credits === 1 ? '' : 's'}</span>`;
-    document.getElementById('acctCredits').innerHTML = creditsHtml;
-    document.getElementById('acctCreditsBilling').innerHTML = creditsHtml;
+    let planHtml;
+    if (subscription && subscription.subscribed) {
+      const renews = subscription.currentPeriodEnd
+        ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+        : null;
+      const note = subscription.cancelAtPeriodEnd
+        ? (renews ? `Ends ${renews}` : 'Ends at period end')
+        : (renews ? `Renews ${renews}` : '');
+      planHtml = `<span class="credit-pill is-unlimited">Unlimited</span>`
+        + (note ? ` <span class="plan-note">${note}</span>` : '');
+    } else {
+      planHtml = `<span class="credit-pill">${p.credits} free analysis${p.credits === 1 ? '' : 'es'} left</span>`;
+    }
+    document.getElementById('acctCredits').innerHTML = planHtml;
+    const billingEl = document.getElementById('acctCreditsBilling');
+    if (billingEl) {
+      billingEl.innerHTML = planHtml + (subscription && subscription.subscribed
+        ? `<div style="margin-top:12px"><button class="modal-btn" onclick="openBillingPortal()">Manage subscription</button></div>`
+        : '');
+    }
   } catch (e) { console.error(e); }
 }
 
@@ -658,6 +699,13 @@ async function startAnalysis() {
     });
     if (!submitRes.ok) {
       const err = await submitRes.json().catch(() => ({}));
+      if (submitRes.status === 403 && err.error === 'no_credits') {
+        showCreditsModal();
+        throw new Error(err.message || 'You have used your free analyses.');
+      }
+      if (submitRes.status === 429 && err.error === 'fair_use') {
+        throw new Error(err.message || 'Monthly fair-use limit reached.');
+      }
       if (submitRes.status === 403) { showCreditsModal(); throw new Error(err.error || 'No credits'); }
       throw new Error(err.error || 'Submission failed');
     }
@@ -1136,25 +1184,28 @@ document.addEventListener('keydown',e=>{
 // Check auth on load
 checkAuth();
 // Check for payment return
-if(window.location.search.includes('payment=success')){
+if(window.location.search.includes('subscription=success')){
   history.replaceState(null,'','/');
-  // The webhook adds credits server-side and may lag a second or two behind the
-  // redirect, so poll the balance a few times until it updates.
-  (async function pollForCredits(){
-    let before=null;
-    try{ const r=await fetch('/api/account',{headers:{Authorization:'Bearer '+authToken}}); before=(await r.json()).credits; }catch(e){}
+  // The webhook activates the subscription server-side and may lag a second or
+  // two behind the redirect, so poll until it flips to active.
+  (async function pollForSubscription(){
     let attempts=0;
     const iv=setInterval(async()=>{
       attempts++;
       await checkAuth();
-      let now=null;
-      try{ const r=await fetch('/api/account',{headers:{Authorization:'Bearer '+authToken}}); now=(await r.json()).credits; }catch(e){}
-      if((before!==null&&now!==null&&now>before)||attempts>=6){
+      if((subscription&&subscription.subscribed)||attempts>=8){
         clearInterval(iv);
-        alert('Payment successful! Your credits have been added.');
+        if(subscription&&subscription.subscribed){
+          alert('You\u2019re subscribed \u2014 unlimited analysis is now active. Enjoy!');
+        }else{
+          alert('Payment received. Your subscription is activating \u2014 refresh in a moment if it hasn\u2019t appeared.');
+        }
       }
     },1500);
   })();
+}
+if(window.location.search.includes('subscription=cancelled')){
+  history.replaceState(null,'','/');
 }
 if(window.location.search.includes('payment=cancelled')){
   history.replaceState(null,'','/');
