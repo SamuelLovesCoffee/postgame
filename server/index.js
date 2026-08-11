@@ -12,6 +12,7 @@ const { renderShareCard } = require('./shareCard');
 const {
   signUp, signIn, authMiddleware, optionalAuth,
   getCredits, deductCredit,
+  getEntitlement, createSubscriptionCheckout, createBillingPortalSession, FAIR_USE_MONTHLY,
   saveAnalysis, getAnalyses, getAnalysis, buildPlayerProfile, deleteAnalysis, getGamesForFeedback,
   saveFeedback, getSavedFeedback, hasEverPurchased, getUserFirstName,
   createCheckoutSession, handleStripeWebhook,
@@ -23,6 +24,8 @@ const {
 
 // Analysis tiers
 const TIERS = {
+  // `credits` is the legacy free-tier cost: subscribers bypass it entirely,
+  // free users still spend their 3 signup credits at these rates.
   quick: { depth: 12, credits: 1, label: 'Quick' },
   deep:  { depth: 18, credits: 2, label: 'Deep' },
 };
@@ -153,8 +156,12 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
-  const credits = await getCredits(req.user.id);
-  res.json({ user: { id: req.user.id, email: req.user.email }, credits });
+  const entitlement = await getEntitlement(req.user.id);
+  res.json({
+    user: { id: req.user.id, email: req.user.email },
+    credits: entitlement.credits,
+    subscription: entitlement,
+  });
 });
 
 // ═══ CREDITS / PACKAGES ═══
@@ -367,6 +374,32 @@ app.post('/api/checkout', authMiddleware, async (req, res) => {
   }
 });
 
+// Start a CHF 5/month subscription
+app.post('/api/subscribe', authMiddleware, async (req, res) => {
+  try {
+    let host = req.get('host') || 'www.post-game.net';
+    if (host === 'post-game.net') host = 'www.post-game.net';
+    const baseUrl = process.env.PUBLIC_BASE_URL || `https://${host}`;
+    const session = await createSubscriptionCheckout(req.user.id, req.user.email, baseUrl);
+    res.json(session);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Stripe-hosted billing portal (update card, view invoices, cancel)
+app.post('/api/billing-portal', authMiddleware, async (req, res) => {
+  try {
+    let host = req.get('host') || 'www.post-game.net';
+    if (host === 'post-game.net') host = 'www.post-game.net';
+    const baseUrl = process.env.PUBLIC_BASE_URL || `https://${host}`;
+    const session = await createBillingPortalSession(req.user.id, baseUrl + '/');
+    res.json(session);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // ═══ ANALYSIS (protected) ═══
 
 app.post('/api/analyse', authMiddleware, async (req, res) => {
@@ -385,16 +418,31 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
   const tierConfig = TIERS[tier] || TIERS.quick;
   const cost = tierConfig.credits;
 
-  // Check credits
-  const credits = await getCredits(req.user.id);
-  if (credits < cost) {
-    return res.status(403).json({ error: `This analysis needs ${cost} credit${cost > 1 ? 's' : ''}. You have ${credits}.` });
-  }
+  // Entitlement: subscribers analyse freely up to the disclosed fair-use ceiling.
+  // Everyone else spends credits — which is how the 3 free analyses still work,
+  // and how any legacy purchased balance keeps its value.
+  const entitlement = await getEntitlement(req.user.id);
+  let chargedCredits = 0;
 
-  // Deduct the tier's credit cost
-  for (let i = 0; i < cost; i++) {
-    const ok = await deductCredit(req.user.id);
-    if (!ok) return res.status(403).json({ error: 'Could not deduct credits.' });
+  if (entitlement.subscribed) {
+    if (entitlement.fairUseExceeded && !isAdmin(req.user.email)) {
+      return res.status(429).json({
+        error: 'fair_use',
+        message: `You've reached this month's fair-use limit of ${FAIR_USE_MONTHLY} analyses. It resets at the start of next month — get in touch if you need more.`,
+      });
+    }
+  } else {
+    if (entitlement.credits < cost) {
+      return res.status(403).json({
+        error: 'no_credits',
+        message: `This analysis needs ${cost} credit${cost > 1 ? 's' : ''}. You have ${entitlement.credits}. Subscribe for unlimited analysis.`,
+      });
+    }
+    for (let i = 0; i < cost; i++) {
+      const ok = await deductCredit(req.user.id);
+      if (!ok) return res.status(403).json({ error: 'Could not deduct credits.' });
+    }
+    chargedCredits = cost;
   }
 
   const jobId = crypto.randomUUID();
@@ -503,9 +551,11 @@ app.post('/api/analyse', authMiddleware, async (req, res) => {
       job.status = 'error'; job.error = err.message;
       // Log the failure for the admin dashboard
       await logAnalysisFailure(req.user.id, tier, err.message);
-      // Refund credits on failure
-      const { addCredits } = require('./auth');
-      await addCredits(req.user.id, cost);
+      // Refund only if this run actually spent credits (subscribers spend none)
+      if (chargedCredits > 0) {
+        const { addCredits } = require('./auth');
+        await addCredits(req.user.id, chargedCredits);
+      }
     } finally {
       releaseSlot();
     }
@@ -615,7 +665,10 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
 
     // Entitlement: the first generation is free. Further generations require a purchase.
     // Admins always bypass the limit.
-    const purchased = await hasEverPurchased(req.user.id);
+    // Subscribers count as "purchased" for regeneration purposes, alongside
+    // anyone who bought credits under the old model.
+    const ent = await getEntitlement(req.user.id);
+    const purchased = ent.subscribed || await hasEverPurchased(req.user.id);
     const admin = isAdmin(req.user.email);
     const canGenerate = admin || genCount < 1 || purchased;
 
@@ -637,7 +690,7 @@ app.get('/api/my-feedback', authMiddleware, async (req, res) => {
     if (!canGenerate) {
       return res.status(403).json({
         error: 'feedback_limit',
-        message: 'You have used your free coaching feedback. Buy credits to regenerate it as your game history grows.',
+        message: 'You have used your free coaching feedback. Subscribe to regenerate it as your game history grows.',
       });
     }
 
